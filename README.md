@@ -16,7 +16,9 @@ cd wm-go
 make install
 ```
 
-To run the server locally:
+Copy `sample.env` as `wm.env` and adjust the environment variables as needed.
+
+Run the server:
 
 ```
 make run
