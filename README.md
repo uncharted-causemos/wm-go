@@ -5,6 +5,7 @@
 ## Requirements
 
 * Go v1.12 or higher. Make sure your `$GOPATH` is defined and that `$GOPATH/bin` is in your path.
+* Run `go get -u golang.org/x/lint/golint`
 
 ## Instructions
 
