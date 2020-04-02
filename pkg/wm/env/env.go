@@ -10,8 +10,8 @@ import (
 
 // Specification contains the imported environment variables.
 type Specification struct {
-	Addr string `required:"true" envconfig:"ADDR"`
-	Mode string `required:"true" envconfig:"MODE"`
+	Addr string `default:":4200"`
+	Mode string `default:"dev"`
 
 	ElasticURL string `required:"true" envconfig:"ELASTIC_URL"`
 }
