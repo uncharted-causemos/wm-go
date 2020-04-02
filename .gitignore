@@ -5,7 +5,7 @@ vendor/
 
 # env files
 *.env
-!sample.*.env
+!sample.env
 
 # Log files
 npm-debug.log*
