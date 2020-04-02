@@ -1,0 +1,23 @@
+image: golang:1.12.16
+
+variables:
+  GOPROXY: direct
+
+cache:
+  paths:
+  - vendor/
+
+before_script:
+  - go get -u golang.org/x/lint/golint
+  - go mod vendor
+
+lint:
+    script:
+      - go fmt $(go list ./... | grep -v /vendor/)
+      - go vet $(go list ./... | grep -v /vendor/)
+      - go list ./... | grep -v /vendor/ | xargs -L1 golint --set_exit_status
+
+test:
+    script:
+      - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
+      - go tool cover -func=coverage.out
