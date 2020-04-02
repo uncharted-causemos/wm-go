@@ -1,11 +1,11 @@
 # WM Go API
 
-[![pipeline status](https://gitlab.uncharted.software/WM/wm-go/badges/master/pipeline.svg)](https://gitlab.uncharted.software/WM/wm-go/commits/master)
+[![pipeline status](https://gitlab.uncharted.software/WM/wm-go/badges/master/pipeline.svg)](https://gitlab.uncharted.software/WM/wm-go/commits/master)  [![coverage report](https://gitlab.uncharted.software/WM/wm-go/badges/master/coverage.svg)](https://gitlab.uncharted.software/WM/wm-go/commits/master)
 
 ## Requirements
 
 * Go v1.12 or higher. Make sure your `$GOPATH` is defined and that `$GOPATH/bin` is in your path.
-* Run `go get -u golang.org/x/lint/golint`
+* Ensure you have Go Lint installed; eg: `go get -u golang.org/x/lint/golint`
 
 ## Instructions
 
