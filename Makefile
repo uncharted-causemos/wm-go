@@ -26,7 +26,7 @@ install:
 
 .PHONY: build
 build:
-	@CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/graph ./cmd/graph
+	@CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o ./bin/wm ./cmd/wm
 
 .PHONY: lint
 lint:
