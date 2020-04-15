@@ -1,8 +1,14 @@
 package elastic
 
+import (
+	"fmt"
+
+	"github.com/elastic/go-elasticsearch/v7"
+)
+
 // ES wraps the client and serves as the basis of the wm.KnowledgeBase interface.
 type ES struct {
-	// client *someElasticsearchClient
+	client *elasticsearch.Client
 }
 
 // New instantiates and returns a new KB using the provided Config.
@@ -12,8 +18,23 @@ func New(cfg *Config) (*ES, error) {
 	}
 	cfg.init()
 
-	// Connect to Elasticsearch here...
+	client, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses: []string{
+			cfg.Addr,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := client.Info()
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+	fmt.Printf("ES Client:\n%v\n", res)
+
 	return &ES{
-		// client: ...
+		client,
 	}, nil
 }

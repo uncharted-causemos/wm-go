@@ -1,7 +1,17 @@
 package wm
 
-// Tile is an individual tile from MaaS.
-type Tile struct{}
+// TileDataSpec defines the tile data specifications to be used in the queries.
+type TileDataSpec struct {
+	Model     string `json:"model"`
+	RunID     string `json:"runId"`
+	Feature   string `json:"feature"`
+	Date      string `json:"date"`
+	ValueProp string `json:"valueProp"`
+}
 
-// Tiles is an alias for a slice of Tile.
-type Tiles []*Tile
+// Tile interface
+type Tile interface {
+	GetBounds()
+	AddFeatures()
+	ToMVT() (string, error)
+}

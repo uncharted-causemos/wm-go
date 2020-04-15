@@ -34,7 +34,7 @@ func New(cfg *Config) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Get("/{"+paramProjectID+":[a-f0-9-]+}/facets", a.getFacets)
-	r.Get("/{"+paramProjectID+":[a-f0-9-]+}/tiles", a.getTiles)
+	r.Get("/tiles/{zoom}/{x}/{y}", a.getTile)
 
 	return r, nil
 }
