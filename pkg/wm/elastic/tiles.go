@@ -1,72 +1,104 @@
 package elastic
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"fmt"
+	"text/template"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-// // Tile is an individual tile from MaaS.
-// // (TODO: I might need to move this to different place)
-// type Tile struct {
-// 	zoom, x, y int
-// 	features   []*geojson.Feature
-// }
-
-// // GetBounds returns tile bounds
-// func (t *Tile) Bound() wm.Bound {
-// 	return wm.Bound{
-// 		wm.Point{1.1, 2.2},
-// 		wm.Point{},
-// 	}
-// 	// fmt.Println("NYI")
-// }
-
-// // AddFeatures loads geo features to the tile
-// func (t *Tile) AddFeatures() {
-// 	fmt.Println("NYI")
-// }
-
-// // ToMVT returns the tile as mapbox vector tile format
-// func (t *Tile) ToMVT() (string, error) {
-// 	return fmt.Sprintf("%d/%d/%d", t.zoom, t.x, t.y), nil
-// }
-
-// // NewTile creates a new tile
-// func NewTile(zoom int, x int, y int) Tile {
-// 	var features []*geojson.Feature
-// 	return Tile{
-// 		zoom,
-// 		x,
-// 		y,
-// 		features,
-// 	}
-// }
+// Bound represents a geo bound
+type Bound struct {
+	TopLeft     wm.Point `json:"top_left"`
+	BottomRight wm.Point `json:"bottom_right"`
+}
 
 // GetTile returns the tile.
-func (es *ES) GetTile(zoom int, x int, y int, specs wm.TileDataSpecs) (wm.Tile, error) {
+func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y)
-
-	// TODO: get model output data for each of the TileDataSpec,
-	// combine them in to geojson features, and add the geo features(and their values) to the tile
 	var results []interface{}
 	for _, spec := range specs {
-		results = append(results, <-es.getRunOutput("bound", spec))
+		results = append(results, <-es.getRunOutput(Bound(tile.Bound()), zoom, spec))
 	}
 	for _, r := range results {
-		// TODO: process the results and add the features to the tile
-		fmt.Println(r)
+		// TODO: get model output data for each of the TileDataSpec,
+		// combine them in to geojson features, and add the geo features(and their values) to the tile
+		fmt.Printf("Result: \n%v\n", r)
 	}
 	return tile, nil
 }
 
 // get model run output data for given bounds
-func (es *ES) getRunOutput(bound string, spec wm.TileDataSpec) <-chan interface{} {
+func (es *ES) getRunOutput(bound Bound, precision uint32, spec wm.TileDataSpec) <-chan interface{} {
 	r := make(chan interface{})
 	go func() {
-		// TODO: query es and get result
-		r <- "result: " + spec.Feature
+		b, _ := json.Marshal(bound)
+		data := map[string]interface{}{
+			"RunID":     spec.RunID,
+			"Feature":   spec.Feature,
+			"Bound":     string(b),
+			"Precision": 6 + int(precision), // 4096 cells. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
+		}
+		bodyTemplate := `{
+			"query": {
+				"bool": {
+					"filter": [
+						{
+							"term": {
+								"run_id": "{{.RunID}}"
+							}
+						},
+						{
+							"term": {
+								"feature_name": "{{.Feature}}"
+							}
+						},
+						{
+							"geo_bounding_box": {
+								"geo": {{.Bound}}
+							}
+						}
+					]
+				}
+			},
+			"aggregations": {
+				"geotiled": {
+					"geotile_grid": {
+						"size": 10000,
+						"field": "geo",
+						"precision": {{.Precision}}
+					},
+					"aggregations": {
+						"spatial_aggregation": {
+							"avg": {
+								"field": "feature_value"
+							}
+						}
+					}
+				}
+			}
+		}`
+		// TODO: handle errors
+		buf, _ := format(bodyTemplate, data)
+		res, _ := es.client.Search(
+			es.client.Search.WithContext(context.Background()),
+			es.client.Search.WithIndex(spec.Model),
+			es.client.Search.WithBody(buf),
+			es.client.Search.WithPretty(),
+		)
+		r <- res
 		close(r)
 	}()
 	return r
+}
+
+func format(text string, data interface{}) (*bytes.Buffer, error) {
+	var buf bytes.Buffer
+	if err := template.Must(template.New("").Parse(text)).Execute(&buf, data); err != nil {
+		return nil, err
+	}
+	return &buf, nil
 }

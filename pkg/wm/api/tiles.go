@@ -24,13 +24,14 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var zxy [3]int
+	var zxy [3]uint32
 	for i, key := range []string{"zoom", "x", "y"} {
-		zxy[i], err = strconv.Atoi(chi.URLParam(r, key))
+		v, err := strconv.ParseUint(chi.URLParam(r, key), 10, 32)
 		if err != nil {
 			a.errorResponse(w, err, http.StatusBadRequest)
 			return
 		}
+		zxy[i] = uint32(v)
 	}
 
 	tile, err := a.maas.GetTile(zxy[0], zxy[1], zxy[2], specs)
@@ -38,7 +39,7 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	res, err := tile.ToMVT()
+	res, err := tile.MVT()
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
