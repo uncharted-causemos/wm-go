@@ -41,16 +41,29 @@ func NewTile(zoom int, x int, y int) *Tile {
 }
 
 // GetTile returns the tile.
-func (es *ES) GetTile(zoom int, x int, y int, specs []*wm.TileDataSpec) (wm.Tile, error) {
+func (es *ES) GetTile(zoom int, x int, y int, specs wm.TileDataSpecs) (wm.Tile, error) {
 	tile := NewTile(zoom, x, y)
 
 	// TODO: get model output data for each of the TileDataSpec,
 	// combine them in to geojson features, and add the geo features(and their values) to the tile
-
+	var results []interface{}
+	for _, spec := range specs {
+		results = append(results, <-es.getRunOutput("bound", spec))
+	}
+	for _, r := range results {
+		// TODO: process the results and add the features to the tile
+		fmt.Println(r)
+	}
 	return tile, nil
 }
 
 // get model run output data for given bounds
-func (es *ES) getRunOutput() (interface{}, error) {
-	return nil, nil
+func (es *ES) getRunOutput(bound string, spec wm.TileDataSpec) <-chan interface{} {
+	r := make(chan interface{})
+	go func() {
+		// TODO: query es and get result
+		r <- "result: " + spec.Feature
+		close(r)
+	}()
+	return r
 }

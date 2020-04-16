@@ -36,13 +36,13 @@ func getFilters(r *http.Request) ([]*wm.Filter, error) {
 	return filters, nil
 }
 
-func getTileDataSpecs(r *http.Request) ([]*wm.TileDataSpec, error) {
+func getTileDataSpecs(r *http.Request) (wm.TileDataSpecs, error) {
 	raw := r.URL.Query().Get("specs")
 	if raw == "" {
 		return nil, errors.New("The specs list is missing from the query")
 	}
 
-	var specs []*wm.TileDataSpec
+	var specs []wm.TileDataSpec
 	if err := json.Unmarshal([]byte(raw), &specs); err != nil {
 		return nil, err
 	}

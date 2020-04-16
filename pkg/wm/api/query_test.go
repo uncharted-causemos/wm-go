@@ -136,7 +136,7 @@ func TestGetTileDataSpecs(t *testing.T) {
 	for _, test := range []struct {
 		r     *http.Request
 		isErr bool
-		want  []*wm.TileDataSpec
+		want  wm.TileDataSpecs
 	}{
 		{
 			&http.Request{
@@ -148,9 +148,9 @@ func TestGetTileDataSpecs(t *testing.T) {
 				},
 			},
 			false,
-			[]*wm.TileDataSpec{
-				&wm.TileDataSpec{Model: "population", RunID: "rid", Feature: "f1", Date: "2020-01", ValueProp: "v1"},
-				&wm.TileDataSpec{Model: "population2", RunID: "rid2", Feature: "f2", Date: "2020-02", ValueProp: "v2"},
+			wm.TileDataSpecs{
+				wm.TileDataSpec{Model: "population", RunID: "rid", Feature: "f1", Date: "2020-01", ValueProp: "v1"},
+				wm.TileDataSpec{Model: "population2", RunID: "rid2", Feature: "f2", Date: "2020-02", ValueProp: "v2"},
 			},
 		},
 		{
@@ -169,7 +169,7 @@ func TestGetTileDataSpecs(t *testing.T) {
 				},
 			},
 			true,
-			[]*wm.TileDataSpec{},
+			wm.TileDataSpecs{},
 		},
 	} {
 		got, err := getTileDataSpecs(test.r)
