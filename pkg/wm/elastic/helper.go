@@ -6,7 +6,7 @@ import (
 	"text/template"
 )
 
-// Common utility functions within the package
+// Helper functions used within the package
 
 // format parses text as as template and excute it with the data
 func format(text string, data interface{}) (*bytes.Buffer, error) {
