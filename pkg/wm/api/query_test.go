@@ -168,7 +168,7 @@ func TestGetTileDataSpecs(t *testing.T) {
 					RawQuery: `specs=[]`,
 				},
 			},
-			true,
+			false,
 			wm.TileDataSpecs{},
 		},
 	} {

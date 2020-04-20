@@ -1,27 +1,38 @@
 package elastic
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
-	"text/template"
 
+	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-// Bound represents a geo bound
-type Bound struct {
+// bound represents a geo bound
+type bound struct {
 	TopLeft     wm.Point `json:"top_left"`
 	BottomRight wm.Point `json:"bottom_right"`
 }
 
+// geoTile is a single record of the ES geotile bucket aggregation result
+type geoTile struct {
+	Key                string `json:"key"`
+	DocCount           int    `json:"doc_count"`
+	SpatialAggregation struct {
+		Value float64 `json:"value"`
+	} `json:"spatial_aggregation"`
+}
+
+// geoTiles is the ES geotile bucket aggregation result
+type geoTiles []geoTile
+
 // GetTile returns the tile.
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y)
-	var results []interface{}
+	var results []geoTiles
 	for _, spec := range specs {
-		results = append(results, <-es.getRunOutput(Bound(tile.Bound()), zoom, spec))
+		out, _ := es.getRunOutput(bound(tile.Bound()), zoom, spec)
+		results = append(results, <-out)
 	}
 	for _, r := range results {
 		// TODO: get model output data for each of the TileDataSpec,
@@ -31,16 +42,18 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error
 	return tile, nil
 }
 
-// get model run output data for given bounds
-func (es *ES) getRunOutput(bound Bound, precision uint32, spec wm.TileDataSpec) <-chan interface{} {
-	r := make(chan interface{})
+// getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
+func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) (<-chan geoTiles, <-chan error) {
+	out := make(chan geoTiles)
+	er := make(chan error)
 	go func() {
+		defer close(out)
 		b, _ := json.Marshal(bound)
 		data := map[string]interface{}{
 			"RunID":     spec.RunID,
 			"Feature":   spec.Feature,
 			"Bound":     string(b),
-			"Precision": 6 + int(precision), // 4096 cells. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
+			"Precision": 1, // 4096 cells. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
 		}
 		bodyTemplate := `{
 			"query": {
@@ -81,24 +94,26 @@ func (es *ES) getRunOutput(bound Bound, precision uint32, spec wm.TileDataSpec) 
 				}
 			}
 		}`
-		// TODO: handle errors
-		buf, _ := format(bodyTemplate, data)
-		res, _ := es.client.Search(
-			es.client.Search.WithContext(context.Background()),
+		buf, err := format(bodyTemplate, data)
+		if err != nil {
+			er <- err
+			return
+		}
+		res, err := es.client.Search(
 			es.client.Search.WithIndex(spec.Model),
 			es.client.Search.WithBody(buf),
-			es.client.Search.WithPretty(),
 		)
-		r <- res
-		close(r)
+		if err != nil {
+			er <- err
+			return
+		}
+		buckets := gjson.Get(read(res.Body), "aggregations.geotiled.buckets").String()
+		var result geoTiles
+		if err := json.Unmarshal([]byte(buckets), &result); err != nil {
+			er <- err
+			return
+		}
+		out <- result
 	}()
-	return r
-}
-
-func format(text string, data interface{}) (*bytes.Buffer, error) {
-	var buf bytes.Buffer
-	if err := template.Must(template.New("").Parse(text)).Execute(&buf, data); err != nil {
-		return nil, err
-	}
-	return &buf, nil
+	return out, er
 }

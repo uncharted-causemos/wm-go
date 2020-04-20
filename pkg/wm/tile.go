@@ -21,8 +21,8 @@ type TileDataSpec struct {
 
 // Point is a lon/lat point
 type Point struct {
-	Lon float64 `json:"lon"`
 	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 // Bound represent rectangular bound
@@ -41,15 +41,14 @@ type Tile struct {
 func (t *Tile) Bound() Bound {
 	bound := maptile.New(t.x, t.y, maptile.Zoom(t.zoom)).Bound()
 	return Bound{
-		Point{bound.LeftTop().Lon(), bound.LeftTop().Lat()},
-		Point{bound.RightBottom().Lon(), bound.RightBottom().Lat()},
+		Point{bound.LeftTop().Lat(), bound.LeftTop().Lon()},
+		Point{bound.RightBottom().Lat(), bound.RightBottom().Lon()},
 	}
 }
 
 // AddFeatures loads geo features to the tile
 func (t *Tile) AddFeatures(features []geojson.Feature) {
 	t.features = features
-	fmt.Println("NYI")
 }
 
 // MVT returns the tile as mapbox vector tile format
