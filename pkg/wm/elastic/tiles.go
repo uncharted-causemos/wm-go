@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/paulmach/orb/geojson"
+	"github.com/paulmach/orb/maptile"
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -23,28 +25,51 @@ type geoTile struct {
 	} `json:"spatial_aggregation"`
 }
 
-// geoTiles is the ES geotile bucket aggregation result
-type geoTiles []geoTile
+// geoTilesResult is the ES geotile bucket aggregation result
+type geoTilesResult struct {
+	Bound     bound
+	Precision int
+	Spec      wm.TileDataSpec
+	Data      []geoTile
+}
 
 // GetTile returns the tile.
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y)
-	var results []geoTiles
+	var results []geoTilesResult
 	for _, spec := range specs {
-		out, _ := es.getRunOutput(bound(tile.Bound()), zoom, spec)
+		// + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
+		// TODO: fix precision
+		out, _ := es.getRunOutput(bound(tile.Bound()), zoom+1, spec)
 		results = append(results, <-out)
 	}
-	for _, r := range results {
-		// TODO: get model output data for each of the TileDataSpec,
-		// combine them in to geojson features, and add the geo features(and their values) to the tile
-		fmt.Printf("Result: \n%v\n", r)
+	featureMap := map[string]geojson.Feature{}
+	for _, result := range results {
+		for _, gt := range result.Data {
+			if _, ok := featureMap[gt.Key]; !ok {
+				var z, x, y uint32
+				fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y)
+				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
+				featureMap[gt.Key] = geojson.Feature{
+					Type:     "Feature",
+					Geometry: polygon,
+					Properties: geojson.Properties{
+						"id": gt.Key,
+					},
+				}
+			}
+			featureMap[gt.Key].Properties[result.Spec.ValueProp] = gt.SpatialAggregation.Value
+		}
+	}
+	for _, feature := range featureMap {
+		tile.AddFeature(feature)
 	}
 	return tile, nil
 }
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
-func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) (<-chan geoTiles, <-chan error) {
-	out := make(chan geoTiles)
+func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) (<-chan geoTilesResult, <-chan error) {
+	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
 		defer close(out)
@@ -53,7 +78,7 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 			"RunID":     spec.RunID,
 			"Feature":   spec.Feature,
 			"Bound":     string(b),
-			"Precision": 1, // 4096 cells. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
+			"Precision": precision,
 		}
 		bodyTemplate := `{
 			"query": {
@@ -108,8 +133,13 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 			return
 		}
 		buckets := gjson.Get(read(res.Body), "aggregations.geotiled.buckets").String()
-		var result geoTiles
-		if err := json.Unmarshal([]byte(buckets), &result); err != nil {
+		result := geoTilesResult{
+			Bound:     bound,
+			Precision: int(precision),
+			Spec:      spec,
+			Data:      []geoTile{},
+		}
+		if err := json.Unmarshal([]byte(buckets), &result.Data); err != nil {
 			er <- err
 			return
 		}

@@ -46,9 +46,9 @@ func (t *Tile) Bound() Bound {
 	}
 }
 
-// AddFeatures loads geo features to the tile
-func (t *Tile) AddFeatures(features []geojson.Feature) {
-	t.features = features
+// AddFeature loads geo features to the tile
+func (t *Tile) AddFeature(feature geojson.Feature) {
+	t.features = append(t.features, feature)
 }
 
 // MVT returns the tile as mapbox vector tile format

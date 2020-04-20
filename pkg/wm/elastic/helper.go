@@ -8,7 +8,7 @@ import (
 
 // Helper functions used within the package
 
-// format parses text as as template and excute it with the data
+// format parses text as as a template and excute it with the data
 func format(text string, data interface{}) (*bytes.Buffer, error) {
 	var buf bytes.Buffer
 	if err := template.Must(template.New("").Parse(text)).Execute(&buf, data); err != nil {

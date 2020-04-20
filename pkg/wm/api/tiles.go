@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -44,5 +45,6 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
+	fmt.Printf("\n%v\n", tile)
 	render.Render(w, r, &tilesResponse{Tile: res})
 }
