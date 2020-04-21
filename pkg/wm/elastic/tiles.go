@@ -50,13 +50,9 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error
 				var z, x, y uint32
 				fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y)
 				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
-				featureMap[gt.Key] = geojson.Feature{
-					Type:     "Feature",
-					Geometry: polygon,
-					Properties: geojson.Properties{
-						"id": gt.Key,
-					},
-				}
+				f := *geojson.NewFeature(polygon)
+				f.Properties["id"] = gt.Key
+				featureMap[gt.Key] = f
 			}
 			featureMap[gt.Key].Properties[result.Spec.ValueProp] = gt.SpatialAggregation.Value
 		}
