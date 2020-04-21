@@ -34,7 +34,7 @@ type geoTilesResult struct {
 }
 
 // GetTile returns the tile.
-func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error) {
+func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
 	tile := wm.NewTile(zoom, x, y)
 	var results []geoTilesResult
 	for _, spec := range specs {
@@ -60,7 +60,8 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) (wm.Tile, error
 	for _, feature := range featureMap {
 		tile.AddFeature(feature)
 	}
-	return tile, nil
+
+	return tile.MVT()
 }
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom

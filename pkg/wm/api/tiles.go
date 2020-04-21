@@ -10,7 +10,7 @@ import (
 )
 
 type tilesResponse struct {
-	Tile string
+	Tile []byte
 }
 
 // Render allows Project to satisfy the render.Renderer interface.
@@ -40,11 +40,6 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	res, err := tile.MVT()
-	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
-	}
 	fmt.Printf("\n%v\n", tile)
-	render.Render(w, r, &tilesResponse{Tile: res})
+	render.Render(w, r, &tilesResponse{Tile: tile})
 }
