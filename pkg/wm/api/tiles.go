@@ -2,33 +2,47 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
-
-	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
 type tilesResponse struct {
-	wm.Tiles
+	Tile string
 }
 
 // Render allows Project to satisfy the render.Renderer interface.
-func (fr *tilesResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (tr *tilesResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (a *api) getTiles(w http.ResponseWriter, r *http.Request) {
-	filters, err := getFilters(r)
+func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
+	specs, err := getTileDataSpecs(r)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return
 	}
 
-	ts, err := a.maas.GetTiles(filters)
+	var zxy [3]uint32
+	for i, key := range []string{paramZoom, paramX, paramY} {
+		v, err := strconv.ParseUint(chi.URLParam(r, key), 10, 32)
+		if err != nil {
+			a.errorResponse(w, err, http.StatusBadRequest)
+			return
+		}
+		zxy[i] = uint32(v)
+	}
+
+	tile, err := a.maas.GetTile(zxy[0], zxy[1], zxy[2], specs)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-
-	render.Render(w, r, &tilesResponse{ts})
+	res, err := tile.MVT()
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.Render(w, r, &tilesResponse{Tile: res})
 }

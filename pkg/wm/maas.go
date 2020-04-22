@@ -3,5 +3,5 @@ package wm
 // MaaS defines the methods that the MaaS database implementation needs to
 // satisfy.
 type MaaS interface {
-	GetTiles(filters []*Filter) (Tiles, error)
+	GetTile(zoom, x, y uint32, specs TileDataSpecs) (Tile, error)
 }

@@ -57,6 +57,9 @@ func main() {
 	es, err := elastic.New(&elastic.Config{
 		Addr: s.ElasticURL,
 	})
+	if err != nil {
+		sugar.Fatal(err)
+	}
 
 	apiRouter, err := api.New(&api.Config{
 		KnowledgeBase: es,

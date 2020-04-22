@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/buger/jsonparser v0.0.0-20191204142016-1a29609e0929
 	github.com/davecgh/go-spew v1.1.1
+	github.com/elastic/go-elasticsearch/v7 v7.6.0
 	github.com/go-chi/chi v4.0.3+incompatible
 	github.com/go-chi/cors v1.0.0
 	github.com/go-chi/render v1.0.1
@@ -12,6 +13,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kr/text v0.2.0 // indirect
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
+	github.com/paulmach/orb v0.1.6
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/stretchr/testify v1.5.1 // indirect
 	go.uber.org/multierr v1.5.0 // indirect
