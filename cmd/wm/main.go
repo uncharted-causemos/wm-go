@@ -9,7 +9,6 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/render"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/api"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
@@ -44,7 +43,6 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(flate.DefaultCompression))
-	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
