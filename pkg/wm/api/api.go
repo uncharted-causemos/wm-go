@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/go-chi/chi"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 	"go.uber.org/zap"
@@ -9,6 +11,9 @@ import (
 // URL parameter strings
 const (
 	paramProjectID = "projectID"
+	paramZoom      = "zoom"
+	paramX         = "x"
+	paramY         = "y"
 )
 
 type api struct {
@@ -34,7 +39,7 @@ func New(cfg *Config) (chi.Router, error) {
 	r := chi.NewRouter()
 
 	r.Get("/{"+paramProjectID+":[a-f0-9-]+}/facets", a.getFacets)
-	r.Get("/tiles/{zoom}/{x}/{y}", a.getTile)
+	r.Get(fmt.Sprintf("/tiles/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
 
 	return r, nil
 }

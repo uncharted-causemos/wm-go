@@ -26,7 +26,7 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var zxy [3]uint32
-	for i, key := range []string{"zoom", "x", "y"} {
+	for i, key := range []string{paramZoom, paramX, paramY} {
 		v, err := strconv.ParseUint(chi.URLParam(r, key), 10, 32)
 		if err != nil {
 			a.errorResponse(w, err, http.StatusBadRequest)
