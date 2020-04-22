@@ -58,8 +58,8 @@ func (t *Tile) MVT() ([]byte, error) {
 	layers := mvt.NewLayers(collections)
 	layers.ProjectToTile(maptile.New(t.x, t.y, maptile.Zoom(t.zoom)))
 	layers.Clip(mvt.MapboxGLDefaultExtentBound)
-	data, err := mvt.MarshalGzipped(layers)
-	// data, _ := mvt.Marshal(layers)
+	// data, err := mvt.MarshalGzipped(layers)
+	data, err := mvt.Marshal(layers)
 	if err != nil {
 		return nil, err
 	}

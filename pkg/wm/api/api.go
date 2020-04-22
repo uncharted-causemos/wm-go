@@ -46,7 +46,7 @@ func New(cfg *Config) (chi.Router, error) {
 	})
 
 	r.Route("/tiles", func(r chi.Router) {
-		r.Get(fmt.Sprintf("{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
+		r.Get(fmt.Sprintf("/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
 	})
 
 	return r, nil

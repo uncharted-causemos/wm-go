@@ -1,22 +1,13 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi"
-	"github.com/go-chi/render"
 )
 
-type tilesResponse struct {
-	Tile []byte
-}
-
-// Render allows Project to satisfy the render.Renderer interface.
-func (tr *tilesResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
+const contentTypeMVT = "application/vnd.mapbox-vector-tile"
 
 func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 	specs, err := getTileDataSpecs(r)
@@ -40,6 +31,6 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("\n%v\n", tile)
-	render.Render(w, r, &tilesResponse{Tile: tile})
+	w.Header().Set("Content-Type", contentTypeMVT)
+	w.Write(tile)
 }
