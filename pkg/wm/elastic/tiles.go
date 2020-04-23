@@ -13,6 +13,8 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
+const tileDataLayerName = "maas"
+
 // bound represents a geo bound
 type bound struct {
 	TopLeft     wm.Point `json:"top_left"`
@@ -38,7 +40,7 @@ type geoTilesResult struct {
 
 // GetTile returns the tile containing model run output specified by the spec
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
-	tile := wm.NewTile(zoom, x, y)
+	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
 	precision := zoom + 6 // + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
 	var results []geoTilesResult
 	for _, spec := range specs {

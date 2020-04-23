@@ -33,6 +33,7 @@ type Bound struct {
 // Tile is an individual tile from MaaS.
 type Tile struct {
 	zoom, x, y uint32
+	layer      string
 	features   geojson.FeatureCollection
 }
 
@@ -53,7 +54,7 @@ func (t *Tile) AddFeature(feature geojson.Feature) {
 // MVT returns the tile as mapbox vector tile format
 func (t *Tile) MVT() ([]byte, error) {
 	collections := map[string]*geojson.FeatureCollection{
-		"maas": &t.features,
+		t.layer: &t.features,
 	}
 	layers := mvt.NewLayers(collections)
 	layers.ProjectToTile(maptile.New(t.x, t.y, maptile.Zoom(t.zoom)))
@@ -65,12 +66,13 @@ func (t *Tile) MVT() ([]byte, error) {
 }
 
 // NewTile creates a new tile
-func NewTile(zoom, x, y uint32) Tile {
+func NewTile(zoom, x, y uint32, layerName string) Tile {
 	features := *geojson.NewFeatureCollection()
 	return Tile{
 		zoom,
 		x,
 		y,
+		layerName,
 		features,
 	}
 }
