@@ -2,7 +2,9 @@ package elastic
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/paulmach/orb/geojson"
@@ -46,23 +48,12 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 		}
 		results = append(results, <-out)
 	}
-	// Combine all run output results into a single tile
-	featureMap := map[string]geojson.Feature{}
-	for _, result := range results {
-		for _, gt := range result.Data {
-			if _, ok := featureMap[gt.Key]; !ok {
-				var z, x, y uint32
-				if _, err := fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y); err != nil {
-					return nil, err
-				}
-				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
-				f := *geojson.NewFeature(polygon)
-				f.Properties["id"] = gt.Key
-				featureMap[gt.Key] = f
-			}
-			featureMap[gt.Key].Properties[result.Spec.ValueProp] = gt.SpatialAggregation.Value
-		}
+
+	featureMap, err := es.createFeatures(results)
+	if err != nil {
+		return nil, err
 	}
+
 	for _, feature := range featureMap {
 		tile.AddFeature(feature)
 	}
@@ -144,14 +135,20 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 			return
 		}
 		res, err := es.client.Search(
-			es.client.Search.WithIndex(spec.Model),
+			es.client.Search.WithIndex(strings.ToLower(spec.Model)),
 			es.client.Search.WithBody(buf),
 		)
 		if err != nil {
 			er <- err
 			return
 		}
-		buckets := gjson.Get(read(res.Body), "aggregations.geotiled.buckets").String()
+		body := read(res.Body)
+		if res.IsError() {
+			er <- errors.New(body)
+			return
+		}
+
+		buckets := gjson.Get(body, "aggregations.geotiled.buckets").String()
 		result := geoTilesResult{
 			Bound:     bound,
 			Precision: int(precision),
@@ -166,4 +163,25 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 		out <- result
 	}()
 	return out, er
+}
+
+// createFeatures processes and merges the results and returns a map of geojson feature
+func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Feature, error) {
+	featureMap := map[string]geojson.Feature{}
+	for _, result := range results {
+		for _, gt := range result.Data {
+			if _, ok := featureMap[gt.Key]; !ok {
+				var z, x, y uint32
+				if _, err := fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y); err != nil {
+					return nil, err
+				}
+				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
+				f := *geojson.NewFeature(polygon)
+				f.Properties["id"] = gt.Key
+				featureMap[gt.Key] = f
+			}
+			featureMap[gt.Key].Properties[result.Spec.ValueProp] = gt.SpatialAggregation.Value
+		}
+	}
+	return featureMap, nil
 }
