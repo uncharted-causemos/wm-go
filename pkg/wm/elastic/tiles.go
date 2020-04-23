@@ -39,10 +39,10 @@ type geoTilesResult struct {
 // GetTile returns the tile containing model run output specified by the spec
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
 	tile := wm.NewTile(zoom, x, y)
+	precision := zoom + 6 // + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
 	var results []geoTilesResult
 	for _, spec := range specs {
-		// + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
-		out, err := es.getRunOutput(bound(tile.Bound()), zoom+6, spec)
+		out, err := es.getRunOutput(bound(tile.Bound()), precision, spec)
 		if e := <-err; e != nil {
 			return nil, e
 		}
@@ -53,7 +53,6 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-
 	for _, feature := range featureMap {
 		tile.AddFeature(feature)
 	}
