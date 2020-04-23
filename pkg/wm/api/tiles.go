@@ -8,6 +8,7 @@ import (
 )
 
 const contentTypeMVT = "application/vnd.mapbox-vector-tile"
+const contentEncodingGzip = "gzip"
 
 func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 	specs, err := getTileDataSpecs(r)
@@ -32,5 +33,6 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Content-Type", contentTypeMVT)
+	w.Header().Set("Content-Encoding", contentEncodingGzip)
 	w.Write(tile)
 }

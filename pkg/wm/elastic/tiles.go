@@ -3,6 +3,7 @@ package elastic
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
@@ -33,22 +34,27 @@ type geoTilesResult struct {
 	Data      []geoTile
 }
 
-// GetTile returns the tile.
+// GetTile returns the tile containing model run output specified by the spec
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
 	tile := wm.NewTile(zoom, x, y)
 	var results []geoTilesResult
 	for _, spec := range specs {
 		// + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
-		// TODO: fix precision
-		out, _ := es.getRunOutput(bound(tile.Bound()), zoom+1, spec)
+		out, err := es.getRunOutput(bound(tile.Bound()), zoom+6, spec)
+		if e := <-err; e != nil {
+			return nil, e
+		}
 		results = append(results, <-out)
 	}
+	// Combine all run output results into a single tile
 	featureMap := map[string]geojson.Feature{}
 	for _, result := range results {
 		for _, gt := range result.Data {
 			if _, ok := featureMap[gt.Key]; !ok {
 				var z, x, y uint32
-				fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y)
+				if _, err := fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y); err != nil {
+					return nil, err
+				}
 				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
 				f := *geojson.NewFeature(polygon)
 				f.Properties["id"] = gt.Key
@@ -60,7 +66,6 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 	for _, feature := range featureMap {
 		tile.AddFeature(feature)
 	}
-
 	return tile.MVT()
 }
 
@@ -69,13 +74,22 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
+		defer close(er)
 		defer close(out)
+		startTime, err := time.Parse(time.RFC3339, spec.Date)
+		if err != nil {
+			er <- err
+			return
+		}
 		b, _ := json.Marshal(bound)
 		data := map[string]interface{}{
-			"RunID":     spec.RunID,
-			"Feature":   spec.Feature,
-			"Bound":     string(b),
-			"Precision": precision,
+			"RunID":       spec.RunID,
+			"Feature":     spec.Feature,
+			"Bound":       string(b),
+			"Precision":   precision,
+			"StartTime":   startTime.Format(time.RFC3339),
+			"EndTime":     startTime.AddDate(0, 1, 0).Format(time.RFC3339), // Add a month since we want monthly data
+			"Aggregation": "avg",
 		}
 		bodyTemplate := `{
 			"query": {
@@ -95,6 +109,14 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 							"geo_bounding_box": {
 								"geo": {{.Bound}}
 							}
+						},
+						{
+							"range": {
+								"timestamp": {
+									"gte": "{{.StartTime}}",
+									"lte": "{{.EndTime}}"
+								}
+							}
 						}
 					]
 				}
@@ -108,7 +130,7 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 					},
 					"aggregations": {
 						"spatial_aggregation": {
-							"avg": {
+							"{{.Aggregation}}": {
 								"field": "feature_value"
 							}
 						}
@@ -140,6 +162,7 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 			er <- err
 			return
 		}
+		er <- nil
 		out <- result
 	}()
 	return out, er
