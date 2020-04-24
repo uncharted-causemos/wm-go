@@ -32,10 +32,10 @@ type geoTile struct {
 
 // geoTilesResult is the ES geotile bucket aggregation result
 type geoTilesResult struct {
-	Bound     bound
-	Precision int
-	Spec      wm.TileDataSpec
-	Data      []geoTile
+	bound     bound
+	precision int
+	spec      wm.TileDataSpec
+	data      []geoTile
 }
 
 // GetTile returns the tile containing model run output specified by the spec
@@ -151,12 +151,12 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 
 		buckets := gjson.Get(body, "aggregations.geotiled.buckets").String()
 		result := geoTilesResult{
-			Bound:     bound,
-			Precision: int(precision),
-			Spec:      spec,
-			Data:      []geoTile{},
+			bound:     bound,
+			precision: int(precision),
+			spec:      spec,
+			data:      []geoTile{},
 		}
-		if err := json.Unmarshal([]byte(buckets), &result.Data); err != nil {
+		if err := json.Unmarshal([]byte(buckets), &result.data); err != nil {
 			er <- err
 			return
 		}
@@ -170,7 +170,7 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Feature, error) {
 	featureMap := map[string]geojson.Feature{}
 	for _, result := range results {
-		for _, gt := range result.Data {
+		for _, gt := range result.data {
 			if _, ok := featureMap[gt.Key]; !ok {
 				var z, x, y uint32
 				if _, err := fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y); err != nil {
@@ -181,7 +181,7 @@ func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Featu
 				f.Properties["id"] = gt.Key
 				featureMap[gt.Key] = f
 			}
-			featureMap[gt.Key].Properties[result.Spec.ValueProp] = gt.SpatialAggregation.Value
+			featureMap[gt.Key].Properties[result.spec.ValueProp] = gt.SpatialAggregation.Value
 		}
 	}
 	return featureMap, nil
