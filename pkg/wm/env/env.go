@@ -14,6 +14,8 @@ type Specification struct {
 	Mode string `default:"dev"`
 
 	ElasticURL string `required:"true" envconfig:"ELASTIC_URL"`
+
+	DgraphURLS []string `required:"true" envconfig:"DGRAPH_URLS"`
 }
 
 // Load imports the environment variables and returns them in an Specification.
