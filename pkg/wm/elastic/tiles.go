@@ -58,8 +58,7 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 		}
 	}
 	for _, r := range resChs {
-		t := <-r
-		results = append(results, t)
+		results = append(results, <-r)
 	}
 
 	featureMap, err := es.createFeatures(results)
