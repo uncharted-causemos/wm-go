@@ -42,13 +42,24 @@ type geoTilesResult struct {
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
 	precision := zoom + 6 // + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
+
+	var errChs []chan error
+	var resChs []chan geoTilesResult
 	var results []geoTilesResult
+
 	for _, spec := range specs {
-		out, err := es.getRunOutput(bound(tile.Bound()), precision, spec)
+		res, err := es.getRunOutput(bound(tile.Bound()), precision, spec)
+		errChs = append(errChs, err)
+		resChs = append(resChs, res)
+	}
+	for _, err := range errChs {
 		if e := <-err; e != nil {
 			return nil, e
 		}
-		results = append(results, <-out)
+	}
+	for _, r := range resChs {
+		t := <-r
+		results = append(results, t)
 	}
 
 	featureMap, err := es.createFeatures(results)
@@ -62,7 +73,7 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 }
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
-func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) (<-chan geoTilesResult, <-chan error) {
+func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) (chan geoTilesResult, chan error) {
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
