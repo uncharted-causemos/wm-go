@@ -1,8 +1,7 @@
 package wm
 
 import (
-	"fmt"
-
+	"github.com/paulmach/orb/encoding/mvt"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
 )
@@ -21,8 +20,8 @@ type TileDataSpec struct {
 
 // Point is a lon/lat point
 type Point struct {
-	Lon float64 `json:"lon"`
 	Lat float64 `json:"lat"`
+	Lon float64 `json:"lon"`
 }
 
 // Bound represent rectangular bound
@@ -34,36 +33,46 @@ type Bound struct {
 // Tile is an individual tile from MaaS.
 type Tile struct {
 	zoom, x, y uint32
-	features   []geojson.Feature
+	layer      string
+	features   geojson.FeatureCollection
 }
 
 // Bound returns tile bounds
 func (t *Tile) Bound() Bound {
 	bound := maptile.New(t.x, t.y, maptile.Zoom(t.zoom)).Bound()
 	return Bound{
-		Point{bound.LeftTop().Lon(), bound.LeftTop().Lat()},
-		Point{bound.RightBottom().Lon(), bound.RightBottom().Lat()},
+		Point{bound.LeftTop().Lat(), bound.LeftTop().Lon()},
+		Point{bound.RightBottom().Lat(), bound.RightBottom().Lon()},
 	}
 }
 
-// AddFeatures loads geo features to the tile
-func (t *Tile) AddFeatures(features []geojson.Feature) {
-	t.features = features
-	fmt.Println("NYI")
+// AddFeature loads geo feature to the tile
+func (t *Tile) AddFeature(feature geojson.Feature) {
+	t.features.Append(&feature)
 }
 
 // MVT returns the tile as mapbox vector tile format
-func (t *Tile) MVT() (string, error) {
-	return fmt.Sprintf("%d/%d/%d", t.zoom, t.x, t.y), nil
+func (t *Tile) MVT() ([]byte, error) {
+	collections := map[string]*geojson.FeatureCollection{
+		t.layer: &t.features,
+	}
+	layers := mvt.NewLayers(collections)
+	layers.ProjectToTile(maptile.New(t.x, t.y, maptile.Zoom(t.zoom)))
+	data, err := mvt.MarshalGzipped(layers)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 // NewTile creates a new tile
-func NewTile(zoom, x, y uint32) Tile {
-	var features []geojson.Feature
+func NewTile(zoom, x, y uint32, layerName string) Tile {
+	features := *geojson.NewFeatureCollection()
 	return Tile{
 		zoom,
 		x,
 		y,
+		layerName,
 		features,
 	}
 }
