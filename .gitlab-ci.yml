@@ -8,6 +8,7 @@ cache:
   - vendor/
 
 before_script:
+  - docker info
   - go get -u golang.org/x/lint/golint
   - go mod vendor
 
