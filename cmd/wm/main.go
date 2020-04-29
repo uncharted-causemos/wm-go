@@ -16,8 +16,10 @@ import (
 	"go.uber.org/zap"
 )
 
+const envFile = "wm.env"
+
 func main() {
-	s, err := env.Load("wm.env")
+	s, err := env.Load(envFile)
 	if err != nil {
 		log.Fatal(err)
 	}

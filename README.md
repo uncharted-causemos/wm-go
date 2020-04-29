@@ -24,3 +24,11 @@ Run the server:
 ```
 make run
 ```
+
+## Update and push docker image
+
+Run following commands
+```
+docker build -t docker.uncharted.software/worldmodeler/wm-go .
+docker push docker.uncharted.software/worldmodeler/wm-go:latest
+```
