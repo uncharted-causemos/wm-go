@@ -22,9 +22,9 @@ type Specification struct {
 // Load imports the environment variables and returns them in an Specification.
 func Load(envFile string) (*Specification, error) {
 
-	// In dev, load environment file from the .env file, in production just check existing host environment
 	env := os.Getenv("WM_MODE")
-	if "dev" == env {
+	// if no env, load environment file from the .env file, otherwise (in production) just check existing host environment
+	if "" == env {
 		err := godotenv.Load(envFile)
 		if err != nil {
 			return nil, fmt.Errorf("Error loading %s file: %v", envFile, err)
