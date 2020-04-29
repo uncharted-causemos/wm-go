@@ -32,3 +32,8 @@ Run following commands
 docker build -t docker.uncharted.software/worldmodeler/wm-go .
 docker push docker.uncharted.software/worldmodeler/wm-go:latest
 ```
+
+To run the container
+```
+docker run --env-file ./wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:latest
+```
