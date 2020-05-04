@@ -25,15 +25,7 @@ Run the server:
 make run
 ```
 
-## Update and push docker image
-
-Run following commands
-```
-docker build -t docker.uncharted.software/worldmodeler/wm-go .
-docker push docker.uncharted.software/worldmodeler/wm-go:latest
-```
-
-To run the container
-```
-docker run --env-file ./wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:latest
-```
+## Note on CI/CD Workflows
+  - Linting and test runs when there's a merge requests or push to master
+  - Docker image with latest tag will be created and pushed to the registry when changes are committed to master
+  - Docker image with a tag (eg. 0.1.1) will be created (and pushed to the registry) and will be deployed to openstack instance when a commit is tagged
