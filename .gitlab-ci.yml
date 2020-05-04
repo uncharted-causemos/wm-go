@@ -65,7 +65,7 @@ environment:
     # prepare should fail if the docker tag version is empty
     - if [ -z "${DOCKER_TAG}" ]; then exit 1; fi
     - echo "DOCKER_TAG=${DOCKER_TAG}" > ci.env
-
+    
 build:
   stage: build
   only:
