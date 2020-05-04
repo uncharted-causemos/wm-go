@@ -37,6 +37,8 @@ test:
     - go test -race $(go list ./... | grep -v /vendor/) -v -coverprofile=coverage.out
     - go tool cover -func=coverage.out
 
+# Jobs doesn't shared it's local env variables. So Setup up variables you want to share and save it to a file. 
+# The file can be passed to other jobs as an artifacts
 environment:
   stage: prepare
   only:
