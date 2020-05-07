@@ -24,7 +24,6 @@ type bound struct {
 // geoTile is a single record of the ES geotile bucket aggregation result
 type geoTile struct {
 	Key                string `json:"key"`
-	DocCount           int    `json:"doc_count"`
 	SpatialAggregation struct {
 		Value float64 `json:"value"`
 	} `json:"spatial_aggregation"`
@@ -195,4 +194,25 @@ func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Featu
 		}
 	}
 	return featureMap, nil
+}
+
+func normalize(geoTiles []geoTile, precision int) []geoTile {
+	var tiles []geoTile
+	for _, geoTile := range geoTiles {
+		tiles = append(tiles, divideTile(geoTile, precision)...)
+	}
+	return geoTiles
+}
+
+// divideTile divides the tile into 4^level smaller ones with same value
+func divideTile(tile geoTile, level int) []geoTile {
+	if level == 0 {
+		return []geoTile{tile}
+	}
+	var tiles []geoTile
+	tiles = append(tiles, divideTile(tile, level-1)...)
+	tiles = append(tiles, divideTile(tile, level-1)...)
+	tiles = append(tiles, divideTile(tile, level-1)...)
+	tiles = append(tiles, divideTile(tile, level-1)...)
+	return tiles
 }
