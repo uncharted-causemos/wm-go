@@ -1,3 +1,7 @@
+#
+# Use docker multistage builds by having intermediate builder image to keep final image size small
+# Check https://docs.docker.com/develop/develop-images/multistage-build/ for more details
+#
 ############################
 # STEP 1 build executable binary
 ############################
