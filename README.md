@@ -24,3 +24,8 @@ Run the server:
 ```
 make run
 ```
+
+## Note on CI/CD Workflows
+  - Linting and test runs when there's a merge requests or push to master.
+  - Docker image with latest tag will be created and pushed to the registry when changes are committed to master.
+  - Docker image with a tag (eg. 0.1.1) will be created (and pushed to the registry) and will be deployed to openstack instance when a commit is tagged.

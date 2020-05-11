@@ -3,6 +3,7 @@ package env
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/kelseyhightower/envconfig"
@@ -20,13 +21,18 @@ type Specification struct {
 
 // Load imports the environment variables and returns them in an Specification.
 func Load(envFile string) (*Specification, error) {
-	err := godotenv.Load(envFile)
-	if err != nil {
-		return nil, fmt.Errorf("Error loading %s file: %v", envFile, err)
+
+	env := os.Getenv("WM_MODE")
+	// if no env, load environment file from the .env file, otherwise (in production) just check existing host environment
+	if "" == env {
+		err := godotenv.Load(envFile)
+		if err != nil {
+			return nil, fmt.Errorf("Error loading %s file: %v", envFile, err)
+		}
 	}
 
 	var s Specification
-	err = envconfig.Process("wm", &s)
+	err := envconfig.Process("wm", &s)
 	if err != nil {
 		return nil, fmt.Errorf("Error processing environment config: %v", err)
 	}
