@@ -251,6 +251,7 @@ func divideTile(tile geoTile, level uint32) []geoTile {
 		return []geoTile{tile}
 	}
 	var tiles []geoTile
+	// Details on tile calculation: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Subtiles
 	topLeft := geoTile{
 		Key:                fmt.Sprintf("%d/%d/%d", z+1, 2*x, 2*y),
 		SpatialAggregation: tile.SpatialAggregation,
