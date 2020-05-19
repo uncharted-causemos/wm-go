@@ -38,31 +38,6 @@ type geoTilesResult struct {
 	data  []geoTile
 }
 
-var modelMaxPrecision = map[string]uint32{
-	"G-Range":            10,
-	"consumption_model":  14,
-	"asset_wealth_model": 14,
-	"malnutrition_model": 15,
-	"population_model":   15,
-	"PIHM":               16,
-	//
-	// Note: could not figure out max precision for following modles since we don't have them in our es currently
-	//
-	// "cropland_model":          99,
-	// "world_population_africa": 99,
-	// "CHIRPS":                  99,
-	// "flood_index_model":       99,
-	// "DSSAT":                   99,
-	// "APSIM":                   99,
-	// "CLEM":                    99,
-	// "lpjml":                   99,
-	// "lpjml_historic":          99,
-	// "yield_anomalies_lpjml":   99,
-	// "FSC":                     99,
-	// "market_price_model":      99,
-	// "multi_twist":             99,
-}
-
 // GetTile returns the tile containing model run output specified by the spec
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
@@ -111,7 +86,7 @@ func (es *ES) getRunOutput(bound bound, zoom uint32, spec wm.TileDataSpec) (chan
 		b, _ := json.Marshal(bound)
 		// Target precision for the results, + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
 		precision := zoom + 6
-		maxPrecision, ok := modelMaxPrecision[spec.Model]
+		maxPrecision, ok := modelMaxPrecision[strings.ToLower(spec.Model)]
 		if !ok {
 			maxPrecision = precision
 		}
