@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -24,7 +25,6 @@ type bound struct {
 // geoTile is a single record of the ES geotile bucket aggregation result
 type geoTile struct {
 	Key                string `json:"key"`
-	DocCount           int    `json:"doc_count"`
 	SpatialAggregation struct {
 		Value float64 `json:"value"`
 	} `json:"spatial_aggregation"`
@@ -32,23 +32,22 @@ type geoTile struct {
 
 // geoTilesResult is the ES geotile bucket aggregation result
 type geoTilesResult struct {
-	bound     bound
-	precision int
-	spec      wm.TileDataSpec
-	data      []geoTile
+	bound bound
+	zoom  int
+	spec  wm.TileDataSpec
+	data  []geoTile
 }
 
 // GetTile returns the tile containing model run output specified by the spec
 func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
-	precision := zoom + 6 // + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
 
 	var errChs []chan error
 	var resChs []chan geoTilesResult
 	var results []geoTilesResult
 
 	for _, spec := range specs {
-		res, err := es.getRunOutput(bound(tile.Bound()), precision, spec)
+		res, err := es.getRunOutput(bound(tile.Bound()), zoom, spec)
 		errChs = append(errChs, err)
 		resChs = append(resChs, res)
 	}
@@ -72,7 +71,8 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 }
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
-func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) (chan geoTilesResult, chan error) {
+func (es *ES) getRunOutput(bound bound, zoom uint32, spec wm.TileDataSpec) (chan geoTilesResult, chan error) {
+	// TODO: Cache the result of this function since this is resource/compute intensive
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
@@ -84,11 +84,19 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 			return
 		}
 		b, _ := json.Marshal(bound)
+		// Target precision for the results, + 6 precision results 4096 cells in the bound. More details: https://wiki.openstreetmap.org/wiki/Zoom_levels
+		precision := zoom + 6
+		maxPrecision, ok := modelMaxPrecision[strings.ToLower(spec.Model)]
+		if !ok {
+			maxPrecision = precision
+		}
+		// let output precision be >= zoom and <= maxPrecision
+		outputPrecision := math.Max(float64(zoom), math.Min(float64(maxPrecision), float64(precision)))
 		data := map[string]interface{}{
 			"RunID":       spec.RunID,
 			"Feature":     spec.Feature,
 			"Bound":       string(b),
-			"Precision":   precision,
+			"Precision":   outputPrecision,
 			"StartTime":   startTime.Format(time.RFC3339),
 			"EndTime":     startTime.AddDate(0, 1, 0).Format(time.RFC3339), // Add a month since we want monthly data
 			"Aggregation": "avg",
@@ -161,16 +169,17 @@ func (es *ES) getRunOutput(bound bound, precision uint32, spec wm.TileDataSpec) 
 
 		buckets := gjson.Get(body, "aggregations.geotiled.buckets").String()
 		result := geoTilesResult{
-			bound:     bound,
-			precision: int(precision),
-			spec:      spec,
-			data:      []geoTile{},
+			bound: bound,
+			zoom:  int(zoom),
+			spec:  spec,
+			data:  []geoTile{},
 		}
 		if err := json.Unmarshal([]byte(buckets), &result.data); err != nil {
 			er <- err
 			return
 		}
 		er <- nil
+		result.data = subDivideTiles(result.data, precision)
 		out <- result
 	}()
 	return out, er
@@ -195,4 +204,48 @@ func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Featu
 		}
 	}
 	return featureMap, nil
+}
+
+// subDivideTiles divides each tile of geoTiles into subdivided tiles at given precision and returns the result.
+// If tile precision(zoom level) of given tiles >= precision, just returns the original geoTiles
+func subDivideTiles(geoTiles []geoTile, precision uint32) []geoTile {
+	var tiles []geoTile
+	for _, geoTile := range geoTiles {
+		tiles = append(tiles, divideTile(geoTile, precision)...)
+	}
+	return tiles
+}
+
+// divideTile divides the tile into 4^level smaller subtiles
+// For given tile with zoom level 1 and 2 as level param, it will produce 16 (4^2) subtiles of zoom level 3
+func divideTile(tile geoTile, level uint32) []geoTile {
+	var z, x, y uint32
+	fmt.Sscanf(tile.Key, "%d/%d/%d", &z, &x, &y)
+
+	if level <= z {
+		return []geoTile{tile}
+	}
+	var tiles []geoTile
+	// Details on tile calculation: https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Subtiles
+	topLeft := geoTile{
+		Key:                fmt.Sprintf("%d/%d/%d", z+1, 2*x, 2*y),
+		SpatialAggregation: tile.SpatialAggregation,
+	}
+	topRight := geoTile{
+		Key:                fmt.Sprintf("%d/%d/%d", z+1, 2*x+1, 2*y),
+		SpatialAggregation: tile.SpatialAggregation,
+	}
+	bottomLeft := geoTile{
+		Key:                fmt.Sprintf("%d/%d/%d", z+1, 2*x, 2*y+1),
+		SpatialAggregation: tile.SpatialAggregation,
+	}
+	bottomRight := geoTile{
+		Key:                fmt.Sprintf("%d/%d/%d", z+1, 2*x+1, 2*y+1),
+		SpatialAggregation: tile.SpatialAggregation,
+	}
+	tiles = append(tiles, divideTile(topLeft, level-1)...)
+	tiles = append(tiles, divideTile(topRight, level-1)...)
+	tiles = append(tiles, divideTile(bottomLeft, level-1)...)
+	tiles = append(tiles, divideTile(bottomRight, level-1)...)
+	return tiles
 }
