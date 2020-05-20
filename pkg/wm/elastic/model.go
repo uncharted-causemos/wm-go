@@ -32,7 +32,8 @@ var modelMaxPrecision = map[string]uint32{
 	PIHM:         16,
 
 	// Note: could not figure out or test max precision for following modles since we don't have them in our es currently
-	// Update theses accordingly when models are available in the data base
+	// Update theses accordingly when models are available in the data bas:w
+	// Might want to look at https://gitlab.uncharted.software/WM/wm-maas-ingest/blob/master/pkg/maas/model/resolutions.go for model resolution
 	APSIM:                 99,
 	CHIRPS:                99,
 	CLEM:                  99,
