@@ -136,3 +136,6 @@ openstack-deploy:
     - echo "Clean up previous wm-go images"
     - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker rmi $(docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
     - echo "wm-go ${DOCKER_TAG} is successfully deployed!"
+  environment:
+    name: openstack
+    url: http://$OPENSTACK_IP:4200
