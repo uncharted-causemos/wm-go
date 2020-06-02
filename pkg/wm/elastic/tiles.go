@@ -24,10 +24,12 @@ type bound struct {
 
 // geoTile is a single record of the ES geotile bucket aggregation result
 type geoTile struct {
-	Key                string `json:"key"`
-	SpatialAggregation struct {
-		Value float64 `json:"value"`
-	} `json:"spatial_aggregation"`
+	Key                string             `json:"key"`
+	SpatialAggregation geoTileAggregation `json:"spatial_aggregation"`
+}
+
+type geoTileAggregation struct {
+	Value float64 `json:"value"`
 }
 
 // geoTilesResult is the ES geotile bucket aggregation result
@@ -60,7 +62,7 @@ func (es *ES) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error)
 		results = append(results, <-r)
 	}
 
-	featureMap, err := es.createFeatures(results)
+	featureMap, err := createFeatures(results)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +188,7 @@ func (es *ES) getRunOutput(bound bound, zoom uint32, spec wm.TileDataSpec) (chan
 }
 
 // createFeatures processes and merges the results and returns a map of geojson feature
-func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Feature, error) {
+func createFeatures(results []geoTilesResult) (map[string]geojson.Feature, error) {
 	featureMap := map[string]geojson.Feature{}
 	for _, result := range results {
 		for _, gt := range result.data {
@@ -209,7 +211,7 @@ func (es *ES) createFeatures(results []geoTilesResult) (map[string]geojson.Featu
 // subDivideTiles divides each tile of geoTiles into subdivided tiles at given precision and returns the result.
 // If tile precision(zoom level) of given tiles >= precision, just returns the original geoTiles
 func subDivideTiles(geoTiles []geoTile, precision uint32) []geoTile {
-	var tiles []geoTile
+	tiles := []geoTile{}
 	for _, geoTile := range geoTiles {
 		tiles = append(tiles, divideTile(geoTile, precision)...)
 	}
@@ -243,9 +245,9 @@ func divideTile(tile geoTile, level uint32) []geoTile {
 		Key:                fmt.Sprintf("%d/%d/%d", z+1, 2*x+1, 2*y+1),
 		SpatialAggregation: tile.SpatialAggregation,
 	}
-	tiles = append(tiles, divideTile(topLeft, level-1)...)
-	tiles = append(tiles, divideTile(topRight, level-1)...)
-	tiles = append(tiles, divideTile(bottomLeft, level-1)...)
-	tiles = append(tiles, divideTile(bottomRight, level-1)...)
+	tiles = append(tiles, divideTile(topLeft, level)...)
+	tiles = append(tiles, divideTile(topRight, level)...)
+	tiles = append(tiles, divideTile(bottomLeft, level)...)
+	tiles = append(tiles, divideTile(bottomRight, level)...)
 	return tiles
 }
