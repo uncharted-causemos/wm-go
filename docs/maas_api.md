@@ -325,22 +325,12 @@ Response:
 ]
 ```
 
-### GET /runs
+### GET /model/{modelId}/runs
+Get all runs for the model
 
 #### Parameters
 
 #### Example
-
-### Get /runs/facets
-
-#### Parameters
- - **filters** fliters object eg. `filters={ clauses: [ { field: "model", isNot: false, operand: "or", values: ["DSSAT"] }]`
- - **facets** list of facet(run parameter) names
-
-#### Example
-
-```
-```
 
 ### GET /output/{runId}/timeseries
 Temporal timeseries aggregation of the ouput with given run ID
