@@ -196,13 +196,13 @@ Model output
 
 | Field  | Type | Description | ES Mapping
 | ------------- | ------------- | ------------- | ------------- |
-| `geo`  | string | Run ID  | keyword |
+| `geo`  | string | Lat lng, `{lat, lon}`  | geo_point |
 | `model`  | string | Model name | keyword |
 | `run_id`  | string | Model run Id | keyword |
-| `timestamp`  | timestamp | | date
-| `region`  | timestamp | | date
-| `country`  | timestamp | | date
-| `state`  | timestamp | | date
+| `timestamp`  | timestamp | Timestamp | date
+| `region`  | string  | Region | keyword
+| `country`  |  | | 
+| `state`  |  | | 
 
 #### Example
 
