@@ -1,4 +1,4 @@
-# Resources
+# ES Resources
 
 ## Datacube 
 Data cube contains all aggregated metadata for model output / indicator useful for faceting/searching. 
@@ -25,6 +25,8 @@ Data cube contains all aggregated metadata for model output / indicator useful f
 | `concepts[].score`  | float | concept relevance score to this model output | float |
 | `region` | string | name of the region that the data cube (model output) belongs to | keyword |
 | `period` | object | date range that's covered by the output, `{ gte, lte }` | date_range |
+
+***TODO:*** Add indicator metadata and update fields
 
 #### Example: 
 ```
@@ -116,7 +118,7 @@ Data cube contains all aggregated metadata for model output / indicator useful f
 }
 ```
 #### Important Notes:
-  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`. Or maybe consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` especially if output covers multiple regions.
+  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`. Or maybe consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions.
   * `period` may need to be a list of periods, if model output has multiple runs with different time intervals
   * Having more fields that can be used for searching and faceting on would be nice. eg.  `metrics`, `items`, `source` that we don't currently have or not able to retrieve. 
 
@@ -186,6 +188,28 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 }
 ```
 
+## Output
+Model output
+
+***TODO:*** Define model output schema here
+#### Fields 
+
+| Field  | Type | Description | ES Mapping
+| ------------- | ------------- | ------------- | ------------- |
+| `geo`  | string | Run ID  | keyword |
+| `model`  | string | Model name | keyword |
+| `run_id`  | string | Model run Id | keyword |
+| `timestamp`  | timestamp | | date
+| `region`  | timestamp | | date
+| `country`  | timestamp | | date
+| `state`  | timestamp | | date
+
+#### Example
+
+```
+```
+
+
 # Causemos REST API for new Data view
 
 ### GET /datacubes
@@ -232,8 +256,8 @@ Response:
         ...
       ],
       "concepts": [{
-        "name": "<concept name>",
-        "score": "<score>"
+        "name": "wm/concept/causal_factor/agriculture/crop_production",
+        "score": "0.6544816493988037"
       }],
 
       "region": "Ethiopia",
@@ -258,14 +282,28 @@ Response:
 #### Example
 
 ```
+Request:
+  /datacubes/facets?facets=["parameters.name", "region"]&search=crop&filters={ clauses: [ { field: "category", isNot: false, operand: "or", values: ["Economic"] }, { field: "parameters.name", isNot: false, operand: "or", values: ["rainfall", "fertilizer" ] } }]}}
+
+Response:
 
 ```
 
 
-GET /model/{model}/parameters
+### GET /models/{model}/parameters
+Mirrors `https://model-service.worldmodelers.com/model_parameters/{ModelName}`
+
+#### Path
+ - **model** model name
 
 
-Example
+#### Example
+```
+Request:
+
+GET /model/DSSAT/parameters
+
+Response: 
 [
   {
     "default": "05-20",
@@ -283,28 +321,35 @@ Example
     "name": "planting_window_shift",
     "type": "NumberParameter"
   }
+	...
 ]
+```
 
+### GET /runs
 
-GET /runs
+#### Parameters
 
-Parameters
+#### Example
 
-Get /runs/facets
+### Get /runs/facets
 
-Parameters
+#### Parameters
+ - **filters** fliters object eg. `filters={ clauses: [ { field: "model", isNot: false, operand: "or", values: ["DSSAT"] }]`
+ - **facets** list of facet(run parameter) names
 
-filters: list of filters
-facets: list of facet names
+#### Example
 
-example: 
+```
+```
 
+### GET /output/{runId}/timeseries
+Temporal timeseries aggregation of the ouput with given run ID
 
+### GET /output/tiles
+MVT tile representation of the model output
 
-GET /runs/<runId>/timeseries
-
-
-
-
-
-
+#### Parameters
+ - **specs** list of tile specs. eg. `specs=[
+						{"model":"population", "runId":"rid", "feature":"f1", "date":"2020-01", "valueProp": "v1"},
+					  {"model":"DSSAT", "runId":"rid2", "feature":"f2", "date":"2020-02", "valueProp": "v2"}
+					]`
