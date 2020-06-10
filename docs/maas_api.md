@@ -1,7 +1,7 @@
 # ES Resources
 
 ## Datacube 
-Data cube contains all aggregated metadata for model output / indicator useful for faceting/searching. 
+Data cube is basically aggregated metadata for model output / indicator useful for faceting/searching. 
 
 #### Fields 
 
@@ -199,15 +199,17 @@ Model output
 | `geo`  | string | Lat lng, `{lat, lon}`  | geo_point |
 | `model`  | string | Model name | keyword |
 | `run_id`  | string | Model run Id | keyword |
-| `timestamp`  | timestamp | Timestamp | date
-| `region`  | string  | Region | keyword
-| `country`  |  | | 
-| `state`  |  | | 
+| `timestamp`  | timestamp | Timestamp | date |
+| `region`  | string  | Region where the points belong to | keyword
+... More
 
 #### Example
 
 ```
 ```
+#### Important Notes:
+  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps. 
+  * `region` - We may want to have multiple fields for different level of geographical regions, like, `county`, `state`, etc.
 
 
 # Causemos REST API for new Data view
