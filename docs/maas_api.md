@@ -208,7 +208,7 @@ Model output
 ```
 ```
 #### Important Notes:
-  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps. 
+  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps using average but it would be ideal to use the default agg function set by modellers.
   * `region` - We may want to have multiple fields for different level of geographical regions, like, `county`, `state`, etc.
 
 
