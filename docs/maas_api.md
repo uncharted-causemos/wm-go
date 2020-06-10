@@ -28,7 +28,7 @@ Data cube is basically aggregated metadata for model output / indicator useful f
 
 ***TODO:*** Add indicator metadata and update fields
 
-#### Example: 
+#### Example
 ```
  {
 	"type": "model",
@@ -191,7 +191,7 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 ## Output
 Model output
 
-***TODO:*** Define model output schema here
+***TODO:*** Define model output schema here. We probably don't want Galois to store this in their ES since model output data would be massive and the cost is expensive. 
 #### Fields 
 
 | Field  | Type | Description | ES Mapping
@@ -208,7 +208,7 @@ Model output
 ```
 ```
 #### Important Notes:
-  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps using average but it would be ideal to use the default agg function set by modellers.
+  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps using average but it would be ideal to use the default agg function set by expert modellers.
   * `region` - We may want to have multiple fields for different level of geographical regions, like, `county`, `state`, etc.
 
 
@@ -331,8 +331,8 @@ Response:
 Get all runs for the model
 
 #### Parameters
- - **sort_by** sort by provided field
- - **limit** limit
+ - **sort_by** Sort the runs by the provided sort_by field
+ - **limit** Limits the # of results
 
 #### Example
 
@@ -343,7 +343,4 @@ Temporal timeseries aggregation of the ouput with given run ID
 MVT tile representation of the model output
 
 #### Parameters
- - **specs** list of tile specs. eg. `specs=[
-						{"model":"population", "runId":"rid", "feature":"f1", "date":"2020-01", "valueProp": "v1"},
-					  {"model":"DSSAT", "runId":"rid2", "feature":"f2", "date":"2020-02", "valueProp": "v2"}
-					]`
+ - **specs** (required) List of output selection specs for the output to be included in the tile. eg. `specs=[{"model":"G-Range","runId":"062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78","feature":"total_anomaly_herbage_prodn","date":"2019-04-01T00:00:00.000Z","valueProp":"G-Range:total_anomaly_herbage_prodn"},{"model":"malnutrition_model","runId":"8e62caa28c3132c4a8e6042a83a3ce0c03c86d94a764e2a13b55b484d985eecb","feature":"malnutrition cases","date":"2018-05-01T00:00:00.000Z","valueProp":"malnutrition_model:malnutrition cases"}]`
