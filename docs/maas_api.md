@@ -277,7 +277,7 @@ Response:
 #### Parameters
  - **search** search term used for text matching on text type fields in addition to filters
  - **filters** fliters object eg. `filters={ clauses: [ { field: "category", isNot: false, operand: "or", values: ["Economic"] }, { field: "parameters.name", isNot: false, operand: "or", values: ["rainfall", "fertilizer" ] } }]}`
-* **facets** list of facet(attribute) names
+ - **facets** list of facet(attribute) names
 
 #### Example
 
@@ -329,13 +329,15 @@ Response:
 Get all runs for the model
 
 #### Parameters
+ - **sort_by** sort by provided field
+ - **limit** limit
 
 #### Example
 
 ### GET /output/{runId}/timeseries
 Temporal timeseries aggregation of the ouput with given run ID
 
-### GET /output/tiles
+### GET /output/tiles/{z}/{x}/{y}
 MVT tile representation of the model output
 
 #### Parameters
