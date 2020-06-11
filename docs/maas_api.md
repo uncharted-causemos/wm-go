@@ -320,10 +320,32 @@ Response:
 
 ```
 Request:
-  /datacubes/facets?facets=["parameters.name", "region"]&search=crop&filters={ clauses: [ { field: "category", isNot: false, operand: "or", values: ["Economic"] }, { field: "parameters.name", isNot: false, operand: "or", values: ["rainfall", "fertilizer" ] } }]}}
+  /datacubes/facets?facets=["parameters.name", "country"]&search=crop&filters={ clauses: [ { field: "category", isNot: false, operand: "or", values: ["Economic"] }, { field: "parameters.name", isNot: false, operand: "or", values: ["rainfall", "fertilizer" ] } }]}}
 
 Response:
-
+{
+	"parameters.name": [
+		{
+			"key": "rainfall",
+			"count" 12
+		},
+		{
+			"key": "fertilizer",
+			"count" 4
+		},
+		...
+	],
+	"country": [
+		{
+			"key": "Ethiopia",
+			"count": 43
+		},
+		{
+			"key": "South Sudan",
+			"count": 2
+		}
+	]
+}
 ```
 
 
