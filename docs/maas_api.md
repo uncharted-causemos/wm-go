@@ -1,7 +1,8 @@
-# ES Resources
-
-## Datacube 
-Data cube is basically aggregated metadata for model output / indicator useful for faceting/searching. 
+# Resources
+Preferably we want to have all the resources for metadata in ES for easier searching/querying. 
+Following resources are new or updated ones that would be needed by Causmos in addition to the existing ones current Maas api covers (eg. `Model` `Parameters`, `Concept Mapping` etc)
+## Datacube (ES) 
+Datacube is basically aggregated metadata for the model output / indicator useful for faceting/searching. 
 
 #### Fields 
 
@@ -118,11 +119,11 @@ Data cube is basically aggregated metadata for model output / indicator useful f
 }
 ```
 #### Important Notes:
-  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`. Or maybe consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions.
+  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`, `city`, `admin1`, or `admin2`. Also consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions.
   * `period` may need to be a list of periods, if model output has multiple runs with different time intervals
   * Having more fields that can be used for searching and faceting on would be nice. eg.  `metrics`, `items`, `source` that we don't currently have or not able to retrieve. 
 
-## Run
+## Run (ES)
 Model run with parameters/configs used for the run. (ie. Run results in current maas api)
 
 #### Fields 
@@ -136,6 +137,9 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 | `parameters[].type`  | string | Parameter type | keyword
 | `parameters[].value`  | string | Parameter value | keyword
 | `timestamp`  | timestamp | Epoch timestamp when the model run was initiated | date
+| `status`  | string  | Run status eg. ["SUCCESS", "FAIL", "PENDING"] | string
+| `output`  | string | URI for accessing raw output (eg. S3 uri) | string |
+| `output_normalized`  | timestamp | URI for accessing normalized output (eg. s3 uri) | string
 
 #### Example
 ```
@@ -184,32 +188,64 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 			"type": "NumberParameter"
 		}
 	],
-	"timestamp": 0
+	"timestamp": 0,
+	"status": "SUCCESS",
+	"output": "https://s3.amazonaws.com/world-modelers/results/DSSAT_results/pp_ETH_Oroima_Teff_Meher__rf_0N__fen_tot25__erain1.0__pfrst0.csv"
+	"output_normalized: "https://s3.amazonaws.com/world-modelers/results_normalized/DSSAT/671e299cff0d6ee2e16d47c0e8f4ab633cb79525c8bb5e4f8f48a1c33ce757fa.csv"
 }
 ```
 
-## Output
-Model output
+## Output (AWS S3)
+Normalized model output data. Preferably in S3 bucket and indexed by model name and runId (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78.(csv|jsonl)`), since the amount of the data is huge and it would be costly to have in under ES.
 
-***TODO:*** Define model output schema here. We probably don't want Galois to store this in their ES since model output data would be massive and the cost is expensive. 
 #### Fields 
 
-| Field  | Type | Description | ES Mapping
-| ------------- | ------------- | ------------- | ------------- |
-| `geo`  | string | Lat lng, `{lat, lon}`  | geo_point |
-| `model`  | string | Model name | keyword |
-| `run_id`  | string | Model run Id | keyword |
-| `timestamp`  | timestamp | Timestamp | date |
-| `region`  | string  | Region where the points belong to | keyword
-... More
+| Field  | Type | Description |
+| ------------- | ------------- | ------------- |
+| `run_id`  | string | Model run Id |
+| `model`  | string | Model name |
+| `feature` (or output)  | string | model output variable name |
+| `feature_value` (or output_value)  | string | model output value |
+| `country`  | string  | Country where the point belong to |
+| `state`  | string  | State where the point belong to |
+| `city`  | string  | City where the point belong to |
+| `admin1`  | string  | First level admin region (eg. state, province etc) |
+| `admin2`  | string  | Second level admin region (eg. county, district etc) |
+| `geohash[1..8]`  | string  | Different levels of geohashes |
+| `lat`  | float | Latitude |
+| `lng`  | float | Longitude  |
+| `timestamp`  | timestamp | Timestamp |
 
 #### Example
 
 ```
+{
+	"id": "1048401765-0-0",
+	"run_id": "df3f4f29f433ca66ca71cf5764c757559a1f1268a53aba44255e329c128cb263",
+	"model": "cropland_model",
+	"country": "Ethiopia",
+	"state": "Oromia",
+	"admin1": "Oromia",
+	"admin2": "Borena",
+	"city": "",
+	"feature_name": "cropland",
+	"feature_value": 0.004375,
+	"lat": 3.92128,
+	"lon": 38.057093
+	"geohash3": "sbe",
+	"geohash4": "sben",
+	"geohash5": "sben6",
+	"geohash6": "sben61",
+	"geohash7": "sben61b",
+	"geohash8": "sben61b7",
+	"timestamp": "2012-01-01T00:00:00Z",
+	"updated_at": "0001-01-01T00:00:00Z"
+	"created_at": "2020-01-16T04:27:56Z",
+}
 ```
 #### Important Notes:
   * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps using average but it would be ideal to use the default agg function set by expert modellers.
-  * `region` - We may want to have multiple fields for different level of geographical regions, like, `county`, `state`, etc.
+  * `region` - We may not need to have `state` or `county` if `admin[1-2]` covers all. It might be better to have division names normalized just using admin[] since different country uses different name for division levels.
 
 
 # Causemos REST API for new Data view
