@@ -9,11 +9,12 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 | Field  | Type | Description | ES Mapping
 | ------------- | ------------- | ------------- | ------------- |
 | `type`  | enum | type of data cube, 'model' or 'indicator'  | keyword |
-| `model`  | string | model name | keyword 
+| `model`  | string | output model name | keyword 
 | `category`  | []string | list of model category eg. ["Agriculture", "Economic"] | keyword |
 | `model_description` | string |  model description  | text |
 | `label` | string |  model label  | text |
 | `maintainer` | string |  model maintainer/source  | text |
+| `source` | string |  model/indicator source (eg. FAO) | keyword |
 | `output_name`  | string | output variable name  | keyword |
 | `output_description`  | string | output description  | text | 
 | `output_units`  | string | output units | keyword |
@@ -21,13 +22,11 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 | `parameters[].name` | string | parameter name | keyword |
 | `parameters[].type` | string | parameter type | keyword |
 | `parameters[].description` | string | parameter description | text |
-| `concepts`  | []object | list of relevant concepts mapped to the output, `[]{ name string, score number }` | nested |
+| `concepts`  | []object | list of relevant concepts mapped to the indicator/model output, `[]{ name string, score number }` | nested |
 | `concepts[].name`  | string | concept name | keyword or text? |
-| `concepts[].score`  | float | concept relevance score to this model output | float |
+| `concepts[].score`  | float | concept relevance score to this model/indicator output | float |
 | `region` | string | name of the region that the data cube (model output) belongs to | keyword |
 | `period` | object | date range that's covered by the output, `{ gte, lte }` | date_range |
-
-***TODO:*** Add indicator metadata and update fields
 
 #### Example
 ```
@@ -121,7 +120,7 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 #### Important Notes:
   * `region` - We may want to have multiple fields for every regional levels like `country`, `state`, `city`, `admin1`, or `admin2`. Also consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions.
   * `period` may need to be a list of periods, if model output has multiple runs with different time intervals
-  * Having more fields that can be used for searching and faceting on would be nice. eg.  `metrics`, `items`, `source` that we don't currently have or not able to retrieve. 
+  * Any other metadata fields that can be used for searching and faceting on would be useful. Such as  `metrics`, `items`, or `source` that we don't currently have.
 
 ## Run (ES)
 Model run with parameters/configs used for the run. (ie. Run results in current maas api)
@@ -245,7 +244,7 @@ Normalized model output data. Preferably in S3 bucket and indexed by model name 
 ```
 #### Important Notes:
   * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated (preferably using agg function set by expert modeller) to certain resolution across all model outputs.
-  * `region` - We may not need `state` field  if `admin[1-2]` covers all. It might be better to have division names normalized just using admin[] since different country uses different name for division levels.
+  * `region` - We may not need `state` field  if `admin1[1-n]` covers all. It might be better to have division names normalized just using admin[1-n] since different country uses different name for division levels.
 
 
 # Causemos REST API for new Data view
