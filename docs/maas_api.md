@@ -244,8 +244,8 @@ Normalized model output data. Preferably in S3 bucket and indexed by model name 
 }
 ```
 #### Important Notes:
-  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated to certain resolution across all model outputs. Currently we aggregate the values to monthly timestamps using average but it would be ideal to use the default agg function set by expert modellers.
-  * `region` - We may not need to have `state` or `county` if `admin[1-2]` covers all. It might be better to have division names normalized just using admin[] since different country uses different name for division levels.
+  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated (preferably using agg function set by expert modeller) to certain resolution across all model outputs.
+  * `region` - We may not need `state` field  if `admin[1-2]` covers all. It might be better to have division names normalized just using admin[] since different country uses different name for division levels.
 
 
 # Causemos REST API for new Data view
