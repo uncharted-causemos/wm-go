@@ -25,7 +25,7 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 | `concepts`  | []object | list of relevant concepts mapped to the indicator/model output, `[]{ name string, score number }` | nested |
 | `concepts[].name`  | string | concept name | keyword or text? |
 | `concepts[].score`  | float | concept relevance score to this model/indicator output | float |
-| `region` | string | name of the region that the data cube (model output) belongs to | keyword |
+| `region` or (country, admin[1-n]) | string | name of the region that the data cube (model output) belongs to | keyword |
 | `period` | object | date range that's covered by the output, `{ gte, lte }` | date_range |
 
 #### Example
@@ -118,7 +118,7 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 }
 ```
 #### Important Notes:
-  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`, `city`, `admin1`, or `admin2`. Also consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions.
+  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`, `city`, `admin1`, or `admin2`. Also consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions at the same level.
   * `period` may need to be a list of periods, if model output has multiple runs with different time intervals
   * Any other metadata fields that can be used for searching and faceting on would be useful. Such as  `metrics`, `items`, or `source` that we don't currently have.
 
