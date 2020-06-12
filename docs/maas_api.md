@@ -178,6 +178,7 @@ Similar to current parameters model in current maas api but add parameter `units
 ### Example 
 ````
   {
+		"model": "DSSAT",
     "choices": [
       "Meher",
       "Belg"
@@ -188,6 +189,7 @@ Similar to current parameters model in current maas api but add parameter `units
     "type": "ChoiceParameter"
   },
   {
+		"model": "DSSAT",
     "default": 100,
     "description": "This a scalar between 0 and 200 which represents fertilizer in kg/ha. 100 is considered the  baseline amount (per management practice), so anything above 100 represents additional  fertilizer usage/availability and anything below 100 represents decreased fertilzer (per  management practice).",
     "maximum": 200,
