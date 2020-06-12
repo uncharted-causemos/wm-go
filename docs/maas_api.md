@@ -18,15 +18,16 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 | `output_name`  | string | output variable name  | keyword |
 | `output_description`  | string | output description  | text | 
 | `output_units`  | string | output units | keyword |
-| `parameters` | []object | list of model parameters, `[]{ name string, type string, description string }` | nested |
-| `parameters[].name` | string | parameter name | keyword |
-| `parameters[].type` | string | parameter type | keyword |
-| `parameters[].description` | string | parameter description | text |
+| `output_units_description`  | string | output units description (eg. meters)  | keyword | 
+| `parameters` | []string | list of model parameter names for the output | keyword |
+| `parameter_descriptions` | []string | list of model parameter descriptions to be used for text matching/searching | text |
 | `concepts`  | []object | list of relevant concepts mapped to the indicator/model output, `[]{ name string, score number }` | nested |
-| `concepts[].name`  | string | concept name | keyword or text? |
+| `concepts[].name`  | string | concept name | keyword |
 | `concepts[].score`  | float | concept relevance score to this model/indicator output | float |
-| `region` or (country, admin[1-n]) | string | name of the region that the data cube (model output) belongs to | keyword |
-| `period` | object | date range that's covered by the output, `{ gte, lte }` | date_range |
+| `country`| []string | Countries covered by the output | keyword |
+| `admin1`| []string | First level admin regions covered by the output | keyword |
+| `admin2`| []string | Second level admin regions covered by the output | keyword |
+| `periods` | []daterange | date ranges that's covered by the output runs, `[]{ gte, lte }` | date_range |
 
 #### Example
 ```
@@ -46,79 +47,45 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 	"output_description": "Harvested weight at harvest (kg/ha)",
 	"output_name": "HWAH",
 	"output_units": "kg/ha",
+	"output_units_description": ""
 
-	"parameters": [{
-			"description": "The season for the given run. May supercede planting_start and planting_end.",
-			"name": "season",
-			"type": "ChoiceParameter"
-		},
-		{
-			"description": "The crop for the given model run.",
-			"name": "crop",
-			"type": "ChoiceParameter"
-		},
-		{
-			"description": "The number of pixel predictions DSSAT will make. Setting samples to 0 returns the  entire geography (all Ethiopia) which is quite large.",
-			"name": "samples",
-			"type": "NumberParameter"
-		},
-		{
-			"description": "The management practice to model. maize_rf_highN corresponds to a high nitrogen management  practice. maize_irrig corresponds to a high nitrogen, irrigated management practice. maize_rf_0N  corresponds to a subsistence management practice. maize_rf_lowN corresponds to a low nitrogen  managemet practice. If set to combined, all practices are produced. ",
-			"name": "management_practice",
-			"type": "ChoiceParameter"
-		},
-		{
-			"description": "The year to begin the simulation. The earliest possible year to begin is 1984 and the latest is  2019.",
-			"name": "start_year",
-			"type": "TimeParameter"
-		},
-		{
-			"description": "The number of years to run the simulation. If start_year + number_years - 1 > 2018 then this  will be set such that your simulation runs through 2018.",
-			"name": "number_years",
-			"type": "TimeParameter"
-		},
-		{
-			"description": "The degree to perturb rainfall from the baseline model. This should be a real number,  which, if 0, would indicate no rainfall in any district. If 1 it would indicate rainfall matching baseline estimates. 1.25 would indicate a 25% increase in rainfall from off the baseline estimate.",
-			"name": "rainfall",
-			"type": "NumberParameter"
-		},
-		{
-			"description": "This a scalar between 0 and 200 which represents fertilizer in kg/ha. 100 is considered the  baseline amount (per management practice), so anything above 100 represents additional  fertilizer usage/availability and anything below 100 represents decreased fertilzer (per  management practice).",
-			"name": "fertilizer",
-			"type": "NumberParameter"
-		},
-		{
-			"description": "This is the month and day in \"mm-dd\" format when planting should begin. This allows the modeler  to simulate various planting seasons (such as Belg and Maher).",
-			"name": "planting_start",
-			"type": "TimeParameter"
-		},
-		{
-			"description": "This is the month and day in \"mm-dd\" format when planting should end. This allows the modeler  to simulate various planting seasons (such as Belg and Maher). This must be after the  planting_start parameter.",
-			"name": "planting_end",
-			"type": "TimeParameter"
-		},
-		{
-			"description": "This is the number, in days, that the planting window was shifted",
-			"name": "planting_window_shift",
-			"type": "NumberParameter"
-		}
+	"parameters": ["season","crop","samples","management_practice","start_year","number_years","rainfall","fertilizer","planting_start", "planting_end","planting_window_shift"],
 
+	"parameter_descriptions": [
+		"The season for the given run. May supercede planting_start and planting_end.",
+		"The crop for the given model run.",
+		"The number of pixel predictions DSSAT will make. Setting samples to 0 returns the  entire geography (all Ethiopia) which is quite large.",
+		"The management practice to model. maize_rf_highN corresponds to a high nitrogen management  practice. maize_irrig corresponds to a high nitrogen, irrigated management practice. maize_rf_0N  corresponds to a subsistence management practice. maize_rf_lowN corresponds to a low nitrogen  managemet practice. If set to combined, all practices are produced. ",
+		"The year to begin the simulation. The earliest possible year to begin is 1984 and the latest is  2019.",
+		"The number of years to run the simulation. If start_year + number_years - 1 > 2018 then this  will be set such that your simulation runs through 2018.",
+		"The degree to perturb rainfall from the baseline model. This should be a real number,  which, if 0, would indicate no rainfall in any district. If 1 it would indicate rainfall matching baseline estimates. 1.25 would indicate a 25% increase in rainfall from off the baseline estimate.",
+		"This a scalar between 0 and 200 which represents fertilizer in kg/ha. 100 is considered the  baseline amount (per management practice), so anything above 100 represents additional  fertilizer usage/availability and anything below 100 represents decreased fertilzer (per  management practice).",
+		"This is the month and day in \"mm-dd\" format when planting should begin. This allows the modeler  to simulate various planting seasons (such as Belg and Maher).",
+		"This is the month and day in \"mm-dd\" format when planting should end. This allows the modeler  to simulate various planting seasons (such as Belg and Maher). This must be after the  planting_start parameter.",
+		"This is the number, in days, that the planting window was shifted"
 	],
 	"concepts": [{
 		"name": "wm/concept/causal_factor/agriculture/crop_production",
 		"score": "0.6544816493988037"
 	}],
 
-	"region": "Ethiopia",
+	"country": ["Ethiopia"],
+	"admin1": ["Oromia", "Somali", "Afar"],
+	"admin2": ["Borena", "Guji", "Bale", "Nogob", "... and more"],
 
-  "period": {
-    "gte": "2015-01",
-    "lte": "2016-02"
-  }
+  "periods": [
+		{
+			"gte": "2015-01",
+			"lte": "2016-02"
+		},
+		{
+			"gte": "2017-01",
+			"lte": "2019-02"
+		},
+	]
 }
 ```
 #### Important Notes:
-  * `region` - We may want to have multiple fields for every regional levels like `country`, `state`, `city`, `admin1`, or `admin2`. Also consider a list of regions (countries, states, etc). eg. `["Ethiopia", "South Sudan"]` if output covers multiple regions at the same level.
   * `period` may need to be a list of periods, if model output has multiple runs with different time intervals
   * Any other metadata fields that can be used for searching and faceting on would be useful. Such as  `metrics`, `items`, or `source` that we don't currently have.
 
@@ -136,6 +103,10 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 | `parameters[].type`  | string | Parameter type | keyword
 | `parameters[].value`  | string | Parameter value | keyword
 | `timestamp`  | timestamp | Epoch timestamp when the model run was initiated | date
+| `country`| []string | Countries covered by the run output | keyword |
+| `admin1`| []string | First level admin regions covered by the output | keyword |
+| `admin2`| []string | Second level admin regions covered by the output | keyword |
+| `period`| []daterange | Date range covered by the output, `{ gte, lte }` | date_range |
 | `status`  | string  | Run status eg. ["SUCCESS", "FAIL", "PENDING"] | string
 | `output`  | string | URI for accessing raw output (eg. S3 uri) | string |
 | `output_normalized`  | timestamp | URI for accessing normalized output (eg. s3 uri) | string
@@ -188,14 +159,24 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 		}
 	],
 	"timestamp": 0,
+
+	"country": ["Ethiopia"],
+	"admin1": ["Oromia", "Somali", "Afar"],
+	"admin2": ["Borena", "Guji", "Bale", "Nogob", "... and more"],
+  "period": {
+		"gte": "2015-01",
+		"lte": "2016-02"
+	},
 	"status": "SUCCESS",
 	"output": "https://s3.amazonaws.com/world-modelers/results/DSSAT_results/pp_ETH_Oroima_Teff_Meher__rf_0N__fen_tot25__erain1.0__pfrst0.csv"
-	"output_normalized: "https://s3.amazonaws.com/world-modelers/results_normalized/DSSAT/671e299cff0d6ee2e16d47c0e8f4ab633cb79525c8bb5e4f8f48a1c33ce757fa.csv"
+	"output_normalized: "https://s3.amazonaws.com/world-modelers/results_normalized/DSSAT/671e299cff0d6ee2e16d47c0e8f4ab633cb79525c8bb5e4f8f48a1c33ce757fa"
 }
 ```
+## Parameter
+
 
 ## Output (AWS S3)
-Normalized model output data. Preferably in S3 bucket and indexed by model name and runId (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78.(csv|jsonl)`), since the amount of the data is huge and it would be costly to have in under ES.
+Normalized model output data. Preferably in S3 bucket and files are indexed by model name, runId and month (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78/2018-01.parquet`). 
 
 #### Fields 
 
@@ -204,13 +185,13 @@ Normalized model output data. Preferably in S3 bucket and indexed by model name 
 | `run_id`  | string | Model run Id |
 | `model`  | string | Model name |
 | `feature` (or output)  | string | model output variable name |
-| `feature_value` (or output_value)  | string | model output value |
+| `feature_value` (or output_value)  | float | model output value |
 | `country`  | string  | Country where the point belong to |
 | `state`  | string  | State where the point belong to |
 | `city`  | string  | City where the point belong to |
 | `admin1`  | string  | First level admin region (eg. state, province etc) |
 | `admin2`  | string  | Second level admin region (eg. county, district etc) |
-| `geohash[1..8]`  | string  | Different levels of geohashes |
+| `adminN`  | string  | 1-n level admin region |
 | `lat`  | float | Latitude |
 | `lng`  | float | Longitude  |
 | `timestamp`  | timestamp | Timestamp |
@@ -231,12 +212,6 @@ Normalized model output data. Preferably in S3 bucket and indexed by model name 
 	"feature_value": 0.004375,
 	"lat": 3.92128,
 	"lon": 38.057093
-	"geohash3": "sbe",
-	"geohash4": "sben",
-	"geohash5": "sben6",
-	"geohash6": "sben61",
-	"geohash7": "sben61b",
-	"geohash8": "sben61b7",
 	"timestamp": "2012-01-01T00:00:00Z",
 	"updated_at": "0001-01-01T00:00:00Z"
 	"created_at": "2020-01-16T04:27:56Z",
@@ -244,7 +219,7 @@ Normalized model output data. Preferably in S3 bucket and indexed by model name 
 ```
 #### Important Notes:
   * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated (preferably using agg function set by expert modeller) to certain resolution across all model outputs.
-  * `region` - We may not need `state` field  if `admin1[1-n]` covers all. It might be better to have division names normalized just using admin[1-n] since different country uses different name for division levels.
+  * `state` - We may not need `state` field if `admin1[1-n]` covers. It might be better to have division names normalized just using admin[1-n] since different country uses different name for division levels.
 
 
 # Causemos REST API for new Data view
