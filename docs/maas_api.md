@@ -1,6 +1,6 @@
 # Resources
 Preferably we want to have all the resources for metadata in ES for easier searching/querying. 
-Following resources are new or updated ones that would be needed by Causmos in addition to the existing ones current Maas api covers (eg. `Model` `Parameters`, `Concept Mapping` etc)
+Following resources are new or updated ones that would be needed by Causmos in addition to the existing ones current Maas api covers (eg. `Model` `Concept Mapping` etc)
 ## Datacube (ES) 
 Datacube is basically aggregated metadata for the model output / indicator useful for faceting/searching. 
 
@@ -47,7 +47,7 @@ Datacube is basically aggregated metadata for the model output / indicator usefu
 	"output_description": "Harvested weight at harvest (kg/ha)",
 	"output_name": "HWAH",
 	"output_units": "kg/ha",
-	"output_units_description": ""
+	"output_units_description": "Kilogram per hectare"
 
 	"parameters": ["season","crop","samples","management_practice","start_year","number_years","rainfall","fertilizer","planting_start", "planting_end","planting_window_shift"],
 
@@ -106,7 +106,7 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 | `country`| []string | Countries covered by the run output | keyword |
 | `admin1`| []string | First level admin regions covered by the output | keyword |
 | `admin2`| []string | Second level admin regions covered by the output | keyword |
-| `period`| []daterange | Date range covered by the output, `{ gte, lte }` | date_range |
+| `period`| daterange | Date range covered by the output, `{ gte, lte }` | date_range |
 | `status`  | string  | Run status eg. ["SUCCESS", "FAIL", "PENDING"] | string
 | `output`  | string | URI for accessing raw output (eg. S3 uri) | string |
 | `output_normalized`  | timestamp | URI for accessing normalized output (eg. s3 uri) | string
@@ -173,10 +173,37 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 }
 ```
 ## Parameter
+Similar to current parameters model in current maas api but add parameter `units` and `units_description` for applicable ones. 
+
+### Example 
+````
+  {
+    "choices": [
+      "Meher",
+      "Belg"
+    ],
+    "default": "meher",
+    "description": "The season for the given run. May supercede planting_start and planting_end.",
+    "name": "season",
+    "type": "ChoiceParameter"
+  },
+  {
+    "default": 100,
+    "description": "This a scalar between 0 and 200 which represents fertilizer in kg/ha. 100 is considered the  baseline amount (per management practice), so anything above 100 represents additional  fertilizer usage/availability and anything below 100 represents decreased fertilzer (per  management practice).",
+    "maximum": 200,
+    "minumum": 0,
+		"units": "kg/ha",
+		"units_description: "Kilogram per hectare"
+    "name": "fertilizer",
+    "type": "NumberParameter"
+  },
+
+````
+
 
 
 ## Output (AWS S3)
-Normalized model output data. Preferably in S3 bucket and files are indexed by model name, runId and month (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78/2018-01.parquet`). 
+Normalized model output data. Preferably in S3 bucket and files are partitioned by model name, runId and month (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78/2018-01.parquet`). 
 
 #### Fields 
 
@@ -218,10 +245,8 @@ Normalized model output data. Preferably in S3 bucket and files are indexed by m
 }
 ```
 #### Important Notes:
-  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated (preferably using agg function set by expert modeller) to certain resolution across all model outputs.
+  * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated (preferably using agg function set by expert modeller) up to certain resolution across all model outputs.
   * `state` - We may not need `state` field if `admin1[1-n]` covers. It might be better to have division names normalized just using admin[1-n] since different country uses different name for division levels.
-
-
 # Causemos REST API for new Data view
 
 ### GET /datacubes
