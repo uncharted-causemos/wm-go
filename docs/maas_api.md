@@ -213,13 +213,13 @@ Preferably have other resources in ES that are not mentioned above like `Model`,
 		"concept": "wm/concept/causal_factor/agriculture/crop_production"
 		"score": 0.7293715476989746
 		"type": "output"
-		"id": "DSSAT-HWAH"
+		"target": "DSSAT-HWAH"
   },
   {
 		"concept": "<concept name>"
 		"score": "<relevance score>"
 		"type": "model|parameter|output"
-		"id": "model name | output id | parameter id"
+		"target": "model name | output id | parameter id"
   },
 	... 
 
