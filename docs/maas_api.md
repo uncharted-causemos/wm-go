@@ -226,7 +226,7 @@ Preferably have other resources in ES that are not mentioned above like `Model`,
 ````
 
 ## Output (AWS S3)
-Normalized model output data. Preferably in S3 bucket and files are partitioned by model name, runId and month (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78/2018-01.parquet`). 
+Normalized model output data. Preferably in S3 bucket and partitioned using parquet format. (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78/{partitioned_filename}.parquet`). 
 
 #### Fields 
 
