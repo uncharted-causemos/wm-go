@@ -175,6 +175,21 @@ Model run with parameters/configs used for the run. (ie. Run results in current 
 ## Parameter
 Similar to current parameters model in current maas api but add parameter `units` and `units_description` for applicable ones. 
 
+### Fields 
+
+| Field  | Type | Description | ES Mapping
+| ------------- | ------------- | ------------- | ------------- |
+| `model`  | string | Model | keyword |
+| `name`  | string | Parameter type | keyword
+| `description`  | string | Parameter description | keyword
+| `units`  | string | Parameter unit | keyword
+| `units_description`  | string | Parameter unit description | keyword
+| `type`  | enum | Parameter type (ie. ChoiceParameter, NumberParameter) | keyword
+| `maximum`  | number | Maximum number (if `type` is NumberParameter) | double
+| `minimum`  | number | Minimum number (if `type` is NumberParameter) | double
+| `choices`  | []string | Set of choices (if `type` is ChoiceParameter) | keyword |
+| `default`  | string | Default choice | keyword
+
 ### Example 
 ````
   {
@@ -204,6 +219,15 @@ Similar to current parameters model in current maas api but add parameter `units
 
 ## Other Resources (ES)
 Preferably have other resources in ES that are not mentioned above like `Model`, `Concept` or `Concept Mappings` that existing maas api provides.
+
+### Fields Concept Mapping
+
+| Field  | Type | Description | ES Mapping
+| ------------- | ------------- | ------------- | ------------- |
+| `concept`  | string | Concept name | keyword |
+| `score`  | number | Mapping score | float
+| `type`  | enum | Target type (ie. model, parameter, output) | keyword
+| `target`  | string | Target of mapping (ie. a model name, output id, or parameter id) | keyword
 
 ### Example 
 ````
