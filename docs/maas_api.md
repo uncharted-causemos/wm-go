@@ -202,7 +202,28 @@ Similar to current parameters model in current maas api but add parameter `units
 
 ````
 
+## Other Resources (ES)
+Preferably have other resources in ES that are not mentioned above like `Model`, `Concept` or `Concept Mappings` that existing maas api provides.
 
+### Example 
+````
+  Concept mapping example
+	One example uses case would be querying all available concept names for certain type, model, output etc.  
+  {
+		"concept": "wm/concept/causal_factor/agriculture/crop_production"
+		"score": 0.7293715476989746
+		"type": "output"
+		"id": "DSSAT-HWAH"
+  },
+  {
+		"concept": "<concept name>"
+		"score": "<relevance score>"
+		"type": "model|parameter|output"
+		"id": "model name | output id | parameter id"
+  },
+	... 
+
+````
 
 ## Output (AWS S3)
 Normalized model output data. Preferably in S3 bucket and files are partitioned by model name, runId and month (eg. `/DSSAT/062d9473d76a01db9f255e0807ce91b1f3ca6caba81b92a53ae530da9b6e2d78/2018-01.parquet`). 
