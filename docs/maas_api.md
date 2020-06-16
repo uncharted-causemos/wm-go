@@ -259,10 +259,8 @@ Normalized model output data. Preferably in S3 bucket and partitioned using parq
 | `run_id`  | string | Model run Id |
 | `model`  | string | Model name |
 | `feature` (or output)  | string | model output variable name |
-| `feature_value` (or output_value)  | float | model output value |
-| `country`  | string  | Country where the point belong to |
-| `state`  | string  | State where the point belong to |
-| `city`  | string  | City where the point belong to |
+| `value` (or output_value)  | float | model output value |
+| `admin0`  | string  | 0 level admin region ie. Country or nation level |
 | `admin1`  | string  | First level admin region (eg. state, province etc) |
 | `admin2`  | string  | Second level admin region (eg. county, district etc) |
 | `adminN`  | string  | 1-n level admin region |
@@ -274,26 +272,22 @@ Normalized model output data. Preferably in S3 bucket and partitioned using parq
 
 ```
 {
-	"id": "1048401765-0-0",
-	"run_id": "df3f4f29f433ca66ca71cf5764c757559a1f1268a53aba44255e329c128cb263",
+	"run_id": 	"df3f4f29f433ca66ca71cf5764c757559a1f1268a53aba44255e329c128cb263",
 	"model": "cropland_model",
-	"country": "Ethiopia",
-	"state": "Oromia",
+	"admin0": "Ethiopia",
 	"admin1": "Oromia",
 	"admin2": "Borena",
-	"city": "",
-	"feature_name": "cropland",
-	"feature_value": 0.004375,
+	"feature": "cropland",
+	"value": 0.004375,
 	"lat": 3.92128,
 	"lon": 38.057093
 	"timestamp": "2012-01-01T00:00:00Z",
-	"updated_at": "0001-01-01T00:00:00Z"
-	"created_at": "2020-01-16T04:27:56Z",
 }
 ```
 #### Important Notes:
   * `timestamp` - In order to enable comparison between model output, It's ideal to have this to be normalized and aggregated (preferably using agg function set by expert modeller) up to certain resolution across all model outputs.
-  * `state` - We may not need `state` field if `admin1[1-n]` covers. It might be better to have division names normalized just using admin[1-n] since different country uses different name for division levels.
+* `runId` or `model` may be omitted since s3 bucket file path likely includes them.
+
 # Causemos REST API for new Data view
 
 ### GET /datacubes
