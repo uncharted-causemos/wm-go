@@ -1,8 +1,11 @@
 package elastic
 
+import "gitlab.uncharted.software/WM/wm-go/pkg/wm"
+
 // Config defines the parameters needed to instantiate a KB.
 type Config struct {
-	Addr string
+	Addr         string
+	ModelService wm.ModelService
 }
 
 // init fills in defaults for missing config parameters.
