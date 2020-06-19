@@ -8,6 +8,7 @@ import (
 )
 
 const modelRunIndex = "model-run-parameters"
+const maxNumberOfRuns = 10000
 
 // GetModelRuns returns model runs
 func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
@@ -44,6 +45,7 @@ func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
 	}
 	res, err := es.client.Search(
 		es.client.Search.WithIndex(modelRunIndex),
+		es.client.Search.WithSize(maxNumberOfRuns),
 		es.client.Search.WithBody(buf),
 	)
 	if err != nil {
@@ -64,9 +66,9 @@ func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
 			})
 		}
 		run := &wm.ModelRun{
-			ID:        hit.Get("_source.run_id").String(),
-			Model:     model,
-			Parameter: parameters,
+			ID:         hit.Get("_source.run_id").String(),
+			Model:      model,
+			Parameters: parameters,
 		}
 		runs = append(runs, run)
 	}

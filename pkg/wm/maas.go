@@ -2,9 +2,9 @@ package wm
 
 // ModelRun represent a model run
 type ModelRun struct {
-	ID        string `json:"id"`
-	Model     string `json:"model"`
-	Parameter []ModelRunParameter
+	ID         string              `json:"id"`
+	Model      string              `json:"model"`
+	Parameters []ModelRunParameter `json:"parameters"`
 }
 
 // ModelRunParameter represent a model run parameter value
