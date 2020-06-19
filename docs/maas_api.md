@@ -390,18 +390,18 @@ Response:
 ```
 
 
-### GET /models/{model}/parameters
+### GET /models/{modelId}/parameters
 Mirrors `https://model-service.worldmodelers.com/model_parameters/{ModelName}`
 
 #### Path
- - **model** model name
+ - **modelId** model name
 
 
 #### Example
 ```
 Request:
 
-GET /model/DSSAT/parameters
+GET /models/DSSAT/parameters
 
 Response: 
 [
@@ -425,7 +425,7 @@ Response:
 ]
 ```
 
-### GET /model/{modelId}/runs
+### GET /models/{modelId}/runs
 Get all runs for the model
 
 #### Parameters
