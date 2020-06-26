@@ -13,6 +13,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/dgraph"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm/modelservice"
 	"go.uber.org/zap"
 )
 
@@ -55,8 +56,13 @@ func main() {
 	})
 	r.Use(c.Handler)
 
+	ms, err := modelservice.New(s.MaasURL, s.MaasUser, s.MaasPassword)
+	if err != nil {
+		sugar.Fatal(err)
+	}
 	es, err := elastic.New(&elastic.Config{
-		Addr: s.ElasticURL,
+		Addr:         s.ElasticURL,
+		ModelService: ms,
 	})
 	if err != nil {
 		sugar.Fatal(err)

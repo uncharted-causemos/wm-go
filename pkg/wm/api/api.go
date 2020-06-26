@@ -15,6 +15,7 @@ const (
 	paramZoom      = "zoom"
 	paramX         = "x"
 	paramY         = "y"
+	paramModelID   = "modelID"
 )
 
 type api struct {
@@ -43,6 +44,13 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 
 		r.Get("/facets", a.getFacets)
+	})
+
+	r.Route("/maas", func(r chi.Router) {
+		r.Use(render.SetContentType(render.ContentTypeJSON))
+
+		r.Get("/models/{"+paramModelID+"}/runs", a.getModelRuns)
+		r.Get("/models/{"+paramModelID+"}/parameters", a.getModelParameters)
 	})
 
 	r.Route("/tiles", func(r chi.Router) {

@@ -17,13 +17,17 @@ type Specification struct {
 	ElasticURL string `required:"true" envconfig:"ELASTIC_URL"`
 
 	DgraphURLS []string `required:"true" envconfig:"DGRAPH_URLS"`
+
+	MaasURL      string `required:"true" envconfig:"MAAS_URL"`
+	MaasUser     string `required:"true" envconfig:"MAAS_USERNAME"`
+	MaasPassword string `required:"true" envconfig:"MAAS_PASSWORD"`
 }
 
 // Load imports the environment variables and returns them in an Specification.
 func Load(envFile string) (*Specification, error) {
 
 	env := os.Getenv("WM_MODE")
-	// if no env, load environment file from the .env file, otherwise (in production) just check existing host environment
+	// if no env var in existing environment, load environment file from the .env file, otherwise (in production) just check existing host environment
 	if "" == env {
 		err := godotenv.Load(envFile)
 		if err != nil {

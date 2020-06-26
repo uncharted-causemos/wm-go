@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v7"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
 // ES wraps the client and serves as the basis of the wm.KnowledgeBase interface.
 type ES struct {
-	client *elasticsearch.Client
+	client       *elasticsearch.Client
+	modelService wm.ModelService
 }
 
 // New instantiates and returns a new KB using the provided Config.
@@ -36,5 +38,6 @@ func New(cfg *Config) (*ES, error) {
 
 	return &ES{
 		client,
+		cfg.ModelService,
 	}, nil
 }

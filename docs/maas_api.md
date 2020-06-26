@@ -208,7 +208,7 @@ Similar to current parameters model in current maas api but add parameter `units
     "default": 100,
     "description": "This a scalar between 0 and 200 which represents fertilizer in kg/ha. 100 is considered the  baseline amount (per management practice), so anything above 100 represents additional  fertilizer usage/availability and anything below 100 represents decreased fertilzer (per  management practice).",
     "maximum": 200,
-    "minumum": 0,
+    "minimum": 0,
 		"units": "kg/ha",
 		"units_description: "Kilogram per hectare"
     "name": "fertilizer",
@@ -390,18 +390,18 @@ Response:
 ```
 
 
-### GET /models/{model}/parameters
+### GET /models/{modelId}/parameters
 Mirrors `https://model-service.worldmodelers.com/model_parameters/{ModelName}`
 
 #### Path
- - **model** model name
+ - **modelId** model name
 
 
 #### Example
 ```
 Request:
 
-GET /model/DSSAT/parameters
+GET /models/DSSAT/parameters
 
 Response: 
 [
@@ -409,7 +409,7 @@ Response:
     "default": "05-20",
     "description": "This is the month and day in \"mm-dd\" format when planting should end. This allows the modeler  to simulate various planting seasons (such as Belg and Maher). This must be after the  planting_start parameter.",
     "maximum": "12-31",
-    "minumum": "01-01",
+    "minimum": "01-01",
     "name": "planting_end",
     "type": "TimeParameter"
   },
@@ -417,7 +417,7 @@ Response:
     "default": 0,
     "description": "This is the number, in days, that the planting window was shifted",
     "maximum": 30,
-    "minumum": -30,
+    "minimum": -30,
     "name": "planting_window_shift",
     "type": "NumberParameter"
   }
@@ -425,7 +425,7 @@ Response:
 ]
 ```
 
-### GET /model/{modelId}/runs
+### GET /models/{modelId}/runs
 Get all runs for the model
 
 #### Parameters
