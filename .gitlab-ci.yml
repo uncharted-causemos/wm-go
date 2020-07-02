@@ -134,7 +134,7 @@ openstack-deploy:
     - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker run --env-file wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
     # Delete the image with previous version tag
     - echo "Clean up previous wm-go images"
-    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker rmi $(docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
+    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker rmi $(sudo docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
     - echo "wm-go ${DOCKER_TAG} is successfully deployed!"
   environment:
     name: openstack
