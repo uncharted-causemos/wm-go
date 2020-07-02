@@ -53,7 +53,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/models/{"+paramModelID+"}/parameters", a.getModelParameters)
 	})
 
-	r.Route("/tiles", func(r chi.Router) {
+	r.Route("/maas/output/tiles", func(r chi.Router) {
 		r.Get(fmt.Sprintf("/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
 	})
 
