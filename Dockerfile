@@ -7,7 +7,7 @@
 ############################
 FROM golang:alpine AS builder
 
-RUN apk update && apk add --no-cache git && apk add --no-cach make
+RUN apk update && apk add --no-cache git && apk add --no-cach make && apk --no-cache add ca-certificates
 
 WORKDIR /go/src/wm-go
 
@@ -20,6 +20,8 @@ RUN make install && make build
 ############################
 FROM scratch
 
+# Copy certificate from the buider image. It is required to make https requests
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/src/wm-go/bin /
 
 ENTRYPOINT ["/wm"]
