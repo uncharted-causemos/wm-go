@@ -127,14 +127,14 @@ openstack-deploy:
 
     # Pull new docker image and restart the container
     - echo "Pulling new docker image"
-    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker pull docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
+    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "docker pull docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
     - echo "Remove running container"
-    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker stop wm-go || true && sudo docker rm wm-go || true"
+    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "docker stop wm-go || true && docker rm wm-go || true"
     - echo "Run new image with ${DOCKER_TAG}"
-    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker run --env-file wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
+    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "docker run --env-file wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
     # Delete the image with previous version tag
     - echo "Clean up previous wm-go images"
-    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "sudo docker rmi $(docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
+    - ssh -o UserKnownHostsFile=known_hosts centos@${OPENSTACK_IP} "docker rmi $(docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
     - echo "wm-go ${DOCKER_TAG} is successfully deployed!"
   environment:
     name: openstack
