@@ -29,17 +29,35 @@ var fields = map[string]wm.Field{
 	"evidenceSource":   wm.FieldEvidenceSource,
 }
 
+var datacubeFields = map[string]wm.Field{
+	"id":             wm.FieldDatacubeID,
+	"type":           wm.FieldDatacubeType,
+	"model":          wm.FieldDatacubeModel,
+	"category":       wm.FieldDatacubeCategory,
+	"label":          wm.FieldDatacubeLabel,
+	"maintainer":     wm.FieldDatacubeMaintainer,
+	"source":         wm.FieldDatacubeSource,
+	"output_name":    wm.FieldDatacubeOutputName,
+	"parameters":     wm.FieldDatacubeParameters,
+	"concepts.name":  wm.FieldDatacubeConceptName,
+	"concepts.score": wm.FieldDatacubeConceptScore,
+	"country":        wm.FieldDatacubeCountry,
+	"admin1":         wm.FieldDatacubeAdmin1,
+	"admin2":         wm.FieldDatacubeAdmin2,
+	"period":         wm.FieldDatacubePeriod,
+}
+
 var operands = map[string]wm.Operand{
 	"and": wm.OperandAnd,
 	"or":  wm.OperandOr,
 }
 
 // parseFilters extracts a slice of filters from a byte slice.
-func parseFilters(raw []byte) ([]*wm.Filter, error) {
+func parseFilters(raw []byte, context wm.FilterContext) ([]*wm.Filter, error) {
 	var fs []*wm.Filter
 
 	if err := parseArray(raw, func(val []byte) error {
-		f, err := parseFilter(val)
+		f, err := parseFilter(val, context)
 		if err != nil {
 			return err
 		}
@@ -54,13 +72,22 @@ func parseFilters(raw []byte) ([]*wm.Filter, error) {
 }
 
 // parseFilter extracts a single filter from a byte slice.
-func parseFilter(raw []byte) (*wm.Filter, error) {
+func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 	fieldStr, err := jsonparser.GetString(raw, "field")
 	if err != nil {
 		return nil, err
 	}
+	var field wm.Field
+	var ok bool
 
-	field, ok := fields[fieldStr]
+	switch context {
+	case wm.ContextKB:
+		field, ok = fields[fieldStr]
+	case wm.ContextDatacube:
+		field, ok = datacubeFields[fieldStr]
+	default:
+		return nil, fmt.Errorf("Unrecognized filter context")
+	}
 	if !ok {
 		return nil, fmt.Errorf("Unrecognized field: %s", fieldStr)
 	}
@@ -115,7 +142,21 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error
 		wm.FieldLocation,
 		wm.FieldOrganization,
 		wm.FieldQuality,
-		wm.FieldReader:
+		wm.FieldReader,
+		wm.FieldDatacubeID,
+		wm.FieldDatacubeType,
+		wm.FieldDatacubeModel,
+		wm.FieldDatacubeCategory,
+		wm.FieldDatacubeLabel,
+		wm.FieldDatacubeMaintainer,
+		wm.FieldDatacubeSource,
+		wm.FieldDatacubeOutputName,
+		wm.FieldDatacubeParameters,
+		wm.FieldDatacubeConceptName,
+		wm.FieldDatacubeConceptScore,
+		wm.FieldDatacubeCountry,
+		wm.FieldDatacubeAdmin1,
+		wm.FieldDatacubeAdmin2:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,
 		wm.FieldPolarity,
@@ -124,10 +165,11 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error
 		intVals, err = parseIntValues(raw)
 	case wm.FieldBeliefScore,
 		wm.FieldGroundingScore,
-		wm.FieldNumEvidence:
+		wm.FieldNumEvidence,
+		wm.FieldDatacubePeriod:
 		rng, err = parseRange(raw)
 	default:
-		err = errors.New("Unhandled values")
+		err = errors.New("parseValues failed: Unhandled values")
 	}
 	if err != nil {
 		return nil, nil, [2]float64{}, err

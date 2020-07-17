@@ -9,6 +9,15 @@ const (
 	OperandOr
 )
 
+// FilterContext is a type for availbel filter contexts
+type FilterContext int
+
+// Available filter context
+const (
+	ContextKB FilterContext = iota
+	ContextDatacube
+)
+
 // Field is a type for filterable fields.
 type Field int
 
@@ -29,6 +38,24 @@ const (
 	FieldReader
 	FieldRefutingEvidence
 	FieldQuality
+
+	// Datacubes fields
+	FieldDatacubeID
+	FieldDatacubeType
+	FieldDatacubeModel
+	FieldDatacubeCategory
+	FieldDatacubeLabel
+	FieldDatacubeMaintainer
+	FieldDatacubeSource
+	FieldDatacubeOutputName
+	FieldDatacubeOutputUnits
+	FieldDatacubeParameters
+	FieldDatacubeConceptName
+	FieldDatacubeConceptScore
+	FieldDatacubeCountry
+	FieldDatacubeAdmin1
+	FieldDatacubeAdmin2
+	FieldDatacubePeriod
 )
 
 // Filter defines a filter to be used in the queries.

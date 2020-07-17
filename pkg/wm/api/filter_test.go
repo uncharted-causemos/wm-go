@@ -35,7 +35,7 @@ func TestParseFilters(t *testing.T) {
 			2,
 		},
 	} {
-		got, err := parseFilters([]byte(test.raw))
+		got, err := parseFilters([]byte(test.raw), wm.ContextKB)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("parseFilters returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))
@@ -83,7 +83,7 @@ func TestParseFilter(t *testing.T) {
 			},
 		},
 	} {
-		got, err := parseFilter([]byte(test.raw))
+		got, err := parseFilter([]byte(test.raw), wm.ContextKB)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("parseFilter returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))

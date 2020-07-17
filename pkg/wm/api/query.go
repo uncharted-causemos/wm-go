@@ -22,13 +22,17 @@ func getFacetNames(r *http.Request) ([]string, error) {
 	return facetNames, nil
 }
 
-func getFilters(r *http.Request) ([]*wm.Filter, error) {
+func getSearch(r *http.Request) string {
+	return r.URL.Query().Get("search")
+}
+
+func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error) {
 	raw := r.URL.Query().Get("filters")
 	if raw == "" {
 		return nil, nil
 	}
 
-	filters, err := parseFilters([]byte(raw))
+	filters, err := parseFilters([]byte(raw), context)
 	if err != nil {
 		return nil, err
 	}

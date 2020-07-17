@@ -121,7 +121,7 @@ func TestGetFilters(t *testing.T) {
 			0,
 		},
 	} {
-		got, err := getFilters(test.r)
+		got, err := getFilters(test.r, wm.ContextKB)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("getFilters returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))
