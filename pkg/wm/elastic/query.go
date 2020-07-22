@@ -2,7 +2,6 @@ package elastic
 
 import (
 	"errors"
-	"strings"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -34,6 +33,16 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeAdmin1:       "admin1",
 	wm.FieldDatacubeAdmin2:       "admin2",
 	wm.FieldDatacubePeriod:       "period",
+}
+
+const (
+	conceptsPath = "concepts"
+)
+
+// Available nested fields and its path mapping
+var nestedPath = map[wm.Field]string{
+	wm.FieldDatacubeConceptName:  conceptsPath,
+	wm.FieldDatacubeConceptScore: conceptsPath,
 }
 
 var operandClause = map[wm.Operand]string{
@@ -84,18 +93,7 @@ func buildFilter(filter *wm.Filter) (map[string]interface{}, error) {
 
 // buildNestedFilter builds ES nested filter query with given filters.
 // Provided filters must have fields with same parent field
-func buildNestedFilter(filters []*wm.Filter) (map[string]interface{}, error) {
-	var path string
-	// Note: currently, only supported nested fields are `concepts.*`, when more nested fields are added in the future,
-	// It should also validate if the fields of input filters all have same parent.
-	for _, filter := range filters {
-		fields := strings.Split(fieldNames[filter.Field], ".")
-		if len(fields) != 2 {
-			// only support nested field with 1 level deep
-			return nil, errors.New("buildNestedFilter: Invalid nested field")
-		}
-		path = fields[0]
-	}
+func buildNestedFilter(path string, filters []*wm.Filter) (map[string]interface{}, error) {
 	fs, err := buildFilters(filters)
 	if err != nil {
 		return nil, err
@@ -128,7 +126,32 @@ func buildFilters(filters []*wm.Filter) ([]interface{}, error) {
 
 // buildFilterContext builds ES filter used in the filter context (root filter query)
 func buildFilterContext(filters []*wm.Filter) ([]interface{}, error) {
-	return buildFilters(filters)
+	var results []interface{}
+	nested := make(map[string][]*wm.Filter)
+	var normals []*wm.Filter
+
+	for _, filter := range filters {
+		path := nestedPath[filter.Field]
+		if path != "" {
+			nested[path] = append(nested[path], filter)
+		} else {
+			normals = append(normals, filter)
+		}
+	}
+	normalFilters, err := buildFilters(normals)
+	if err != nil {
+		return nil, err
+	}
+	results = append(results, normalFilters...)
+
+	for p, fs := range nested {
+		nestedFilter, err := buildNestedFilter(p, fs)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, nestedFilter)
+	}
+	return results, nil
 }
 
 // buildSearchQueries builds ES text search queries on given fields with a provided search term
@@ -144,14 +167,12 @@ func buildSearchQueries(term string, fields []string) ([]interface{}, error) {
 }
 
 func buildQuery(options queryOptions) (map[string]interface{}, error) {
+	esQuery := make(map[string]interface{})
 	filterContext, err := buildFilterContext(options.filters)
 	if err != nil {
 		return nil, err
 	}
 	boolClause := make(map[string]interface{})
-	if filterContext != nil {
-		boolClause["filter"] = filterContext
-	}
 	if options.search.text != "" {
 		searchContext, err := buildSearchQueries(options.search.text, options.search.fields)
 		if err != nil {
@@ -160,8 +181,13 @@ func buildQuery(options queryOptions) (map[string]interface{}, error) {
 		boolClause["should"] = searchContext
 		boolClause["minimum_should_match"] = 1
 	}
-	esQuery := map[string]interface{}{
-		"bool": boolClause,
+	if filterContext != nil {
+		boolClause["filter"] = filterContext
+	}
+	if len(boolClause) > 0 {
+		esQuery["bool"] = boolClause
+	} else {
+		esQuery["bool"] = map[string]interface{}{"match_all": map[string]interface{}{}}
 	}
 	return esQuery, nil
 }

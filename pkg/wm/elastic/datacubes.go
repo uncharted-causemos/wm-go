@@ -9,26 +9,28 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-var textSearchFields = []string{
+var datacubeTextSearchFields = []string{
 	"model_description",
 	"output_description",
 	"parameter_descriptions",
 }
 
-const datacubesIndex = "datacubes-v3"
+const datacubesIndex = "datacubes"
+const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
 func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacube, error) {
 	var datacubes []*wm.Datacube
 	options := queryOptions{
 		filters: filters,
-		search:  searchOptions{text: search, fields: textSearchFields},
+		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
 	}
 	query, err := buildQuery(options)
 	if err != nil {
 		return nil, err
 	}
 	body := map[string]interface{}{
+		"size":  defaultSize,
 		"query": query,
 	}
 	var buf bytes.Buffer

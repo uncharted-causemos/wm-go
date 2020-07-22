@@ -59,19 +59,26 @@ func TestBuildFilter(t *testing.T) {
 }
 
 func TestBuildNestedFilter(t *testing.T) {
+	type inputParam struct {
+		search  string
+		filters []*wm.Filter
+	}
 	tests := []struct {
 		description string
-		input       []*wm.Filter
+		input       inputParam
 		expect      string
 		isErr       bool
 	}{
 		{
 			"Build filter with single nested field",
-			[]*wm.Filter{
-				{
-					Field:        wm.FieldDatacubeConceptName,
-					StringValues: []string{"c1", "c2"},
-					Operand:      wm.OperandOr,
+			inputParam{
+				"concepts",
+				[]*wm.Filter{
+					{
+						Field:        wm.FieldDatacubeConceptName,
+						StringValues: []string{"c1", "c2"},
+						Operand:      wm.OperandOr,
+					},
 				},
 			},
 			`{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}}]}}}}`,
@@ -79,39 +86,26 @@ func TestBuildNestedFilter(t *testing.T) {
 		},
 		{
 			"Build filter with multiple nested sibling fields",
-			[]*wm.Filter{
-				{
-					Field:        wm.FieldDatacubeConceptName,
-					StringValues: []string{"c1", "c2"},
-					Operand:      wm.OperandOr,
-				},
-				{
-					Field: wm.FieldDatacubeConceptScore,
-					Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: false},
+			inputParam{
+				"concepts",
+				[]*wm.Filter{
+					{
+						Field:        wm.FieldDatacubeConceptName,
+						StringValues: []string{"c1", "c2"},
+						Operand:      wm.OperandOr,
+					},
+					{
+						Field: wm.FieldDatacubeConceptScore,
+						Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: false},
+					},
 				},
 			},
 			`{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}},{"bool":{"must":[{"range":{"concepts.score":{"gte":0.1,"lt":0.3,"relation":"within"}}}]}}]}}}}`,
 			false,
 		},
-		{
-			"Throw errorc with invalid nested fields",
-			[]*wm.Filter{
-				{
-					Field:        wm.FieldDatacubeAdmin1,
-					StringValues: []string{"c1", "c2"},
-					Operand:      wm.OperandOr,
-				},
-				{
-					Field: wm.FieldDatacubePeriod,
-					Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: false},
-				},
-			},
-			"null",
-			true,
-		},
 	}
 	for _, test := range tests {
-		f, err := buildNestedFilter(test.input)
+		f, err := buildNestedFilter(test.input.search, test.input.filters)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("nbuildNestedFilter returned err:\n%v\nfor:\n%+v", err, spew.Sdump(test.input))
@@ -120,6 +114,95 @@ func TestBuildNestedFilter(t *testing.T) {
 		result, _ := json.Marshal(f)
 		if string(result) != test.expect {
 			t.Errorf("%s\nbuildNestedFilter returned: \n%s\ninstead of:\n%s\n for input %v", test.description, result, test.expect, spew.Sdump(test.input))
+		}
+	}
+}
+
+func TestBuildQuery(t *testing.T) {
+	tests := []struct {
+		description string
+		input       queryOptions
+		expect      string
+	}{
+		{
+			"Build an empty query",
+			queryOptions{},
+			`{"bool":{"match_all":{}}}`,
+		},
+		{
+			"Build text match queries for a search term",
+			queryOptions{
+				search: searchOptions{text: "testSearchTerm", fields: []string{"f1", "f2", "f3"}},
+			},
+			`{"bool":{"minimum_should_match":1,"should":[{"match":{"f1":"testSearchTerm"}},{"match":{"f2":"testSearchTerm"}},{"match":{"f3":"testSearchTerm"}}]}}`,
+		},
+		{
+			"Build a query with filters",
+			queryOptions{
+				filters: []*wm.Filter{
+					{
+						Field:        wm.FieldDatacubeID,
+						StringValues: []string{"id1", "id2"},
+						Operand:      wm.OperandOr,
+					},
+					{
+						Field: wm.FieldDatacubePeriod,
+						Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: true},
+					},
+				},
+			},
+			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3,"relation":"within"}}}]}}]}}`,
+		},
+		{
+			"Build a query with filters including nested fields",
+			queryOptions{
+				filters: []*wm.Filter{
+					{
+						Field:        wm.FieldDatacubeID,
+						StringValues: []string{"id1", "id2"},
+						Operand:      wm.OperandOr,
+					},
+					{
+						Field: wm.FieldDatacubePeriod,
+						Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: true},
+					},
+					{
+						Field:        wm.FieldDatacubeConceptName,
+						StringValues: []string{"c1", "c2"},
+						Operand:      wm.OperandOr,
+					},
+					{
+						Field: wm.FieldDatacubeConceptScore,
+						Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: false},
+					},
+				},
+			},
+			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3,"relation":"within"}}}]}},{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}},{"bool":{"must":[{"range":{"concepts.score":{"gte":0.1,"lt":0.3,"relation":"within"}}}]}}]}}}}]}}`,
+		},
+		{
+			"Build a query with search and filters",
+			queryOptions{
+				search: searchOptions{text: "testSearchTerm", fields: []string{"f1", "f2", "f3"}},
+				filters: []*wm.Filter{
+					{
+						Field:        wm.FieldDatacubeID,
+						StringValues: []string{"id1", "id2"},
+						Operand:      wm.OperandOr,
+					},
+					{
+						Field: wm.FieldDatacubePeriod,
+						Range: wm.Range{Minimum: 0.1, Maximum: 0.3, IsClosed: true},
+					},
+				},
+			},
+			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3,"relation":"within"}}}]}}],"minimum_should_match":1,"should":[{"match":{"f1":"testSearchTerm"}},{"match":{"f2":"testSearchTerm"}},{"match":{"f3":"testSearchTerm"}}]}}`,
+		},
+	}
+	for _, test := range tests {
+		f, _ := buildQuery(test.input)
+		result, _ := json.Marshal(f)
+		if string(result) != test.expect {
+			t.Errorf("%s\nbuildFilter returned: \n%s\ninstead of:\n%s\n for input %v", test.description, result, test.expect, spew.Sdump(test.input))
 		}
 	}
 }
