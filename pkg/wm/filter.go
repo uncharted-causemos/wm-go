@@ -65,5 +65,12 @@ type Filter struct {
 	IsNot        bool
 	IntValues    []int
 	StringValues []string
-	Range        [2]float64
+	Range        Range
+}
+
+// Range defines a range
+type Range struct {
+	Minimum  float64
+	Maximum  float64
+	IsClosed bool
 }

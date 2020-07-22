@@ -128,10 +128,10 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 }
 
 // parseValues extracts the values field into an appropriately typed value.
-func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error) {
+func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) {
 	var strVals []string
 	var intVals []int
-	var rng [2]float64
+	var rng wm.Range
 	var err error
 
 	switch field {
@@ -153,7 +153,6 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error
 		wm.FieldDatacubeOutputName,
 		wm.FieldDatacubeParameters,
 		wm.FieldDatacubeConceptName,
-		wm.FieldDatacubeConceptScore,
 		wm.FieldDatacubeCountry,
 		wm.FieldDatacubeAdmin1,
 		wm.FieldDatacubeAdmin2:
@@ -166,13 +165,14 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error
 	case wm.FieldBeliefScore,
 		wm.FieldGroundingScore,
 		wm.FieldNumEvidence,
-		wm.FieldDatacubePeriod:
+		wm.FieldDatacubePeriod,
+		wm.FieldDatacubeConceptScore:
 		rng, err = parseRange(raw)
 	default:
 		err = errors.New("parseValues failed: Unhandled values")
 	}
 	if err != nil {
-		return nil, nil, [2]float64{}, err
+		return nil, nil, wm.Range{}, err
 	}
 
 	return strVals, intVals, rng, nil
@@ -231,8 +231,8 @@ func parseIntValues(raw []byte) ([]int, error) {
 
 // parseRange extracts the contents of the values field as a 2-element float
 // array.
-func parseRange(raw []byte) ([2]float64, error) {
-	var rng [2]float64
+func parseRange(raw []byte) (wm.Range, error) {
+	var rng wm.Range
 
 	var fs []float64
 	if err := parseArray(raw, func(val []byte) error {
@@ -252,8 +252,8 @@ func parseRange(raw []byte) ([2]float64, error) {
 		return rng, fmt.Errorf("Too many values (%d) for range filter", len(fs))
 	}
 
-	rng[0] = fs[0]
-	rng[1] = fs[1]
+	rng.Minimum = fs[0]
+	rng.Maximum = fs[1]
 
 	return rng, nil
 }
