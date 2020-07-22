@@ -167,7 +167,6 @@ func buildSearchQueries(term string, fields []string) ([]interface{}, error) {
 }
 
 func buildQuery(options queryOptions) (map[string]interface{}, error) {
-	esQuery := make(map[string]interface{})
 	filterContext, err := buildFilterContext(options.filters)
 	if err != nil {
 		return nil, err
@@ -184,10 +183,9 @@ func buildQuery(options queryOptions) (map[string]interface{}, error) {
 	if filterContext != nil {
 		boolClause["filter"] = filterContext
 	}
+	esQuery := make(map[string]interface{})
 	if len(boolClause) > 0 {
 		esQuery["bool"] = boolClause
-	} else {
-		esQuery["bool"] = map[string]interface{}{"match_all": map[string]interface{}{}}
 	}
 	return esQuery, nil
 }

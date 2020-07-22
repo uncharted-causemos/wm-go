@@ -30,8 +30,10 @@ func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacu
 		return nil, err
 	}
 	body := map[string]interface{}{
-		"size":  defaultSize,
-		"query": query,
+		"size": defaultSize,
+	}
+	if len(query) > 0 {
+		body["query"] = query
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {

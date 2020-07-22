@@ -127,7 +127,7 @@ func TestBuildQuery(t *testing.T) {
 		{
 			"Build an empty query",
 			queryOptions{},
-			`{"bool":{"match_all":{}}}`,
+			`{}`,
 		},
 		{
 			"Build text match queries for a search term",
