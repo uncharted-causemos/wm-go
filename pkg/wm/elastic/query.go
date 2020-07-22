@@ -78,7 +78,7 @@ func buildFilter(filter *wm.Filter) (map[string]interface{}, error) {
 		}
 		queries = []interface{}{
 			map[string]interface{}{
-				"range": map[string]interface{}{fieldName: map[string]interface{}{"gte": filter.Range.Minimum, lt: filter.Range.Maximum, "relation": "within"}},
+				"range": map[string]interface{}{fieldName: map[string]interface{}{"gte": filter.Range.Minimum, lt: filter.Range.Maximum}},
 			},
 		}
 	}

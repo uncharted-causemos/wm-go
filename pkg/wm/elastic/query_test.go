@@ -38,7 +38,7 @@ func TestBuildFilter(t *testing.T) {
 				Field: wm.FieldDatacubePeriod,
 				Range: wm.Range{Minimum: 1167609600000, Maximum: 1525132800000, IsClosed: false},
 			},
-			`{"bool":{"must":[{"range":{"period":{"gte":1167609600000,"lt":1525132800000,"relation":"within"}}}]}}`,
+			`{"bool":{"must":[{"range":{"period":{"gte":1167609600000,"lt":1525132800000}}}]}}`,
 		},
 		{
 			"Build a closed range filter",
@@ -46,7 +46,7 @@ func TestBuildFilter(t *testing.T) {
 				Field: wm.FieldDatacubePeriod,
 				Range: wm.Range{Minimum: 0, Maximum: 3, IsClosed: true},
 			},
-			`{"bool":{"must":[{"range":{"period":{"gte":0,"lte":3,"relation":"within"}}}]}}`,
+			`{"bool":{"must":[{"range":{"period":{"gte":0,"lte":3}}}]}}`,
 		},
 	}
 	for _, test := range tests {
@@ -100,7 +100,7 @@ func TestBuildNestedFilter(t *testing.T) {
 					},
 				},
 			},
-			`{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}},{"bool":{"must":[{"range":{"concepts.score":{"gte":0.1,"lt":0.3,"relation":"within"}}}]}}]}}}}`,
+			`{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}},{"bool":{"must":[{"range":{"concepts.score":{"gte":0.1,"lt":0.3}}}]}}]}}}}`,
 			false,
 		},
 	}
@@ -151,7 +151,7 @@ func TestBuildQuery(t *testing.T) {
 					},
 				},
 			},
-			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3,"relation":"within"}}}]}}]}}`,
+			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3}}}]}}]}}`,
 		},
 		{
 			"Build a query with filters including nested fields",
@@ -177,7 +177,7 @@ func TestBuildQuery(t *testing.T) {
 					},
 				},
 			},
-			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3,"relation":"within"}}}]}},{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}},{"bool":{"must":[{"range":{"concepts.score":{"gte":0.1,"lt":0.3,"relation":"within"}}}]}}]}}}}]}}`,
+			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3}}}]}},{"nested":{"path":"concepts","query":{"bool":{"filter":[{"bool":{"should":[{"term":{"concepts.name":"c1"}},{"term":{"concepts.name":"c2"}}]}},{"bool":{"must":[{"range":{"concepts.score":{"gte":0.1,"lt":0.3}}}]}}]}}}}]}}`,
 		},
 		{
 			"Build a query with search and filters",
@@ -195,7 +195,7 @@ func TestBuildQuery(t *testing.T) {
 					},
 				},
 			},
-			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3,"relation":"within"}}}]}}],"minimum_should_match":1,"should":[{"match":{"f1":"testSearchTerm"}},{"match":{"f2":"testSearchTerm"}},{"match":{"f3":"testSearchTerm"}}]}}`,
+			`{"bool":{"filter":[{"bool":{"should":[{"term":{"id":"id1"}},{"term":{"id":"id2"}}]}},{"bool":{"must":[{"range":{"period":{"gte":0.1,"lte":0.3}}}]}}],"minimum_should_match":1,"should":[{"match":{"f1":"testSearchTerm"}},{"match":{"f2":"testSearchTerm"}},{"match":{"f3":"testSearchTerm"}}]}}`,
 		},
 	}
 	for _, test := range tests {
