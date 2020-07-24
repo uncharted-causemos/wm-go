@@ -29,17 +29,35 @@ var fields = map[string]wm.Field{
 	"evidenceSource":   wm.FieldEvidenceSource,
 }
 
+var datacubeFields = map[string]wm.Field{
+	"id":             wm.FieldDatacubeID,
+	"type":           wm.FieldDatacubeType,
+	"model":          wm.FieldDatacubeModel,
+	"category":       wm.FieldDatacubeCategory,
+	"label":          wm.FieldDatacubeLabel,
+	"maintainer":     wm.FieldDatacubeMaintainer,
+	"source":         wm.FieldDatacubeSource,
+	"output_name":    wm.FieldDatacubeOutputName,
+	"parameters":     wm.FieldDatacubeParameters,
+	"concepts.name":  wm.FieldDatacubeConceptName,
+	"concepts.score": wm.FieldDatacubeConceptScore,
+	"country":        wm.FieldDatacubeCountry,
+	"admin1":         wm.FieldDatacubeAdmin1,
+	"admin2":         wm.FieldDatacubeAdmin2,
+	"period":         wm.FieldDatacubePeriod,
+}
+
 var operands = map[string]wm.Operand{
 	"and": wm.OperandAnd,
 	"or":  wm.OperandOr,
 }
 
 // parseFilters extracts a slice of filters from a byte slice.
-func parseFilters(raw []byte) ([]*wm.Filter, error) {
+func parseFilters(raw []byte, context wm.FilterContext) ([]*wm.Filter, error) {
 	var fs []*wm.Filter
 
 	if err := parseArray(raw, func(val []byte) error {
-		f, err := parseFilter(val)
+		f, err := parseFilter(val, context)
 		if err != nil {
 			return err
 		}
@@ -54,13 +72,22 @@ func parseFilters(raw []byte) ([]*wm.Filter, error) {
 }
 
 // parseFilter extracts a single filter from a byte slice.
-func parseFilter(raw []byte) (*wm.Filter, error) {
+func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 	fieldStr, err := jsonparser.GetString(raw, "field")
 	if err != nil {
 		return nil, err
 	}
+	var field wm.Field
+	var ok bool
 
-	field, ok := fields[fieldStr]
+	switch context {
+	case wm.ContextKB:
+		field, ok = fields[fieldStr]
+	case wm.ContextDatacube:
+		field, ok = datacubeFields[fieldStr]
+	default:
+		return nil, fmt.Errorf("Unrecognized filter context")
+	}
 	if !ok {
 		return nil, fmt.Errorf("Unrecognized field: %s", fieldStr)
 	}
@@ -101,10 +128,10 @@ func parseFilter(raw []byte) (*wm.Filter, error) {
 }
 
 // parseValues extracts the values field into an appropriately typed value.
-func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error) {
+func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) {
 	var strVals []string
 	var intVals []int
-	var rng [2]float64
+	var rng wm.Range
 	var err error
 
 	switch field {
@@ -115,7 +142,20 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error
 		wm.FieldLocation,
 		wm.FieldOrganization,
 		wm.FieldQuality,
-		wm.FieldReader:
+		wm.FieldReader,
+		wm.FieldDatacubeID,
+		wm.FieldDatacubeType,
+		wm.FieldDatacubeModel,
+		wm.FieldDatacubeCategory,
+		wm.FieldDatacubeLabel,
+		wm.FieldDatacubeMaintainer,
+		wm.FieldDatacubeSource,
+		wm.FieldDatacubeOutputName,
+		wm.FieldDatacubeParameters,
+		wm.FieldDatacubeConceptName,
+		wm.FieldDatacubeCountry,
+		wm.FieldDatacubeAdmin1,
+		wm.FieldDatacubeAdmin2:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,
 		wm.FieldPolarity,
@@ -124,13 +164,15 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, [2]float64, error
 		intVals, err = parseIntValues(raw)
 	case wm.FieldBeliefScore,
 		wm.FieldGroundingScore,
-		wm.FieldNumEvidence:
+		wm.FieldNumEvidence,
+		wm.FieldDatacubePeriod,
+		wm.FieldDatacubeConceptScore:
 		rng, err = parseRange(raw)
 	default:
-		err = errors.New("Unhandled values")
+		err = errors.New("parseValues failed: Unhandled values")
 	}
 	if err != nil {
-		return nil, nil, [2]float64{}, err
+		return nil, nil, wm.Range{}, err
 	}
 
 	return strVals, intVals, rng, nil
@@ -189,8 +231,8 @@ func parseIntValues(raw []byte) ([]int, error) {
 
 // parseRange extracts the contents of the values field as a 2-element float
 // array.
-func parseRange(raw []byte) ([2]float64, error) {
-	var rng [2]float64
+func parseRange(raw []byte) (wm.Range, error) {
+	var rng wm.Range
 
 	var fs []float64
 	if err := parseArray(raw, func(val []byte) error {
@@ -210,8 +252,8 @@ func parseRange(raw []byte) ([2]float64, error) {
 		return rng, fmt.Errorf("Too many values (%d) for range filter", len(fs))
 	}
 
-	rng[0] = fs[0]
-	rng[1] = fs[1]
+	rng.Minimum = fs[0]
+	rng.Maximum = fs[1]
 
 	return rng, nil
 }

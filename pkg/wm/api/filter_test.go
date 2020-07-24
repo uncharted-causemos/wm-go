@@ -35,7 +35,7 @@ func TestParseFilters(t *testing.T) {
 			2,
 		},
 	} {
-		got, err := parseFilters([]byte(test.raw))
+		got, err := parseFilters([]byte(test.raw), wm.ContextKB)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("parseFilters returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))
@@ -79,11 +79,11 @@ func TestParseFilter(t *testing.T) {
 				Field:   wm.FieldBeliefScore,
 				Operand: wm.OperandAnd,
 				IsNot:   false,
-				Range:   [2]float64{0.5, 0.9},
+				Range:   wm.Range{Minimum: 0.5, Maximum: 0.9, IsClosed: false},
 			},
 		},
 	} {
-		got, err := parseFilter([]byte(test.raw))
+		got, err := parseFilter([]byte(test.raw), wm.ContextKB)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("parseFilter returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))
@@ -101,7 +101,7 @@ func TestParseValues(t *testing.T) {
 		isErr       bool
 		wantStrVals []string
 		wantIntVals []int
-		wantRange   [2]float64
+		wantRange   wm.Range
 	}{
 		{
 			wm.FieldLocation,
@@ -109,7 +109,7 @@ func TestParseValues(t *testing.T) {
 			false,
 			[]string{},
 			nil,
-			[2]float64{},
+			wm.Range{},
 		},
 		{
 			wm.FieldLocation,
@@ -117,7 +117,7 @@ func TestParseValues(t *testing.T) {
 			false,
 			[]string{"toronto"},
 			nil,
-			[2]float64{},
+			wm.Range{},
 		},
 		{
 			wm.FieldPolarity,
@@ -125,7 +125,7 @@ func TestParseValues(t *testing.T) {
 			false,
 			nil,
 			[]int{0, 3},
-			[2]float64{},
+			wm.Range{},
 		},
 		{
 			wm.FieldBeliefScore,
@@ -133,7 +133,7 @@ func TestParseValues(t *testing.T) {
 			false,
 			nil,
 			nil,
-			[2]float64{0.5, 0.75},
+			wm.Range{Minimum: 0.5, Maximum: 0.75, IsClosed: false},
 		},
 		{
 			wm.FieldBeliefScore,
@@ -141,7 +141,7 @@ func TestParseValues(t *testing.T) {
 			true,
 			nil,
 			nil,
-			[2]float64{},
+			wm.Range{},
 		},
 	} {
 		strVals, intVals, rng, err := parseValues(test.field, []byte(test.raw))
@@ -242,22 +242,22 @@ func TestParseRange(t *testing.T) {
 	for _, test := range []struct {
 		raw   string
 		isErr bool
-		want  [2]float64
+		want  wm.Range
 	}{
 		{
 			"[[3.141,2.718]]",
 			false,
-			[2]float64{3.141, 2.718},
+			wm.Range{Minimum: 3.141, Maximum: 2.718, IsClosed: false},
 		},
 		{
 			"[[3.141]]",
 			true,
-			[2]float64{},
+			wm.Range{},
 		},
 		{
 			"[[3.141,2.718,1.618]]",
 			true,
-			[2]float64{},
+			wm.Range{},
 		},
 	} {
 		got, err := parseRange([]byte(test.raw))

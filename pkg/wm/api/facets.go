@@ -24,7 +24,7 @@ func (a *api) getFacets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filters, err := getFilters(r)
+	filters, err := getFilters(r, wm.ContextKB)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return

@@ -300,51 +300,123 @@ Normalized model output data. Preferably in S3 bucket and partitioned using parq
 
 ```
 Request: 
-  /datacubes?search=crop&filters={ clauses: [ { field: "category", isNot: false, operand: "or", values: ["Economic"] }, { field: "parameters.name", isNot: false, operand: "or", values: ["rainfall", "fertilizer" ] } }]}}
+  /datacubes?search=rainfall&filters={"clauses":[{"field":"model","operand":"or","isNot":false,"values":["G-Range", "PIHM", "malnutrition_model"]}]}
 
 Response: 
  [
    {
-      "type": "model",
-
-      "model": "DSSAT",
-      "category": [
-        "Agriculture",
-        "Economic"
-      ],
-      "model_description": "The Decision Support System for Agrotechnology Transfer (DSSAT) comprises dynamic crop growth simulation model for over 40 crops. The model simulates growth development; and yield as a function of the soil-plant-atmosphere dynamics.",
-      "label": "Decision Support System for Agrotechnology Transfer",
-      "maintainer": "Cheryl Porter, cporter@ufl.edu",
-
-
-      "output_description": "Harvested weight at harvest (kg/ha)",
-      "output_name": "HWAH",
-      "output_units": "kg/ha",
-
-      "parameters": [{
-          "description": "The degree to perturb rainfall from the baseline model. This should be a real number,  which, if 0, would indicate no rainfall in any district. If 1 it would indicate rainfall matching baseline estimates. 1.25 would indicate a 25% increase in rainfall from off the baseline estimate.",
-          "name": "rainfall",
-          "type": "NumberParameter"
-        },
-        {
-          "description": "This a scalar between 0 and 200 which represents fertilizer in kg/ha. 100 is considered the  baseline amount (per management practice), so anything above 100 represents additional  fertilizer usage/availability and anything below 100 represents decreased fertilzer (per  management practice).",
-          "name": "fertilizer",
-          "type": "NumberParameter"
-        },
-        ...
-      ],
-      "concepts": [{
-        "name": "wm/concept/causal_factor/agriculture/crop_production",
-        "score": "0.6544816493988037"
-      }],
-
-      "region": "Ethiopia",
-
-      "period": {
-        "gte": "2015-01",
-        "lte": "2016-02"
-      }
-    }
+        "id": "6cfd6f41-21dc-4f84-85a5-da6a8f4707d4",
+        "type": "model",
+        "model": "G-Range",
+        "category": [
+            "Agriculture"
+        ],
+        "model_description": "G-Range is a global rangeland model that simulates generalised changes in rangelands through time. Spatial data and a set of parameters that describe plant growth in landscape units combine with computer code representing ecological processes to represent soil nutrient and water dynamics, vegetation growth, fire, and wild and domestic animal offtake. The model is spatial, with areas of the world divided into square cells. Those cells that are rangelands have ecosystem dynamics simulated. A graphical user interface allows users to explore model output.",
+        "label": "APSIMx-G-Range",
+        "maintainer": "Andrew Moore, Andrew.Moore@csiro.au",
+        "source": "Andrew Moore, Andrew.Moore@csiro.au",
+        "output_name": "total_anomaly_herbage_prodn",
+        "output_description": "Difference between herbage aboveground net primary production from rangelands and its long-term average value",
+        "output_units": "quintal",
+        "output_units_description": "",
+        "parameters": [
+            "climate_anomalies",
+            "cereal_prodn_pctile",
+            "cereal_prodn_tercile",
+            "irrigation",
+            "additional_extension",
+            "temperature",
+            "sowing_window_shift",
+            "fertilizer",
+            "rainfall"
+        ],
+        "parameter_descriptions": [
+            "One of 5 classes based on the mean 2018-19 cropping-year (March-February) rainfall and temperature anomalies in the climate ensemble member. Ensemble members where the root-mean-square anomaly of temperature and precipitation are within 0.9 standard deviations are \"midrange\"; otherwise ensemble members are classified according to the quadrant in which they fall.",
+            "Ranking of total national production of the 5 cereals as modelled under 2018 land use and practices, expressed as a percentile (the zero percentile is lowest)",
+            "Grouping of climate ensemble members according to terciles of total national production of the 5 cereals as modelled under 2018 land use and practices",
+            "Average proportion of cereal area that is irrigated across Ethiopia. Local proportions vary spatially and with the type of crop",
+            "For this scenario, an \"extension package\" means the adoption of both improved crop cultivars and chemical fertilizer application. The value is the proportion of land **not already using \"extension package\"** that is converted to management under the \"extension package\". For example, if 20% of maize crops in a grid-cell already use improved cultivars plus fertilizer, then 40% \"additional extension package\" will increase the overall level to (20% + 40% x (100%-20%)) = 52%",
+            "Change applied to maximum and minimum air temperature in every day of the climate record in the counterfactual",
+            "Shift (measured in days) in the date range over which crops are sown in response to a sufficiently large rainfall event",
+            "Additional N fertilizer applied at sowing, over and above the rate that is specific to a location, crop and management system",
+            "Multiplier applied to daily rainfall in every day of the climate record in the counterfactual"
+        ],
+        "concepts": [
+            {
+                "name": "wm/concept/causal_factor/crisis_and_disaster/environmental_disasters/crop_failure",
+                "score": 0.5259248614311218
+            },
+            {
+                "name": "wm/concept/causal_factor/economic_and_commerce/economic_activity/market/price_or_cost/food_price",
+                "score": 0.5313275456428528
+            },
+            {
+                "name": "wm/concept/causal_factor/access/water_access",
+                "score": 0.5188208222389221
+            },
+            {
+                "name": "wm/concept/causal_factor/trend",
+                "score": 0.5317885875701904
+            },
+            {
+                "name": "wm/concept/causal_factor/economic_and_commerce/economic_activity/market/price_or_cost/cost_of_living",
+                "score": 0.5160562992095947
+            },
+            {
+                "name": "wm/concept/causal_factor/economic_and_commerce/economic_activity/market/revenue/farmer_income",
+                "score": 0.5530139207839966
+            },
+            {
+                "name": "wm/concept/causal_factor/interventions/provision_of_goods_and_services/household_solid_waste_management",
+                "score": 0.590152382850647
+            },
+            {
+                "name": "wm/concept/causal_factor/interventions/provision_of_goods_and_services/provision_of_credit_and_training_for_income_generation",
+                "score": 0.5345229506492615
+            },
+            {
+                "name": "wm/concept/causal_factor/economic_and_commerce/economic_activity/market/price_or_cost/cost_of_transportation",
+                "score": 0.5599560737609863
+            },
+            {
+                "name": "wm/concept/causal_factor/interventions/provision_of_goods_and_services/point_of_use_water_treatment_at_household_level",
+                "score": 0.5954615473747253
+            }
+        ],
+        "country": [
+            "Ethiopia"
+        ],
+        "admin1": [
+            "Oromia",
+            "Somali",
+            "Amhara",
+            "Southern Nations, Nationalities and Peoples",
+            "Afar",
+            "Tigray",
+            "Benshangul-Gumaz",
+            "Gambela Peoples",
+            "Dire Dawa",
+            "Harari People"
+        ],
+        "admin2": [
+            "Afder",
+            "Bale",
+            "Borena",
+            "Doolo",
+            "Liben",
+            "Jarar",
+            "Afar Zone 1",
+            "Semen Gondar",
+            "Siti",
+            "Shabelle"
+        ],
+        "period": [
+            {
+                "gte": "1525132800000",
+                "lte": "1554076800000"
+            }
+        ]
+    },
   ...
  ]
 ```
