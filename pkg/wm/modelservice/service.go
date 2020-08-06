@@ -51,3 +51,27 @@ func (s *Service) GetModelParameters(model string) ([]*wm.ModelParameter, error)
 	}
 	return parameters, nil
 }
+
+// GetConcepts returns concept names
+func (s *Service) GetConcepts() ([]string, error) {
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/list_concepts", s.url), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.SetBasicAuth(s.username, s.password)
+	resp, err := s.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var concepts []string
+	if err := json.Unmarshal(body, &concepts); err != nil {
+		return nil, err
+	}
+	return concepts, nil
+}
