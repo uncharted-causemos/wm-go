@@ -14,6 +14,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/modelservice"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm/storage"
 	"go.uber.org/zap"
 )
 
@@ -68,6 +69,11 @@ func main() {
 		sugar.Fatal(err)
 	}
 
+	s3, err := storage.New(nil, "")
+	if err != nil {
+		sugar.Fatal(err)
+	}
+
 	dg, err := dgraph.New(&dgraph.Config{
 		Addrs: s.DgraphURLS,
 	})
@@ -78,6 +84,7 @@ func main() {
 	apiRouter, err := api.New(&api.Config{
 		KnowledgeBase: es,
 		MaaS:          es,
+		MaaSStorage:   s3,
 		Graph:         dg,
 		Logger:        sugar,
 	})

@@ -19,10 +19,11 @@ const (
 )
 
 type api struct {
-	graph  wm.Graph
-	kb     wm.KnowledgeBase
-	maas   wm.MaaS
-	logger *zap.SugaredLogger
+	graph       wm.Graph
+	kb          wm.KnowledgeBase
+	maas        wm.MaaS
+	maasStorage wm.MaaSStorage
+	logger      *zap.SugaredLogger
 }
 
 // New returns a chi router with the various endpoints defined.
@@ -32,10 +33,11 @@ func New(cfg *Config) (chi.Router, error) {
 	}
 
 	a := api{
-		graph:  cfg.Graph,
-		kb:     cfg.KnowledgeBase,
-		maas:   cfg.MaaS,
-		logger: cfg.Logger,
+		graph:       cfg.Graph,
+		kb:          cfg.KnowledgeBase,
+		maas:        cfg.MaaS,
+		maasStorage: cfg.MaaSStorage,
+		logger:      cfg.Logger,
 	}
 
 	r := chi.NewRouter()
