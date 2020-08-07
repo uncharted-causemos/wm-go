@@ -52,6 +52,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/models/{"+paramModelID+"}/runs", a.getModelRuns)
 		r.Get("/models/{"+paramModelID+"}/parameters", a.getModelParameters)
 		r.Get("/datacubes", a.getDatacubes)
+		r.Get("/concepts", a.getConcepts)
 	})
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {

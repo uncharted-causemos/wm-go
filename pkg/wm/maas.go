@@ -73,9 +73,13 @@ type MaaS interface {
 
 	// SearchDatacubes search and returns datacubes
 	SearchDatacubes(search string, filters []*Filter) ([]*Datacube, error)
+
+	// GetConcepts returns list of concepts
+	GetConcepts() ([]string, error)
 }
 
 // ModelService defines the interface for external REST API
 type ModelService interface {
 	GetModelParameters(model string) ([]*ModelParameter, error)
+	GetConcepts() ([]string, error)
 }
