@@ -11,6 +11,21 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
+// type FilterValuePa
+// const (
+// 	Parser =
+// )
+// var fieldMapping = map[wm.FilterContext]map[string]wm.Field{
+// 	wm.ContextKB:       fields,
+// 	wm.ContextDatacube: datacubeFields,
+// }
+// var fields2 = map[string]struct {
+// 	wm.Field
+// 	int
+// }{
+// 	"location": {wm.FieldLocation, 0},
+// }
+
 var fields = map[string]wm.Field{
 	"location":         wm.FieldLocation,
 	"organization":     wm.FieldOrganization,

@@ -20,7 +20,7 @@ type Specification struct {
 
 	MaasURL      string `required:"true" envconfig:"MAAS_URL"`
 	MaasUser     string `required:"true" envconfig:"MAAS_USERNAME"`
-	MaasPassword string `required:"true" envconfig:"MAAS_PASSWORD"`
+	MaasPassword string `json:"-" required:"true" envconfig:"MAAS_PASSWORD"`
 }
 
 // Load imports the environment variables and returns them in an Specification.

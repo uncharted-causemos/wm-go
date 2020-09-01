@@ -22,6 +22,7 @@ type api struct {
 	graph  wm.Graph
 	kb     wm.KnowledgeBase
 	maas   wm.MaaS
+	data   wm.DataAnalysis
 	logger *zap.SugaredLogger
 }
 
@@ -34,6 +35,7 @@ func New(cfg *Config) (chi.Router, error) {
 	a := api{
 		graph:  cfg.Graph,
 		kb:     cfg.KnowledgeBase,
+		data:   cfg.DataAnalysis,
 		maas:   cfg.MaaS,
 		logger: cfg.Logger,
 	}
@@ -58,6 +60,12 @@ func New(cfg *Config) (chi.Router, error) {
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {
 		r.Get(fmt.Sprintf("/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
+	})
+
+	r.Route("/analysis", func(r chi.Router) {
+		r.Use(render.SetContentType(render.ContentTypeJSON))
+		r.Get("/", a.getAnalyses)
+		r.Post("/", a.createAnalysis)
 	})
 
 	return r, nil

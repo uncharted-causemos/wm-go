@@ -12,6 +12,7 @@ type Config struct {
 	Graph         wm.Graph
 	KnowledgeBase wm.KnowledgeBase
 	MaaS          wm.MaaS
+	DataAnalysis  wm.DataAnalysis
 	Logger        *zap.SugaredLogger
 }
 
@@ -25,6 +26,9 @@ func (cfg *Config) init() error {
 	*/
 	if cfg.KnowledgeBase == nil {
 		return errors.New("KnowledgeBase cannot be nil")
+	}
+	if cfg.DataAnalysis == nil {
+		return errors.New("DataAnalysis cannot be nil")
 	}
 	if cfg.MaaS == nil {
 		return errors.New("MaaS cannot be nil")
