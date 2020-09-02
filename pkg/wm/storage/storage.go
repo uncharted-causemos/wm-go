@@ -25,7 +25,7 @@ func New(cfg *aws.Config, bucket string) (*Storage, error) {
 		}
 	}
 	if bucket == "" {
-		bucket = "tiles"
+		bucket = "tiles-v2"
 	}
 
 	sess := session.Must(session.NewSession(cfg))

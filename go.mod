@@ -19,7 +19,7 @@ require (
 	github.com/stretchr/testify v1.5.1
 	github.com/tidwall/gjson v1.6.0
 	github.com/tidwall/pretty v1.0.1 // indirect
-	gitlab.uncharted.software/WM/wm-proto v0.0.0-20200629203014-5332f18a55e2
+	gitlab.uncharted.software/WM/wm-proto v0.0.0-20200901203834-ffc38ad8a5c5
 	go.uber.org/multierr v1.5.0 // indirect
 	go.uber.org/zap v1.14.0
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect

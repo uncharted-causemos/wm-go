@@ -3,13 +3,14 @@ package storage
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
-	"gitlab.uncharted.software/WM/wm-proto/tiles"
+	pb "gitlab.uncharted.software/WM/wm-proto/tiles"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -85,7 +86,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		// 	return
 		// }
 		// key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", spec.Model, spec.RunID, spec.Feature, startTime.Unix(), zoom, x, y)
-		key := fmt.Sprintf("%s/%s/%s-%d-%d-%d.tile", "consumption_model", "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", "1578975264", zoom, x, y)
+		key := fmt.Sprintf("%s/%s/%s/%s-%d-%d-%d.tile", "consumption_model", "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", "consumption_per_capita_per_day", "1262304000000", zoom, x, y)
 
 		// TODO: Modify tile protobuf mapping and tile pipeline to save multiple zooms in one tile
 		// TODO: Get max zoom across all requested models and split up tiles on the fly to account
@@ -98,7 +99,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 			er <- err
 			return
 		}
-		var tile tiles.Tile
+		var tile pb.Tile
 		defer resp.Body.Close()
 		buf, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -111,18 +112,25 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 			return
 		}
 
-		gt := []geoTile{
-			geoTile{
-				Key:                fmt.Sprintf("%d/%d/%d", tile.Coord.Z, tile.Coord.X, tile.Coord.Y),
-				SpatialAggregation: geoTileAggregation{Value: tile.Value},
-			},
+		totalBins := tile.Bins.TotalBins
+		totalBinsXY := uint32(math.Pow(2, (math.Log(float64(totalBins)) / math.Log(4))))
+		var gts []geoTile
+		for binPosition, binStats := range tile.Bins.Stats {
+			gt := geoTile{
+				Key: fmt.Sprintf("%d/%d/%d",
+					tile.Coord.Z+uint32(math.Log2(float64(totalBinsXY))),
+					tile.Coord.X*totalBinsXY+uint32(math.Mod(float64(binPosition), float64(totalBinsXY))),
+					tile.Coord.Y*totalBinsXY+binPosition/totalBinsXY),
+				SpatialAggregation: geoTileAggregation{Value: binStats.Sum},
+			}
+			gts = append(gts, gt)
 		}
 		wmTile := wm.NewTile(zoom, x, y, tileDataLayerName)
 		result := geoTilesResult{
 			bound: bound(wmTile.Bound()),
 			zoom:  int(zoom),
 			spec:  spec,
-			data:  gt,
+			data:  gts,
 		}
 		er <- nil
 		out <- result
