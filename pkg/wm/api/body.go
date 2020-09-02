@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -18,13 +17,11 @@ func decodeJSONBody(r *http.Request, dst interface{}) error {
 		// catch and handle specific errors here
 		switch {
 		case errors.Is(err, io.EOF):
-			msg := fmt.Sprintf("Request body must not be empty")
-			return &malformedRequest{status: http.StatusBadRequest, msg: msg}
+			return NewHTTPError(err, http.StatusBadRequest, "Request body must not be empty")
 		case errors.As(err, &invalidUnmarshalError):
 			return err
 		default:
-			msg := fmt.Sprintf("Request body is invalid")
-			return &malformedRequest{status: http.StatusBadRequest, msg: msg}
+			return NewHTTPError(err, http.StatusBadRequest, "Request body is invalid")
 		}
 	}
 	return nil

@@ -19,9 +19,9 @@ type DataAnalysis interface {
 
 	CreateAnalysis(payload *Analysis) (*Analysis, error)
 
-	// DeleteAnalysis(analysisID string) error
+	// UpdateAnalysis(AnalysisID string, payload *Analysis) (*Analysis, error)
 
-	// UpdateAnalysis(AnalysisID string) (Analysis, error)
+	// DeleteAnalysis(analysisID string) error
 
 	// UpdateAnalysisState(analysisID string, state string) error
 }

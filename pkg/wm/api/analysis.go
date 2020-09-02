@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -20,17 +19,13 @@ func (a *api) createAnalysis(w http.ResponseWriter, r *http.Request) {
 	var analysisObj *wm.Analysis
 	err := decodeJSONBody(r, &analysisObj)
 	if err != nil {
-		var mr *malformedRequest
-		if errors.As(err, &mr) {
-			a.errorResponse(w, err, mr.status)
-		} else {
-			a.errorResponse(w, err, http.StatusInternalServerError)
-		}
+		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
 	newAnalysis, err := a.data.CreateAnalysis(analysisObj)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
 	}
 	render.Render(w, r, &analysisResponse{newAnalysis})
 }
@@ -44,6 +39,7 @@ func (a *api) getAnalyses(w http.ResponseWriter, r *http.Request) {
 	analyses, err := a.data.GetAnalyses(filters)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
 	}
 	list := []render.Renderer{}
 	for _, analysis := range analyses {

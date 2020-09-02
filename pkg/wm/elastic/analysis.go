@@ -58,3 +58,31 @@ func (es *ES) CreateAnalysis(payload *wm.Analysis) (*wm.Analysis, error) {
 	}
 	return newAnalysis, nil
 }
+
+// // UpdateAnalysis updates an analysis with given ID
+// func (es *ES) UpdateAnalysis(analysisID string, payload *wm.Analysis) (*wm.Analysis, error) {
+// 	uuid.MustParse(analysisID)
+// 	update := &wm.Analysis{
+// 		ID:          analysisID,
+// 		ProjectID:   payload.ProjectID,
+// 		Title:       payload.Title,
+// 		Description: payload.Description,
+// 		ModifiedAt:  time.Now(),
+// 	}
+// 	body, err := json.Marshal(update)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	res, err := es.client.Index(
+// 		analysisIndex,
+// 		bytes.NewReader(body),
+// 	)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer res.Body.Close()
+// 	if res.IsError() {
+// 		return nil, errors.New(read(res.Body))
+// 	}
+// 	return update, nil
+// }
