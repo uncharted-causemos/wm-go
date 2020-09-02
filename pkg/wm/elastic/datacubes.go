@@ -60,3 +60,35 @@ func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacu
 	}
 	return datacubes, nil
 }
+
+// CountDatacubes returns data cube count
+func (es *ES) CountDatacubes(search string, filters []*wm.Filter) (uint64, error) {
+	options := queryOptions{
+		filters: filters,
+		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
+	}
+	query, err := buildQuery(options)
+	if err != nil {
+		return 0, err
+	}
+	body := map[string]interface{}{}
+	if len(query) > 0 {
+		body["query"] = query
+	}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(body); err != nil {
+		return 0, err
+	}
+	res, err := es.client.Count(
+		es.client.Count.WithIndex(datacubesIndex),
+		es.client.Count.WithBody(&buf),
+		es.client.Count.WithPretty(),
+	)
+	defer res.Body.Close()
+	resBody := read(res.Body)
+	if res.IsError() {
+		return 0, errors.New(resBody)
+	}
+	count := gjson.Get(resBody, "count").Uint()
+	return count, nil
+}
