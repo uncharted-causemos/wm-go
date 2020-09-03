@@ -11,11 +11,12 @@ import (
 
 // URL parameter strings
 const (
-	paramProjectID = "projectID"
-	paramZoom      = "zoom"
-	paramX         = "x"
-	paramY         = "y"
-	paramModelID   = "modelID"
+	paramProjectID  = "projectID"
+	paramZoom       = "zoom"
+	paramX          = "x"
+	paramY          = "y"
+	paramModelID    = "modelID"
+	paramAnalysisID = "analysisID"
 )
 
 type api struct {
@@ -65,7 +66,10 @@ func New(cfg *Config) (chi.Router, error) {
 	r.Route("/analysis", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 		r.Get("/", a.getAnalyses)
+		r.Get("/{"+paramAnalysisID+":[a-f0-9-]+}", a.getAnalysisByID)
 		r.Post("/", a.createAnalysis)
+		r.Put("/{"+paramAnalysisID+":[a-f0-9-]+}", a.updateAnalysis)
+		r.Delete("/{"+paramAnalysisID+":[a-f0-9-]+}", a.deleteAnalysis)
 	})
 
 	return r, nil

@@ -44,7 +44,7 @@ func (a *api) errorResponse(w http.ResponseWriter, err error, status int) {
 	code := status
 	errMsg := http.StatusText(code)
 
-	// If error is an HTTPError
+	// If error is HTTPError
 	var httpError *HTTPError
 	if errors.As(err, &httpError) {
 		code = httpError.Status

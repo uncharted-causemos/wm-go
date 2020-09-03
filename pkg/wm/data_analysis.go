@@ -15,13 +15,15 @@ type Analysis struct {
 
 // DataAnalysis defines the methods that data analysis database implementation needs to satisfy.
 type DataAnalysis interface {
+	GetAnalysisByID(AnalysisID string) (*Analysis, error)
+
 	GetAnalyses(filters []*Filter) ([]*Analysis, error)
 
 	CreateAnalysis(payload *Analysis) (*Analysis, error)
 
-	// UpdateAnalysis(AnalysisID string, payload *Analysis) (*Analysis, error)
+	UpdateAnalysis(analysisID string, payload *Analysis) (*Analysis, error)
 
-	// DeleteAnalysis(analysisID string) error
+	DeleteAnalysis(analysisID string) error
 
 	// UpdateAnalysisState(analysisID string, state string) error
 }
