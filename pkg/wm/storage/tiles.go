@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
@@ -98,8 +99,14 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		})
 		err := req.Send()
 		if err != nil {
-			er <- err
-			return
+			if awsErr, ok := err.(awserr.Error); ok {
+				if awsErr.Code() == s3.ErrCodeNoSuchKey {
+					// Ignore tile not found errors as this is expected behaviour
+					return
+				}
+				er <- err
+				return
+			}
 		}
 		var tile pb.Tile
 		defer resp.Body.Close()
