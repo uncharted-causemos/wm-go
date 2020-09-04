@@ -1,11 +1,3 @@
-// es, err := elastic.New(&elastic.Config{
-// 	Addr:         s.ElasticURL,
-// 	ModelService: ms,
-// })
-// if err != nil {
-// 	sugar.Fatal(err)
-// }
-
 package storage
 
 import (

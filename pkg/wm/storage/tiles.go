@@ -80,6 +80,9 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 	go func() {
 		defer close(er)
 		defer close(out)
+		// TODO: Remove hard coding and uncomment below code once all models in elasticsearch have been processed
+		// by tile pipeline, aggregated monthly and timeseries + min/max stats have been stored by tile pipeline
+		// and retrieved in wm-go
 		// startTime, err := time.Parse(time.RFC3339, spec.Date)
 		// if err != nil {
 		// 	er <- err
@@ -88,8 +91,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		// key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", spec.Model, spec.RunID, spec.Feature, startTime.Unix(), zoom, x, y)
 		key := fmt.Sprintf("%s/%s/%s/%s-%d-%d-%d.tile", "consumption_model", "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", "consumption_per_capita_per_day", "1262304000000", zoom, x, y)
 
-		// TODO: Modify tile protobuf mapping and tile pipeline to save multiple zooms in one tile
-		// TODO: Get max zoom across all requested models and split up tiles on the fly to account
+		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
 			Bucket: aws.String(s.bucket),
 			Key:    aws.String(key),
@@ -106,12 +108,12 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 			er <- err
 			return
 		}
-
 		if err := proto.Unmarshal(buf, &tile); err != nil {
 			er <- err
 			return
 		}
 
+		// Convert tile bin positions into z/x/y tile coordinates and save as geotiles
 		totalBins := tile.Bins.TotalBins
 		totalBinsXY := uint32(math.Pow(2, (math.Log(float64(totalBins)) / math.Log(4))))
 		var gts []geoTile
@@ -121,10 +123,14 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 					tile.Coord.Z+uint32(math.Log2(float64(totalBinsXY))),
 					tile.Coord.X*totalBinsXY+uint32(math.Mod(float64(binPosition), float64(totalBinsXY))),
 					tile.Coord.Y*totalBinsXY+binPosition/totalBinsXY),
-				SpatialAggregation: geoTileAggregation{Value: binStats.Sum},
+				SpatialAggregation: geoTileAggregation{Value: binStats.Avg},
 			}
 			gts = append(gts, gt)
 		}
+
+		// TODO: Get max zoom across all requested models and split up tiles on the fly to account
+		//       for models with different max zoom levels, an example of this is done in the
+		//       elasticsearch getRunOutput function
 		wmTile := wm.NewTile(zoom, x, y, tileDataLayerName)
 		result := geoTilesResult{
 			bound: bound(wmTile.Bound()),
