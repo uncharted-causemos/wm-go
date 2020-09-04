@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -69,7 +72,13 @@ func main() {
 		sugar.Fatal(err)
 	}
 
-	s3, err := storage.New(nil, "")
+	bucket := s.AwsS3Bucket
+	s3, err := storage.New(&aws.Config{
+		Credentials:      credentials.NewStaticCredentials(s.AwsS3Id, s.AwsS3Secret, s.AwsS3Token),
+		S3ForcePathStyle: aws.Bool(true),
+		Region:           aws.String(endpoints.UsEast1RegionID),
+		Endpoint:         aws.String(s.AwsS3URL), // LocalStack/Minio S3 Port
+	}, bucket)
 	if err != nil {
 		sugar.Fatal(err)
 	}
