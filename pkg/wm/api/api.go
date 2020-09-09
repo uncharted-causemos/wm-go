@@ -69,6 +69,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/{"+paramAnalysisID+":[a-f0-9-]+}", a.getAnalysisByID)
 		r.Post("/", a.createAnalysis)
 		r.Put("/{"+paramAnalysisID+":[a-f0-9-]+}", a.updateAnalysis)
+		r.Put("/{"+paramAnalysisID+":[a-f0-9-]+}/state", a.updateAnalysisState)
 		r.Delete("/{"+paramAnalysisID+":[a-f0-9-]+}", a.deleteAnalysis)
 	})
 

@@ -59,8 +59,7 @@ const (
 	FieldDatacubePeriod
 
 	// Analysis fields
-	FieldAnalysisID
-	FieldAnalysisModifiedAt
+	FieldAnalysisProjectID
 )
 
 // Filter defines a filter to be used in the queries.

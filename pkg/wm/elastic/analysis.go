@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
@@ -62,14 +64,40 @@ func (es *ES) GetAnalyses(filters []*wm.Filter) ([]*wm.Analysis, error) {
 		filters: filters,
 	}
 	query, err := buildQuery(options)
+	// TODO: Implement proper pagination with size, from and sort options
 	body := map[string]interface{}{
-		"size": defaultSize,
+		"size": 100,
+		"sort": []map[string]string{
+			{"modified_at": "desc"},
+		},
 	}
 	if len(query) > 0 {
 		body["query"] = query
 	}
 	if err != nil {
 		return nil, err
+	}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(body); err != nil {
+		return nil, err
+	}
+	res, err := es.client.Search(
+		es.client.Search.WithIndex(analysisIndex),
+		es.client.Search.WithBody(&buf),
+	)
+	defer res.Body.Close()
+	resBody := read(res.Body)
+	if res.IsError() {
+		return nil, fmt.Errorf("ES response error: %s", resBody)
+	}
+	hits := gjson.Get(resBody, "hits.hits").Array()
+	for _, hit := range hits {
+		doc := hit.Get("_source").String()
+		var analysis *wm.Analysis
+		if err := json.Unmarshal([]byte(doc), &analysis); err != nil {
+			return nil, err
+		}
+		analyses = append(analyses, analysis)
 	}
 	return analyses, nil
 }
@@ -103,6 +131,28 @@ func (es *ES) UpdateAnalysis(analysisID string, payload *wm.Analysis) (*wm.Analy
 	analysis.Description = payload.Description
 	analysis.ModifiedAt = time.Now()
 	return es.indexAnalysis(analysis)
+}
+
+// UpdateAnalysisState updates the state of the analysis
+func (es *ES) UpdateAnalysisState(analysisID string, state string) (string, error) {
+	body := map[string]interface{}{
+		"doc": map[string]string{
+			"state": state,
+		},
+	}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(body); err != nil {
+		return "", err
+	}
+	res, err := es.client.Update(analysisIndex, analysisID, &buf)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	if res.IsError() {
+		return "", fmt.Errorf("ES response error: %s", read(res.Body))
+	}
+	return state, nil
 }
 
 // DeleteAnalysis deletes the analysis with given ID

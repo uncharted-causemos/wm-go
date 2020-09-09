@@ -13,6 +13,22 @@ type Analysis struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+/**
+{
+	"mappings": {
+					"properties": {
+							"id": { "type": "keyword" },
+							"project_id": { "type": "keyword" },
+							"title": { "type": "text" },
+							"description": { "type": "text" },
+							"state": { "type": "keyword" },
+							"modified_at": { "type": "date" },
+							"created_at": { "type": "date" }
+					}
+	}
+}
+*/
+
 // DataAnalysis defines the methods that data analysis database implementation needs to satisfy.
 type DataAnalysis interface {
 	GetAnalysisByID(AnalysisID string) (*Analysis, error)
@@ -25,5 +41,5 @@ type DataAnalysis interface {
 
 	DeleteAnalysis(analysisID string) error
 
-	// UpdateAnalysisState(analysisID string, state string) error
+	UpdateAnalysisState(analysisID string, state string) (string, error)
 }

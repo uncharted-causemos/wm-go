@@ -33,6 +33,9 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeAdmin1:       "admin1",
 	wm.FieldDatacubeAdmin2:       "admin2",
 	wm.FieldDatacubePeriod:       "period",
+
+	// Analysis Fields
+	wm.FieldAnalysisProjectID: "project_id",
 }
 
 const (

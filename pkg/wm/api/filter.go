@@ -11,21 +11,6 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-// type FilterValuePa
-// const (
-// 	Parser =
-// )
-// var fieldMapping = map[wm.FilterContext]map[string]wm.Field{
-// 	wm.ContextKB:       fields,
-// 	wm.ContextDatacube: datacubeFields,
-// }
-// var fields2 = map[string]struct {
-// 	wm.Field
-// 	int
-// }{
-// 	"location": {wm.FieldLocation, 0},
-// }
-
 var fields = map[string]wm.Field{
 	"location":         wm.FieldLocation,
 	"organization":     wm.FieldOrganization,
@@ -60,6 +45,10 @@ var datacubeFields = map[string]wm.Field{
 	"admin1":         wm.FieldDatacubeAdmin1,
 	"admin2":         wm.FieldDatacubeAdmin2,
 	"period":         wm.FieldDatacubePeriod,
+}
+
+var analysisFields = map[string]wm.Field{
+	"project_id": wm.FieldAnalysisProjectID,
 }
 
 var operands = map[string]wm.Operand{
@@ -100,6 +89,8 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 		field, ok = fields[fieldStr]
 	case wm.ContextDatacube:
 		field, ok = datacubeFields[fieldStr]
+	case wm.ContextAnalysis:
+		field, ok = analysisFields[fieldStr]
 	default:
 		return nil, fmt.Errorf("Unrecognized filter context")
 	}
@@ -170,7 +161,8 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeConceptName,
 		wm.FieldDatacubeCountry,
 		wm.FieldDatacubeAdmin1,
-		wm.FieldDatacubeAdmin2:
+		wm.FieldDatacubeAdmin2,
+		wm.FieldAnalysisProjectID:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,
 		wm.FieldPolarity,

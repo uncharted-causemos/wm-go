@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -45,6 +47,26 @@ func (a *api) updateAnalysis(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.Render(w, r, &analysisResponse{updated})
+}
+
+func (a *api) updateAnalysisState(w http.ResponseWriter, r *http.Request) {
+	analysisID := chi.URLParam(r, paramAnalysisID)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	state := string(body)
+	if ok := wm.IsJSON(state); !ok {
+		a.errorResponse(w, NewHTTPError(fmt.Errorf("Bad json"), http.StatusBadRequest, "Request body must be a valid json string"), http.StatusInternalServerError)
+		return
+	}
+	updated, err := a.data.UpdateAnalysisState(analysisID, state)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	w.Write([]byte(updated))
 }
 
 func (a *api) deleteAnalysis(w http.ResponseWriter, r *http.Request) {
