@@ -14,6 +14,7 @@ type analysisResponse struct {
 	*wm.Analysis
 }
 
+// Render allows to satisfy the render.Renderer interface.
 func (a *analysisResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }

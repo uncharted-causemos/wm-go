@@ -14,17 +14,18 @@ type Analysis struct {
 }
 
 /**
+ES mapping for analysis index
 {
 	"mappings": {
-					"properties": {
-							"id": { "type": "keyword" },
-							"project_id": { "type": "keyword" },
-							"title": { "type": "text" },
-							"description": { "type": "text" },
-							"state": { "type": "keyword" },
-							"modified_at": { "type": "date" },
-							"created_at": { "type": "date" }
-					}
+		"properties": {
+				"id": { "type": "keyword" },
+				"project_id": { "type": "keyword" },
+				"title": { "type": "text" },
+				"description": { "type": "text" },
+				"state": { "type": "keyword" },
+				"modified_at": { "type": "date" },
+				"created_at": { "type": "date" }
+		}
 	}
 }
 */
