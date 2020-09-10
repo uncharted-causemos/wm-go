@@ -25,6 +25,7 @@ func (es *ES) indexAnalysis(analysis *wm.Analysis) (*wm.Analysis, error) {
 		analysisIndex,
 		bytes.NewReader(body),
 		es.client.Index.WithDocumentID(analysis.ID),
+		es.client.Index.WithRefresh("true"),
 	)
 	if err != nil {
 		return nil, err
@@ -115,17 +116,14 @@ func (es *ES) CreateAnalysis(payload *wm.Analysis) (*wm.Analysis, error) {
 	return es.indexAnalysis(newAnalysis)
 }
 
-// UpdateAnalysis updates the analysis with given ID. Creates new one with given ID if not already exist
+// UpdateAnalysis updates the analysis with given ID.
 func (es *ES) UpdateAnalysis(analysisID string, payload *wm.Analysis) (*wm.Analysis, error) {
 	analysis, err := es.GetAnalysisByID(analysisID)
 	if err != nil {
 		return nil, err
 	}
 	if analysis == nil {
-		analysis = &wm.Analysis{
-			ID:        analysisID,
-			CreatedAt: time.Now(),
-		}
+		return nil, fmt.Errorf("Analysis with given ID not found: %s", analysisID)
 	}
 	analysis.Title = payload.Title
 	analysis.Description = payload.Description
