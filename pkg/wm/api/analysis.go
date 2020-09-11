@@ -1,8 +1,6 @@
 package api
 
 import (
-	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -16,6 +14,14 @@ type analysisResponse struct {
 
 // Render allows to satisfy the render.Renderer interface.
 func (a *analysisResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type analysisStateResponse struct {
+	wm.AnalysisState
+}
+
+func (as *analysisStateResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -52,22 +58,18 @@ func (a *api) updateAnalysis(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) updateAnalysisState(w http.ResponseWriter, r *http.Request) {
 	analysisID := chi.URLParam(r, paramAnalysisID)
-	body, err := ioutil.ReadAll(r.Body)
+	var stateObj wm.AnalysisState
+	err := decodeJSONBody(r, &stateObj)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	state := string(body)
-	if ok := wm.IsJSON(state); !ok {
-		a.errorResponse(w, NewHTTPError(fmt.Errorf("Bad json"), http.StatusBadRequest, "Request body must be a valid json string"), http.StatusInternalServerError)
-		return
-	}
-	updated, err := a.data.UpdateAnalysisState(analysisID, state)
+	updated, err := a.data.UpdateAnalysisState(analysisID, stateObj)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	w.Write([]byte(updated))
+	render.Render(w, r, &analysisStateResponse{updated})
 }
 
 func (a *api) deleteAnalysis(w http.ResponseWriter, r *http.Request) {

@@ -132,23 +132,23 @@ func (es *ES) UpdateAnalysis(analysisID string, payload *wm.Analysis) (*wm.Analy
 }
 
 // UpdateAnalysisState updates the state of the analysis
-func (es *ES) UpdateAnalysisState(analysisID string, state string) (string, error) {
+func (es *ES) UpdateAnalysisState(analysisID string, state wm.AnalysisState) (wm.AnalysisState, error) {
 	body := map[string]interface{}{
-		"doc": map[string]string{
+		"doc": map[string]wm.AnalysisState{
 			"state": state,
 		},
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return "", err
+		return nil, err
 	}
 	res, err := es.client.Update(analysisIndex, analysisID, &buf)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer res.Body.Close()
 	if res.IsError() {
-		return "", fmt.Errorf("ES response error: %s", read(res.Body))
+		return nil, fmt.Errorf("ES response error: %s", read(res.Body))
 	}
 	return state, nil
 }
