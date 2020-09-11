@@ -1,6 +1,6 @@
 module gitlab.uncharted.software/WM/wm-go
 
-go 1.12
+go 1.13
 
 require (
 	github.com/buger/jsonparser v0.0.0-20191204142016-1a29609e0929
@@ -10,6 +10,7 @@ require (
 	github.com/go-chi/chi v4.0.3+incompatible
 	github.com/go-chi/cors v1.0.0
 	github.com/go-chi/render v1.0.1
+	github.com/google/uuid v1.1.2
 	github.com/joho/godotenv v1.3.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kr/text v0.2.0 // indirect

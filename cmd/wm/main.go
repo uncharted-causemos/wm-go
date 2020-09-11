@@ -78,6 +78,7 @@ func main() {
 	apiRouter, err := api.New(&api.Config{
 		KnowledgeBase: es,
 		MaaS:          es,
+		DataAnalysis:  es,
 		Graph:         dg,
 		Logger:        sugar,
 	})
