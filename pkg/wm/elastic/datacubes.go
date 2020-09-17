@@ -15,7 +15,7 @@ var datacubeTextSearchFields = []string{
 	"parameter_descriptions",
 }
 
-const datacubesIndex = "datacubes"
+const datacubesIndex = "datacubes-supermaas-2020-09-15"
 const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
@@ -25,7 +25,7 @@ func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacu
 		filters: filters,
 		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
 	}
-	query, err := buildQuery(options)
+	query, err := buildBoolQuery(options)
 	if err != nil {
 		return nil, err
 	}
