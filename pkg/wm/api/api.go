@@ -11,16 +11,18 @@ import (
 
 // URL parameter strings
 const (
-	paramProjectID = "projectID"
-	paramZoom      = "zoom"
-	paramX         = "x"
-	paramY         = "y"
-	paramModelID   = "modelID"
+	paramProjectID  = "projectID"
+	paramZoom       = "zoom"
+	paramX          = "x"
+	paramY          = "y"
+	paramModelID    = "modelID"
+	paramAnalysisID = "analysisID"
 )
 
 type api struct {
 	graph       wm.Graph
 	kb          wm.KnowledgeBase
+	data        wm.DataAnalysis
 	maas        wm.MaaS
 	maasStorage wm.MaaSStorage
 	logger      *zap.SugaredLogger
@@ -35,6 +37,7 @@ func New(cfg *Config) (chi.Router, error) {
 	a := api{
 		graph:       cfg.Graph,
 		kb:          cfg.KnowledgeBase,
+		data:        cfg.DataAnalysis,
 		maas:        cfg.MaaS,
 		maasStorage: cfg.MaaSStorage,
 		logger:      cfg.Logger,
@@ -60,6 +63,16 @@ func New(cfg *Config) (chi.Router, error) {
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {
 		r.Get(fmt.Sprintf("/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
+	})
+
+	r.Route("/analysis", func(r chi.Router) {
+		r.Use(render.SetContentType(render.ContentTypeJSON))
+		r.Get("/", a.getAnalyses)
+		r.Get("/{"+paramAnalysisID+":[a-f0-9-]+}", a.getAnalysisByID)
+		r.Post("/", a.createAnalysis)
+		r.Put("/{"+paramAnalysisID+":[a-f0-9-]+}", a.updateAnalysis)
+		r.Put("/{"+paramAnalysisID+":[a-f0-9-]+}/state", a.updateAnalysisState)
+		r.Delete("/{"+paramAnalysisID+":[a-f0-9-]+}", a.deleteAnalysis)
 	})
 
 	return r, nil

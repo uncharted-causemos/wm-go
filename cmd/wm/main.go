@@ -94,6 +94,7 @@ func main() {
 		KnowledgeBase: es,
 		MaaS:          es,
 		MaaSStorage:   s3,
+		DataAnalysis:  es,
 		Graph:         dg,
 		Logger:        sugar,
 	})

@@ -16,6 +16,7 @@ type FilterContext int
 const (
 	ContextKB FilterContext = iota
 	ContextDatacube
+	ContextAnalysis
 )
 
 // Field is a type for filterable fields.
@@ -56,6 +57,9 @@ const (
 	FieldDatacubeAdmin1
 	FieldDatacubeAdmin2
 	FieldDatacubePeriod
+
+	// Analysis fields
+	FieldAnalysisProjectID
 )
 
 // Filter defines a filter to be used in the queries.
