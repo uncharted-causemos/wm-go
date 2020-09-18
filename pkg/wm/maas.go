@@ -45,6 +45,7 @@ type Datacube struct {
 	Admin1                 []string                 `json:"admin1"`
 	Admin2                 []string                 `json:"admin2"`
 	Period                 []DateRange              `json:"period"`
+	SearchScore            float64                  `json:"_search_score,omitempty"`
 }
 
 // DateRange represent a date range

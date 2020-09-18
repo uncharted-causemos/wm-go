@@ -9,7 +9,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-const datacubesIndex = "datacubes-supermaas-2020-09-15"
+const datacubesIndex = "datacubes-supermaas-2020-09-18"
 const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
@@ -49,6 +49,7 @@ func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
 		if err := json.Unmarshal([]byte(doc), &datacube); err != nil {
 			return nil, err
 		}
+		datacube.SearchScore = hit.Get("_score").Float()
 		datacubes = append(datacubes, datacube)
 	}
 	return datacubes, nil
