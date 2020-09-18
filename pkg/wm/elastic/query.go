@@ -216,7 +216,7 @@ func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
 	return esQuery, nil
 }
 
-// TODO: this will be deprecated and replaced by buildBoolQuery
+// TODO: this will be deprecated and replaced by buildBoolQuery. Need to update the corresponding tests as well.
 func buildQuery(options queryOptions) (map[string]interface{}, error) {
 	filterContext, err := buildQueryClauses(options.filters)
 	if err != nil {

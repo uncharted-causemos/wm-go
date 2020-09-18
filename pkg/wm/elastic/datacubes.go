@@ -9,21 +9,14 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-var datacubeTextSearchFields = []string{
-	"model_description",
-	"output_description",
-	"parameter_descriptions",
-}
-
 const datacubesIndex = "datacubes-supermaas-2020-09-15"
 const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
-func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacube, error) {
+func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
 	var datacubes []*wm.Datacube
 	options := queryOptions{
 		filters: filters,
-		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
 	}
 	query, err := buildBoolQuery(options)
 	if err != nil {
@@ -62,10 +55,9 @@ func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacu
 }
 
 // CountDatacubes returns data cube count
-func (es *ES) CountDatacubes(search string, filters []*wm.Filter) (uint64, error) {
+func (es *ES) CountDatacubes(filters []*wm.Filter) (uint64, error) {
 	options := queryOptions{
 		filters: filters,
-		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
 	}
 	query, err := buildQuery(options)
 	if err != nil {
