@@ -9,7 +9,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-const datacubesIndex = "datacubes-supermaas-2020-09-18"
+const datacubesIndex = "datacubes"
 const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
