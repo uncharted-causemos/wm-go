@@ -57,6 +57,7 @@ const (
 	FieldDatacubeAdmin1
 	FieldDatacubeAdmin2
 	FieldDatacubePeriod
+	FieldDatacubeSearch
 
 	// Analysis fields
 	FieldAnalysisProjectID

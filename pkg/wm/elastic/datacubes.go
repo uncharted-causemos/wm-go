@@ -9,23 +9,16 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-var datacubeTextSearchFields = []string{
-	"model_description",
-	"output_description",
-	"parameter_descriptions",
-}
-
 const datacubesIndex = "datacubes"
 const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
-func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacube, error) {
+func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
 	var datacubes []*wm.Datacube
 	options := queryOptions{
 		filters: filters,
-		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
 	}
-	query, err := buildQuery(options)
+	query, err := buildBoolQuery(options)
 	if err != nil {
 		return nil, err
 	}
@@ -56,16 +49,16 @@ func (es *ES) SearchDatacubes(search string, filters []*wm.Filter) ([]*wm.Datacu
 		if err := json.Unmarshal([]byte(doc), &datacube); err != nil {
 			return nil, err
 		}
+		datacube.SearchScore = hit.Get("_score").Float()
 		datacubes = append(datacubes, datacube)
 	}
 	return datacubes, nil
 }
 
 // CountDatacubes returns data cube count
-func (es *ES) CountDatacubes(search string, filters []*wm.Filter) (uint64, error) {
+func (es *ES) CountDatacubes(filters []*wm.Filter) (uint64, error) {
 	options := queryOptions{
 		filters: filters,
-		search:  searchOptions{text: search, fields: datacubeTextSearchFields},
 	}
 	query, err := buildQuery(options)
 	if err != nil {

@@ -45,6 +45,7 @@ type Datacube struct {
 	Admin1                 []string                 `json:"admin1"`
 	Admin2                 []string                 `json:"admin2"`
 	Period                 []DateRange              `json:"period"`
+	SearchScore            float64                  `json:"_search_score,omitempty"`
 }
 
 // DateRange represent a date range
@@ -73,10 +74,10 @@ type MaaS interface {
 	GetModelParameters(model string) ([]*ModelParameter, error)
 
 	// SearchDatacubes search and returns datacubes
-	SearchDatacubes(search string, filters []*Filter) ([]*Datacube, error)
+	SearchDatacubes(filters []*Filter) ([]*Datacube, error)
 
 	// CountDatacubes returns datacubes count
-	CountDatacubes(search string, filters []*Filter) (uint64, error)
+	CountDatacubes(filters []*Filter) (uint64, error)
 
 	// GetConcepts returns list of concepts
 	GetConcepts() ([]string, error)

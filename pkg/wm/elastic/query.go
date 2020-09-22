@@ -33,6 +33,7 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeAdmin1:       "admin1",
 	wm.FieldDatacubeAdmin2:       "admin2",
 	wm.FieldDatacubePeriod:       "period",
+	wm.FieldDatacubeSearch:       "_search",
 
 	// Analysis Fields
 	wm.FieldAnalysisProjectID: "project_id",
@@ -48,31 +49,39 @@ var nestedPath = map[wm.Field]string{
 	wm.FieldDatacubeConceptScore: conceptsPath,
 }
 
+var isSearchField = map[wm.Field]bool{
+	wm.FieldDatacubeSearch: true,
+}
+
 var operandClause = map[wm.Operand]string{
 	wm.OperandAnd: "must",
 	wm.OperandOr:  "should",
 }
 
-// buildFilter builds ES bool filter query satisfying given filter
-func buildFilter(filter *wm.Filter) (map[string]interface{}, error) {
-	clause := operandClause[filter.Operand]
+// buildClause builds ES bool clause query satisfying given filter
+func buildClause(filter *wm.Filter) (map[string]interface{}, error) {
+	clauseType := operandClause[filter.Operand]
 	fieldName, ok := fieldNames[filter.Field]
+	matchType := "term"
+	if isSearchField[filter.Field] {
+		matchType = "match"
+	}
 	if !ok {
-		return nil, errors.New("buildFilter: Unrecognized field")
+		return nil, errors.New("buildClause: Unrecognized field")
 	}
 	var queries []interface{}
 	if filter.IsNot == true {
-		return nil, errors.New("buildFilter: Not yet Implemented")
+		return nil, errors.New("buildClause: Not yet Implemented")
 	}
 	if filter.StringValues != nil {
 		// Build terms
 		for _, value := range filter.StringValues {
 			queries = append(queries, map[string]interface{}{
-				"term": map[string]interface{}{fieldName: value},
+				matchType: map[string]interface{}{fieldName: value},
 			})
 		}
 	} else if filter.IntValues != nil {
-		return nil, errors.New("buildFilter: Not Yet Implemented")
+		return nil, errors.New("buildClause: Not Yet Implemented")
 	} else {
 		// Build range
 		lt := "lt"
@@ -88,7 +97,7 @@ func buildFilter(filter *wm.Filter) (map[string]interface{}, error) {
 
 	f := map[string]interface{}{
 		"bool": map[string]interface{}{
-			clause: queries,
+			clauseType: queries,
 		},
 	}
 	return f, nil
@@ -96,8 +105,8 @@ func buildFilter(filter *wm.Filter) (map[string]interface{}, error) {
 
 // buildNestedFilter builds ES nested filter query with given filters.
 // Provided filters must have fields with same parent field
-func buildNestedFilter(path string, filters []*wm.Filter) (map[string]interface{}, error) {
-	fs, err := buildFilters(filters)
+func buildNestedClause(path string, filters []*wm.Filter) (map[string]interface{}, error) {
+	fs, err := buildClauses(filters)
 	if err != nil {
 		return nil, err
 	}
@@ -115,10 +124,10 @@ func buildNestedFilter(path string, filters []*wm.Filter) (map[string]interface{
 }
 
 // buildFilters builds ES filter quires with given filters
-func buildFilters(filters []*wm.Filter) ([]interface{}, error) {
+func buildClauses(filters []*wm.Filter) ([]interface{}, error) {
 	var fs []interface{}
 	for _, filter := range filters {
-		f, err := buildFilter(filter)
+		f, err := buildClause(filter)
 		if err != nil {
 			return nil, err
 		}
@@ -128,7 +137,7 @@ func buildFilters(filters []*wm.Filter) ([]interface{}, error) {
 }
 
 // buildFilterContext builds ES filter used in the filter context (root filter query)
-func buildFilterContext(filters []*wm.Filter) ([]interface{}, error) {
+func buildQueryClauses(filters []*wm.Filter) ([]interface{}, error) {
 	var results []interface{}
 	nested := make(map[string][]*wm.Filter)
 	var normals []*wm.Filter
@@ -141,14 +150,14 @@ func buildFilterContext(filters []*wm.Filter) ([]interface{}, error) {
 			normals = append(normals, filter)
 		}
 	}
-	normalFilters, err := buildFilters(normals)
+	normalFilters, err := buildClauses(normals)
 	if err != nil {
 		return nil, err
 	}
 	results = append(results, normalFilters...)
 
 	for p, fs := range nested {
-		nestedFilter, err := buildNestedFilter(p, fs)
+		nestedFilter, err := buildNestedClause(p, fs)
 		if err != nil {
 			return nil, err
 		}
@@ -169,8 +178,47 @@ func buildSearchQueries(term string, fields []string) ([]interface{}, error) {
 	return matches, nil
 }
 
+func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
+	boolClause := make(map[string]interface{})
+
+	// Matching document with searches will contribute to the score
+	var searches []*wm.Filter
+	// Scores will be ignored for documents matching filters
+	var filters []*wm.Filter
+
+	for _, filter := range options.filters {
+		if isSearchField[filter.Field] {
+			searches = append(searches, filter)
+		} else {
+			filters = append(searches, filter)
+		}
+	}
+	queryContext, err := buildQueryClauses(searches)
+	if err != nil {
+		return nil, err
+	}
+	filterContext, err := buildQueryClauses(filters)
+	if err != nil {
+		return nil, err
+	}
+	if queryContext != nil {
+		boolClause["must"] = queryContext
+	}
+	if filterContext != nil {
+		boolClause["filter"] = filterContext
+	}
+
+	esQuery := make(map[string]interface{})
+	if len(boolClause) > 0 {
+		esQuery["bool"] = boolClause
+	}
+
+	return esQuery, nil
+}
+
+// TODO: this will be deprecated and replaced by buildBoolQuery. Need to update the corresponding tests as well.
 func buildQuery(options queryOptions) (map[string]interface{}, error) {
-	filterContext, err := buildFilterContext(options.filters)
+	filterContext, err := buildQueryClauses(options.filters)
 	if err != nil {
 		return nil, err
 	}
