@@ -12,6 +12,7 @@ type Config struct {
 	Graph         wm.Graph
 	KnowledgeBase wm.KnowledgeBase
 	MaaS          wm.MaaS
+	MaaSStorage   wm.MaaSStorage
 	DataAnalysis  wm.DataAnalysis
 	Logger        *zap.SugaredLogger
 }

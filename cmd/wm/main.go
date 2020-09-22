@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
@@ -14,6 +17,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/modelservice"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm/storage"
 	"go.uber.org/zap"
 )
 
@@ -68,6 +72,17 @@ func main() {
 		sugar.Fatal(err)
 	}
 
+	bucket := s.AwsS3Bucket
+	s3, err := storage.New(&aws.Config{
+		Credentials:      credentials.NewStaticCredentials(s.AwsS3Id, s.AwsS3Secret, s.AwsS3Token),
+		S3ForcePathStyle: aws.Bool(true),
+		Region:           aws.String(endpoints.UsEast1RegionID),
+		Endpoint:         aws.String(s.AwsS3URL), // LocalStack/Minio S3 Port
+	}, bucket)
+	if err != nil {
+		sugar.Fatal(err)
+	}
+
 	dg, err := dgraph.New(&dgraph.Config{
 		Addrs: s.DgraphURLS,
 	})
@@ -78,6 +93,7 @@ func main() {
 	apiRouter, err := api.New(&api.Config{
 		KnowledgeBase: es,
 		MaaS:          es,
+		MaaSStorage:   s3,
 		DataAnalysis:  es,
 		Graph:         dg,
 		Logger:        sugar,
