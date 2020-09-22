@@ -12,6 +12,8 @@ import (
 // This index will be deprecated and use of it is only temporary
 const parametersIndex = "parameters"
 
+const modelTimeseriesIndex = "model-timeseries"
+
 const modelRunIndex = "model-run-parameters"
 const maxNumberOfRuns = 10000
 
@@ -61,13 +63,16 @@ func (es *ES) getModelRuns(model string) ([]*wm.ModelRun, error) {
 	var runs []*wm.ModelRun
 
 	for _, run := range gjson.Get(body, "aggregations.by_run.buckets").Array() {
-		var parameters []wm.ModelRunParameter
+		parameters := make([]wm.ModelRunParameter, 0)
 		for _, param := range run.Get("by_param.buckets").Array() {
 			source := param.Get("doc.hits.hits.0._source")
-			parameters = append(parameters, wm.ModelRunParameter{
-				Name:  source.Get("parameter_name").String(),
-				Value: source.Get("parameter_value").String(),
-			})
+			pName := source.Get("parameter_name").String()
+			if pName != "" {
+				parameters = append(parameters, wm.ModelRunParameter{
+					Name:  pName,
+					Value: source.Get("parameter_value").String(),
+				})
+			}
 		}
 		run := &wm.ModelRun{
 			ID:         run.Get("key").String(),
@@ -78,6 +83,48 @@ func (es *ES) getModelRuns(model string) ([]*wm.ModelRun, error) {
 	}
 
 	return runs, nil
+}
+
+// Returns a map of runIds that has it's output processed and ingested in our system
+func (es *ES) getAvailableRunIDMap(model string) (map[string]bool, error) {
+	reqBody := fmt.Sprintf(`
+		{
+			"size": 0,
+			"query": {
+					"bool": {
+							"filter": [
+									{"term": {"model": "%s"} }
+							]
+					}
+			},
+			"aggs": {
+					"by_run": {
+							"terms": {"field": "run_id", "size": 1000 } 
+					}
+			}
+	}
+	`, model)
+
+	res, err := es.client.Search(
+		es.client.Search.WithIndex(modelTimeseriesIndex),
+		es.client.Search.WithBody(strings.NewReader(reqBody)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	body := read(res.Body)
+	if res.IsError() {
+		return nil, errors.New(body)
+	}
+
+	runIDs := make(map[string]bool)
+
+	for _, run := range gjson.Get(body, "aggregations.by_run.buckets").Array() {
+		runID := run.Get("key").String()
+		runIDs[runID] = true
+	}
+
+	return runIDs, nil
 }
 
 // GetModelRuns returns model runs
@@ -128,12 +175,15 @@ func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
 
 	var runs []*wm.ModelRun
 	for _, hit := range gjson.Get(body, "hits.hits").Array() {
-		var parameters []wm.ModelRunParameter
+		parameters := make([]wm.ModelRunParameter, 0)
 		for _, paramHit := range hit.Get("inner_hits.parameters_by_run.hits.hits").Array() {
-			parameters = append(parameters, wm.ModelRunParameter{
-				Name:  paramHit.Get("_source.parameter_name").String(),
-				Value: paramHit.Get("_source.parameter_value").String(),
-			})
+			pName := paramHit.Get("_source.parameter_name").String()
+			if pName != "" {
+				parameters = append(parameters, wm.ModelRunParameter{
+					Name:  pName,
+					Value: paramHit.Get("_source.parameter_value").String(),
+				})
+			}
 		}
 		run := &wm.ModelRun{
 			ID:         hit.Get("_source.run_id").String(),
@@ -152,6 +202,17 @@ func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
 		runs = r
 	}
 
-	// TODO: Once tile-pipeline related changes are in, filter out the runs that we could not process or do not have tiles for.
-	return runs, nil
+	// Filter out the runs that we could not process or do not have tiles for.
+	rIDs, err := es.getAvailableRunIDMap(model)
+	if err != nil {
+		return nil, err
+	}
+	var results []*wm.ModelRun
+	for _, run := range runs {
+		if rIDs[run.ID] {
+			results = append(results, run)
+		}
+	}
+
+	return results, nil
 }
