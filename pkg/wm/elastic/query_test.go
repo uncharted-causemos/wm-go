@@ -8,7 +8,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-func TestBuildFilter(t *testing.T) {
+func TestBuildClause(t *testing.T) {
 	tests := []struct {
 		description string
 		input       *wm.Filter
@@ -50,7 +50,7 @@ func TestBuildFilter(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		f, _ := buildFilter(test.input)
+		f, _ := buildClause(test.input)
 		result, _ := json.Marshal(f)
 		if string(result) != test.expect {
 			t.Errorf("%s\nbuildFilter returned: \n%s\ninstead of:\n%s\n for input %v", test.description, result, test.expect, spew.Sdump(test.input))
@@ -58,7 +58,7 @@ func TestBuildFilter(t *testing.T) {
 	}
 }
 
-func TestBuildNestedFilter(t *testing.T) {
+func TestBuildNestedClause(t *testing.T) {
 	type inputParam struct {
 		search  string
 		filters []*wm.Filter
@@ -105,7 +105,7 @@ func TestBuildNestedFilter(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		f, err := buildNestedFilter(test.input.search, test.input.filters)
+		f, err := buildNestedClause(test.input.search, test.input.filters)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("nbuildNestedFilter returned err:\n%v\nfor:\n%+v", err, spew.Sdump(test.input))
