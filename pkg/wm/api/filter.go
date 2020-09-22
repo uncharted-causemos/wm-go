@@ -45,6 +45,7 @@ var datacubeFields = map[string]wm.Field{
 	"admin1":         wm.FieldDatacubeAdmin1,
 	"admin2":         wm.FieldDatacubeAdmin2,
 	"period":         wm.FieldDatacubePeriod,
+	"_search":        wm.FieldDatacubeSearch,
 }
 
 var analysisFields = map[string]wm.Field{
@@ -162,6 +163,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeCountry,
 		wm.FieldDatacubeAdmin1,
 		wm.FieldDatacubeAdmin2,
+		wm.FieldDatacubeSearch,
 		wm.FieldAnalysisProjectID:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,

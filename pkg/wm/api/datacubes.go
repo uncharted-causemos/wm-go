@@ -29,7 +29,7 @@ func (a *api) getDatacubes(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return
 	}
-	datacubes, err := a.maas.SearchDatacubes(getSearch(r), filters)
+	datacubes, err := a.maas.SearchDatacubes(filters)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
@@ -47,7 +47,7 @@ func (a *api) countDatacubes(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return
 	}
-	count, err := a.maas.CountDatacubes(getSearch(r), filters)
+	count, err := a.maas.CountDatacubes(filters)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
