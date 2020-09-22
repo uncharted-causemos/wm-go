@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -75,38 +76,37 @@ func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, er
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
 func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan geoTilesResult, chan error) {
-	// TODO: Incorporate Feature
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
 		defer close(er)
 		defer close(out)
-		// TODO: Remove hard coding and uncomment below code once all models in elasticsearch have been processed
-		// by tile pipeline, aggregated monthly and timeseries + min/max stats have been stored by tile pipeline
-		// and retrieved in wm-go
-		// startTime, err := time.Parse(time.RFC3339, spec.Date)
-		// if err != nil {
-		// 	er <- err
-		// 	return
-		// }
-		// key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", spec.Model, spec.RunID, spec.Feature, startTime.Unix(), zoom, x, y)
-		key := fmt.Sprintf("%s/%s/%s/%s-%d-%d-%d.tile", "consumption_model", "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", "consumption_per_capita_per_day", "1262304000000", zoom, x, y)
+		startTime, err := time.Parse(time.RFC3339, spec.Date)
+		if err != nil {
+			er <- err
+			return
+		}
+		timemillis := startTime.Unix() * 1000
+		key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", spec.Model, spec.RunID, spec.Feature, timemillis, zoom, x, y)
 
 		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
 			Bucket: aws.String(s.bucket),
 			Key:    aws.String(key),
 		})
-		err := req.Send()
+		err = req.Send()
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == s3.ErrCodeNoSuchKey {
-					// Ignore tile not found errors as this is expected behaviour
+					// Tile not found errors are expected
+					fmt.Printf("Key not found: %s\n", key)
 					return
 				}
 				er <- err
 				return
 			}
+			er <- err
+			return
 		}
 		var tile pb.Tile
 		defer resp.Body.Close()
