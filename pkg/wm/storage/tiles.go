@@ -90,11 +90,8 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		timemillis := startTime.Unix() * 1000
 		modelMaxPrecision, ok := modelMaxPrecision[strings.ToLower(spec.Model)]
 		if !ok {
-			modelMaxPrecision = zoom + 5
+			modelMaxPrecision = 99
 		}
-		maxZoom := modelMaxPrecision - 5
-		tileZoom := uint32(math.Min(float64(zoom), float64(maxZoom)))
-		fmt.Printf("zoom: %d, maxZoom: %d, tileZoom: %d\n", tileZoom, zoom, maxZoom)
 		key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
 
 		// Retrieve protobuf tile from S3
@@ -147,14 +144,13 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		tileMap := make(map[string]*binAgg)
 		var gts []geoTile
 		for binPosition, binStats := range tile.Bins.Stats {
-			z := binPrecision
+			z := binPrecision - precisionDiff
 			x := tile.Coord.X*totalBinsXY + uint32(math.Mod(float64(binPosition), float64(totalBinsXY)))
 			y := tile.Coord.Y*totalBinsXY + binPosition/totalBinsXY
-			if precisionDiff > 0 {
-				// Use precisionDiff level up parent tile coord
-				z = binPrecision - precisionDiff
-				x = x / (2 * precisionDiff)
-				y = y / (2 * precisionDiff)
+			// Use parent coord if there is precision difference
+			for i := 0; i < int(precisionDiff); i++ {
+				x = x / 2
+				y = y / 2
 			}
 			coord := fmt.Sprintf("%d/%d/%d", z, x, y)
 			if _, ok := tileMap[coord]; !ok {
