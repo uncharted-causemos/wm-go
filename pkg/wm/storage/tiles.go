@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -87,7 +88,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 			return
 		}
 		timemillis := startTime.Unix() * 1000
-		key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", spec.Model, spec.RunID, spec.Feature, timemillis, zoom, x, y)
+		key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
 
 		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
