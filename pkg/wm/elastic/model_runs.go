@@ -103,7 +103,7 @@ func (es *ES) getAvailableRunIDMap(model string) (map[string]bool, error) {
 					}
 			}
 	}
-	`, model)
+	`, strings.ToLower(model))
 
 	res, err := es.client.Search(
 		es.client.Search.WithIndex(modelTimeseriesIndex),
