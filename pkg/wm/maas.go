@@ -15,13 +15,13 @@ type ModelRunParameter struct {
 
 // ModelParameter represent a model parameter metadata
 type ModelParameter struct {
-	Choices     []string    `json:"choices,omitempty"`
-	Default     interface{} `json:"default"`
-	Description string      `json:"description"`
-	Maximum     interface{} `json:"maximum,omitempty"`
-	Minimum     interface{} `json:"minimum,omitempty"`
-	Name        string      `json:"name"`
-	Type        string      `json:"type"`
+	Choices     []interface{} `json:"choices,omitempty"`
+	Default     interface{}   `json:"default"`
+	Description string        `json:"description"`
+	Maximum     interface{}   `json:"maximum,omitempty"`
+	Minimum     interface{}   `json:"minimum,omitempty"`
+	Name        string        `json:"name"`
+	Type        string        `json:"type"`
 }
 
 // Datacube represent a datacube object
