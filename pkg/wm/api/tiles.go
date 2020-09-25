@@ -27,7 +27,7 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		zxy[i] = uint32(v)
 	}
 
-	tile, err := a.maas.GetTile(zxy[0], zxy[1], zxy[2], specs)
+	tile, err := a.maasStorage.GetTile(zxy[0], zxy[1], zxy[2], specs)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return

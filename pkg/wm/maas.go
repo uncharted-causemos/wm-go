@@ -15,13 +15,13 @@ type ModelRunParameter struct {
 
 // ModelParameter represent a model parameter metadata
 type ModelParameter struct {
-	Choices     []string    `json:"choices,omitempty"`
-	Default     interface{} `json:"default"`
-	Description string      `json:"description"`
-	Maximum     interface{} `json:"maximum,omitempty"`
-	Minimum     interface{} `json:"minimum,omitempty"`
-	Name        string      `json:"name"`
-	Type        string      `json:"type"`
+	Choices     []interface{} `json:"choices,omitempty"`
+	Default     interface{}   `json:"default"`
+	Description string        `json:"description"`
+	Maximum     interface{}   `json:"maximum,omitempty"`
+	Minimum     interface{}   `json:"minimum,omitempty"`
+	Name        string        `json:"name"`
+	Type        string        `json:"type"`
 }
 
 // Datacube represent a datacube object
@@ -64,7 +64,8 @@ type DatacubeConceptMapping struct {
 // satisfy.
 type MaaS interface {
 	// GetTile returns mapbox vector tile
-	GetTile(zoom, x, y uint32, specs TileDataSpecs) ([]byte, error)
+	// TODO: Clean up unused interface
+	// GetTile(zoom, x, y uint32, specs TileDataSpecs) ([]byte, error)
 
 	// GetModelRuns returns all model runs for the given model
 	GetModelRuns(model string) ([]*ModelRun, error)
