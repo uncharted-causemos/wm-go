@@ -21,7 +21,9 @@ stages:
     paths:
     - vendor/
   before_script:
+    - echo "machine gitlab.uncharted.software login ${GITLAB_LOGIN} password ${GITLAB_TOKEN}"
     - echo "machine gitlab.uncharted.software login ${GITLAB_LOGIN} password ${GITLAB_TOKEN}" > ~/.netrc
+    - cat ~/.netrc
     - go get -u golang.org/x/lint/golint
     - go mod vendor
 
