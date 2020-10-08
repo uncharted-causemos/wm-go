@@ -75,7 +75,6 @@ build:
   only:
     - master
     - tags
-    - merge_requests
   dependencies:
     - environment
   image: docker:latest
