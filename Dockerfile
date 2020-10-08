@@ -7,7 +7,13 @@
 ############################
 FROM golang:alpine AS builder
 
+ARG GITLAB_LOGIN
+ARG GITLAB_TOKEN
+
 RUN apk update && apk add --no-cache git && apk add --no-cach make && apk --no-cache add ca-certificates
+# Gitlab reads following login information from ~/.netrc file
+RUN echo "machine gitlab.uncharted.software login ${GITLAB_LOGIN} password ${GITLAB_TOKEN}" > ~/.netrc
+RUN cat ~/.netrc
 
 WORKDIR /go/src/wm-go
 
