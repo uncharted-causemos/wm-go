@@ -87,7 +87,6 @@ build:
     # Set env vars passed from prepare stage
     - export $(grep -v '^#' ci.env | xargs)
   script:
-    - export DOCKER_TAG="latest"
     - echo "--- Building wm-go docker image ---"
     - echo VERSION=${DOCKER_TAG}
 
