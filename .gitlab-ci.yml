@@ -46,6 +46,7 @@ environment:
   only:
     - master
     - tags
+    - merge_requests
   image: alpine
   artifacts:
     paths:
