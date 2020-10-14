@@ -91,7 +91,7 @@ build:
     - echo VERSION=${DOCKER_TAG}
 
     # Build and push the docker image
-    - docker --build-arg GITLAB_LOGIN=${GITLAB_LOGIN} --build-arg GITLAB_TOKEN=${GITLAB_TOKEN} build -t docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} .
+    - docker build --build-arg GITLAB_LOGIN=${GITLAB_LOGIN} --build-arg GITLAB_TOKEN=${GITLAB_TOKEN} -t docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} .
     - docker push docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}
 
 openstack-deploy:
