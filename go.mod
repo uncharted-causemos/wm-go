@@ -3,6 +3,7 @@ module gitlab.uncharted.software/WM/wm-go
 go 1.13
 
 require (
+	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.33.19
 	github.com/buger/jsonparser v0.0.0-20191204142016-1a29609e0929
 	github.com/davecgh/go-spew v1.1.1

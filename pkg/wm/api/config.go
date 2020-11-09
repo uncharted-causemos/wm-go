@@ -9,12 +9,12 @@ import (
 
 // Config defines the parameters needed to instantiate the API router.
 type Config struct {
-	Graph         wm.Graph
-	KnowledgeBase wm.KnowledgeBase
-	MaaS          wm.MaaS
-	MaaSStorage   wm.MaaSStorage
-	DataAnalysis  wm.DataAnalysis
-	Logger        *zap.SugaredLogger
+	Graph          wm.Graph
+	KnowledgeBase  wm.KnowledgeBase
+	MaaS           wm.MaaS
+	DataOutputTile wm.DataOutputTile
+	DataAnalysis   wm.DataAnalysis
+	Logger         *zap.SugaredLogger
 }
 
 // init validates the config and fills in defaults for missing optional
