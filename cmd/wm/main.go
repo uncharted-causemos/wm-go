@@ -91,12 +91,12 @@ func main() {
 	}
 
 	apiRouter, err := api.New(&api.Config{
-		KnowledgeBase: es,
-		MaaS:          es,
-		MaaSStorage:   s3,
-		DataAnalysis:  es,
-		Graph:         dg,
-		Logger:        sugar,
+		KnowledgeBase:  es,
+		MaaS:           es,
+		DataOutputTile: s3,
+		DataAnalysis:   es,
+		Graph:          dg,
+		Logger:         sugar,
 	})
 	if err != nil {
 		sugar.Fatal(err)

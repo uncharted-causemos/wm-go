@@ -53,3 +53,7 @@ func getTileDataSpecs(r *http.Request) (wm.TileDataSpecs, error) {
 
 	return specs, nil
 }
+
+func getTileDataExpression(r *http.Request) string {
+	return r.URL.Query().Get("expression")
+}

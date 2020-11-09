@@ -63,9 +63,6 @@ type DatacubeConceptMapping struct {
 // MaaS defines the methods that the MaaS database implementation needs to
 // satisfy.
 type MaaS interface {
-	// GetTile returns mapbox vector tile
-	// TODO: Clean up unused interface
-	// GetTile(zoom, x, y uint32, specs TileDataSpecs) ([]byte, error)
 
 	// GetModelRuns returns all model runs for the given model
 	GetModelRuns(model string) ([]*ModelRun, error)

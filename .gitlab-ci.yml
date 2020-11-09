@@ -14,7 +14,7 @@ stages:
   only:
     - master
     - merge_requests
-  image: golang:1.13
+  image: docker-hub.uncharted.software/golang:1.13
   variables:
     GOPROXY: direct
   cache:
@@ -46,7 +46,7 @@ environment:
   only:
     - master
     - tags
-  image: alpine
+  image: docker-hub.uncharted.software/alpine
   artifacts:
     paths:
       - ci.env
@@ -77,7 +77,7 @@ build:
     - tags
   dependencies:
     - environment
-  image: docker:latest
+  image: docker-hub.uncharted.software/docker:latest
   services:
     - docker:dind
   variables:
@@ -100,7 +100,7 @@ openstack-deploy:
     - tags
   dependencies:
     - environment
-  image: alpine
+  image: docker-hub.uncharted.software/alpine
   before_script:
     # Set env vars passed from prepare stage
     - export $(grep -v '^#' ci.env | xargs)

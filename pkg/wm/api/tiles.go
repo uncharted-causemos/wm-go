@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi"
 )
@@ -16,6 +17,8 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return
 	}
+	expression := getTileDataExpression(r)
+	debug := r.URL.Query().Get("debug")
 
 	var zxy [3]uint32
 	for i, key := range []string{paramZoom, paramX, paramY} {
@@ -27,12 +30,23 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		zxy[i] = uint32(v)
 	}
 
-	tile, err := a.maasStorage.GetTile(zxy[0], zxy[1], zxy[2], specs)
+	tile, err := a.dataOutputTile.GetTile(zxy[0], zxy[1], zxy[2], specs, expression)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	// if debug flag is provided, write the string representation of the tile
+	if strings.ToLower(debug) == "true" {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte(tile.String()))
+		return
+	}
+	result, err := tile.MVT()
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", contentTypeMVT)
 	w.Header().Set("Content-Encoding", contentEncodingGzip)
-	w.Write(tile)
+	w.Write(result)
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Knetic/govaluate"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
@@ -44,7 +45,7 @@ type geoTilesResult struct {
 }
 
 // GetTile returns the tile containing model run output specified by the spec
-func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, error) {
+func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs, expression string) (*wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
 
 	var errChs []chan error
@@ -65,14 +66,48 @@ func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs) ([]byte, er
 		results = append(results, <-r)
 	}
 
-	featureMap, err := createFeatures(results)
+	features, err := createFeatures(results)
 	if err != nil {
 		return nil, err
 	}
-	for _, feature := range featureMap {
+
+	if expression != "" {
+		if err := evaluateExpression(features, expression); err != nil {
+			return nil, err
+		}
+	}
+
+	for _, feature := range features {
 		tile.AddFeature(feature)
 	}
-	return tile.MVT()
+	return tile, nil
+}
+
+// evaluateExpression evaluate expression using feature properties as parameters and add the result back as new property to the given feature
+func evaluateExpression(features []*geojson.Feature, expression string) error {
+	exp, err := govaluate.NewEvaluableExpression(expression)
+	if err != nil {
+		return err
+	}
+	for _, feature := range features {
+		parameters := make(map[string]interface{})
+		for key, value := range feature.Properties {
+			if key != "id" {
+				parameters[key] = value
+			}
+		}
+		result, err := exp.Evaluate(parameters)
+		if err != nil {
+			return err
+		}
+		// Check if result is -Inf or Inf (eg. happens when a value is divided by zero)
+		if v, ok := result.(float64); ok && math.IsInf(v, 0) {
+			feature.Properties["result"] = nil
+		} else {
+			feature.Properties["result"] = result
+		}
+	}
+	return nil
 }
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
@@ -185,9 +220,9 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 	return out, er
 }
 
-// createFeatures processes and merges the results and returns a map of geojson feature
-func createFeatures(results []geoTilesResult) (map[string]geojson.Feature, error) {
-	featureMap := map[string]geojson.Feature{}
+// createFeatures processes and merges the geotile results and returns a list of geojson features
+func createFeatures(results []geoTilesResult) ([]*geojson.Feature, error) {
+	featureMap := map[string]*geojson.Feature{}
 	for _, result := range results {
 		for _, gt := range result.data {
 			if _, ok := featureMap[gt.Key]; !ok {
@@ -196,14 +231,18 @@ func createFeatures(results []geoTilesResult) (map[string]geojson.Feature, error
 					return nil, err
 				}
 				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
-				f := *geojson.NewFeature(polygon)
+				f := geojson.NewFeature(polygon)
 				f.Properties["id"] = gt.Key
 				featureMap[gt.Key] = f
 			}
 			featureMap[gt.Key].Properties[result.spec.ValueProp] = gt.SpatialAggregation.Value
 		}
 	}
-	return featureMap, nil
+	var features []*geojson.Feature
+	for _, feature := range featureMap {
+		features = append(features, feature)
+	}
+	return features, nil
 }
 
 // subDivideTiles divides each tile of geoTiles into subdivided tiles at given precision and returns the result.
