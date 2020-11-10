@@ -5,8 +5,7 @@
 ############################
 # STEP 1 build executable binary
 ############################
-FROM golang:alpine AS builder
-
+FROM docker-hub.uncharted.software/golang:alpine AS builder
 ARG GITLAB_LOGIN
 ARG GITLAB_TOKEN
 
