@@ -79,7 +79,8 @@ build:
     - environment
   image: docker-hub.uncharted.software/docker:latest
   services:
-    - docker:dind
+    - name: docker-hub.uncharted.software/docker:dind
+      alias: docker
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
