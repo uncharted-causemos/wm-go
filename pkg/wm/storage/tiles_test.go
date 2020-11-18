@@ -147,8 +147,8 @@ func TestEvaluateExpression(t *testing.T) {
 			},
 			expect: []*geojson.Feature{
 				{Properties: geojson.Properties{"id": "5/19/15", "crop": 3, "rainfall": 30, "result": 10}},
-				{Properties: geojson.Properties{"id": "5/19/16", "crop": 0, "rainfall": 20, "result": nil}},
-				{Properties: geojson.Properties{"id": "5/19/17", "crop": 0, "rainfall": -10, "result": nil}},
+				{Properties: geojson.Properties{"id": "5/19/16", "crop": 0, "rainfall": 20}},
+				{Properties: geojson.Properties{"id": "5/19/17", "crop": 0, "rainfall": -10}},
 			},
 		},
 		{
@@ -163,8 +163,8 @@ func TestEvaluateExpression(t *testing.T) {
 			},
 			expect: []*geojson.Feature{
 				{Properties: geojson.Properties{"id": "5/19/15", "crop": 3, "rainfall": 30, "result": 33}},
-				{Properties: geojson.Properties{"id": "5/19/16", "crop": 0, "result": nil}},
-				{Properties: geojson.Properties{"id": "5/19/17", "rainfall": -10, "result": nil}},
+				{Properties: geojson.Properties{"id": "5/19/16", "crop": 0}},
+				{Properties: geojson.Properties{"id": "5/19/17", "rainfall": -10}},
 			},
 		},
 	}
