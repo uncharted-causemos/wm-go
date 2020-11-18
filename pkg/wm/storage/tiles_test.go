@@ -151,6 +151,22 @@ func TestEvaluateExpression(t *testing.T) {
 				{Properties: geojson.Properties{"id": "5/19/17", "crop": 0, "rainfall": -10, "result": nil}},
 			},
 		},
+		{
+			description: "Test when expression parameters are missing in the feature",
+			input: inputParams{
+				features: []*geojson.Feature{
+					{Properties: geojson.Properties{"id": "5/19/15", "crop": 3, "rainfall": 30}},
+					{Properties: geojson.Properties{"id": "5/19/16", "crop": 0}},
+					{Properties: geojson.Properties{"id": "5/19/17", "rainfall": -10}},
+				},
+				expression: "[rainfall] + [crop]",
+			},
+			expect: []*geojson.Feature{
+				{Properties: geojson.Properties{"id": "5/19/15", "crop": 3, "rainfall": 30, "result": 33}},
+				{Properties: geojson.Properties{"id": "5/19/16", "crop": 0, "result": nil}},
+				{Properties: geojson.Properties{"id": "5/19/17", "rainfall": -10, "result": nil}},
+			},
+		},
 	}
 	for _, test := range tests {
 		evaluateExpression(test.input.features, test.input.expression)

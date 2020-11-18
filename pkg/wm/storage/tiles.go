@@ -98,10 +98,10 @@ func evaluateExpression(features []*geojson.Feature, expression string) error {
 		}
 		result, err := exp.Evaluate(parameters)
 		if err != nil {
-			return err
-		}
-		// Check if result is -Inf or Inf (eg. happens when a value is divided by zero)
-		if v, ok := result.(float64); ok && math.IsInf(v, 0) {
+			// if the expression can not be evaluated
+			feature.Properties["result"] = nil
+		} else if v, ok := result.(float64); ok && math.IsInf(v, 0) {
+			// Check if result is -Inf or Inf (eg. happens when a value is divided by zero)
 			feature.Properties["result"] = nil
 		} else {
 			feature.Properties["result"] = result
