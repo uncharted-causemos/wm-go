@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"sort"
-
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -133,9 +131,6 @@ func (es *ES) GetIndicatorData(indicatorName string) ([]*wm.IndicatorDataPoint, 
 		}
 		dataPoints = append(dataPoints, dataPoint)
 	}
-	sort.Slice(dataPoints, func(i, j int) bool {
-		return dataPoints[i].Timestamp < dataPoints[j].Timestamp
-	})
 
 	return dataPoints, nil
 }
