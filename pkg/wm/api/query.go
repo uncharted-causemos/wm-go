@@ -26,6 +26,10 @@ func getSearch(r *http.Request) string {
 	return r.URL.Query().Get("search")
 }
 
+func getIndicator(r *http.Request) string {
+	return r.URL.Query().Get("indicator")
+}
+
 func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error) {
 	raw := r.URL.Query().Get("filters")
 	if raw == "" {

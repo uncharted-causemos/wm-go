@@ -17,6 +17,7 @@ const (
 	ContextKB FilterContext = iota
 	ContextDatacube
 	ContextAnalysis
+	ContextIndicator
 )
 
 // Field is a type for filterable fields.
@@ -61,6 +62,9 @@ const (
 
 	// Analysis fields
 	FieldAnalysisProjectID
+
+	// Indicator fields
+	FieldIndicatorVariable
 )
 
 // Filter defines a filter to be used in the queries.

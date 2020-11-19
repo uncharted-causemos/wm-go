@@ -52,6 +52,10 @@ var analysisFields = map[string]wm.Field{
 	"project_id": wm.FieldAnalysisProjectID,
 }
 
+var indicatorFields = map[string]wm.Field{
+	"variable": wm.FieldIndicatorVariable,
+}
+
 var operands = map[string]wm.Operand{
 	"and": wm.OperandAnd,
 	"or":  wm.OperandOr,
@@ -92,6 +96,8 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 		field, ok = datacubeFields[fieldStr]
 	case wm.ContextAnalysis:
 		field, ok = analysisFields[fieldStr]
+	case wm.ContextIndicator:
+		field, ok = indicatorFields[fieldStr]
 	default:
 		return nil, fmt.Errorf("Unrecognized filter context")
 	}
@@ -164,7 +170,8 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeAdmin1,
 		wm.FieldDatacubeAdmin2,
 		wm.FieldDatacubeSearch,
-		wm.FieldAnalysisProjectID:
+		wm.FieldAnalysisProjectID,
+		wm.FieldIndicatorVariable:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,
 		wm.FieldPolarity,

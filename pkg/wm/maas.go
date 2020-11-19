@@ -24,6 +24,19 @@ type ModelParameter struct {
 	Type        string        `json:"type"`
 }
 
+// IndicatorDataPoint represent a data point for an indicator datacube
+type IndicatorDataPoint struct {
+	Admin1    string  `json:"admin1"`
+	Admin2    string  `json:"admin2"`
+	Country   string  `json:"country"`
+	Dataset   string  `json:"dataset"`
+	Mean      float64 `json:"mean"`
+	Sum       float64 `json:"sum"`
+	Timestamp float64 `json:"timestamp"`
+	Variable  string  `json:"variable"`
+	Value     float64 `json:"value"`
+}
+
 // Datacube represent a datacube object
 type Datacube struct {
 	ID                     string                   `json:"id"`
@@ -69,6 +82,9 @@ type MaaS interface {
 
 	// GetModelParameters returns available parameters for the model
 	GetModelParameters(model string) ([]*ModelParameter, error)
+
+	// GetIndicatorData returns the indicator time series
+	GetIndicatorData(indicatorName string) ([]*IndicatorDataPoint, error)
 
 	// SearchDatacubes search and returns datacubes
 	SearchDatacubes(filters []*Filter) ([]*Datacube, error)

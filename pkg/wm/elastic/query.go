@@ -37,6 +37,9 @@ var fieldNames = map[wm.Field]string{
 
 	// Analysis Fields
 	wm.FieldAnalysisProjectID: "project_id",
+
+	// Analysis Fields
+	wm.FieldIndicatorVariable: "variable",
 }
 
 const (
