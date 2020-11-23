@@ -110,7 +110,7 @@ func (es *ES) GetIndicatorData(indicatorName string) ([]*wm.IndicatorDataPoint, 
 	}
 	res, err := es.client.Search(
 		es.client.Search.WithIndex(indicatorDataIndex),
-		es.client.Search.WithSize(2000),
+		es.client.Search.WithSize(10000),
 		es.client.Search.WithBody(&buf),
 		es.client.Search.WithPretty(),
 	)
