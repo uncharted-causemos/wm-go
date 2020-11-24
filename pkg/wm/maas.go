@@ -85,7 +85,7 @@ type MaaS interface {
 	GetModelParameters(model string) ([]*ModelParameter, error)
 
 	// GetIndicatorData returns the indicator time series
-	GetIndicatorData(indicatorName string) ([]*IndicatorDataPoint, error)
+	GetIndicatorData(indicatorName string, modelName string) ([]*IndicatorDataPoint, error)
 
 	// SearchDatacubes search and returns datacubes
 	SearchDatacubes(filters []*Filter) ([]*Datacube, error)

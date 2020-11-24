@@ -54,6 +54,7 @@ var analysisFields = map[string]wm.Field{
 
 var indicatorFields = map[string]wm.Field{
 	"variable": wm.FieldIndicatorVariable,
+	"dataset": wm.FieldIndicatorDataset,
 }
 
 var operands = map[string]wm.Operand{
@@ -171,7 +172,8 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeAdmin2,
 		wm.FieldDatacubeSearch,
 		wm.FieldAnalysisProjectID,
-		wm.FieldIndicatorVariable:
+		wm.FieldIndicatorVariable,
+		wm.FieldIndicatorDataset:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,
 		wm.FieldPolarity,

@@ -87,12 +87,16 @@ func (es *ES) CountDatacubes(filters []*wm.Filter) (uint64, error) {
 }
 
 // GetIndicatorData returns the indicator time series
-func (es *ES) GetIndicatorData(indicatorName string) ([]*wm.IndicatorDataPoint, error) {
+func (es *ES) GetIndicatorData(indicatorName string, modelName string) ([]*wm.IndicatorDataPoint, error) {
 	options := queryOptions{
 		filters: []*wm.Filter{
 			{
 				Field: wm.FieldIndicatorVariable,
 				StringValues: []string{indicatorName},
+			},
+			{
+				Field: wm.FieldIndicatorDataset,
+				StringValues: []string{modelName},
 			},
 		},
 	}

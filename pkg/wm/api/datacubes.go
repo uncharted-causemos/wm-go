@@ -66,9 +66,10 @@ func (a *api) countDatacubes(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) getIndicatorData(w http.ResponseWriter, r *http.Request) {
 	indicator := getIndicator(r)
+	model := getModel(r)
 
 	//For now, only handle a single indicatorName
-	indicatorData, err := a.maas.GetIndicatorData(indicator)
+	indicatorData, err := a.maas.GetIndicatorData(indicator, model)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
