@@ -29,6 +29,7 @@ type Datacube struct {
 	ID                     string                   `json:"id"`
 	Type                   string                   `json:"type"`
 	Model                  string                   `json:"model"`
+	ModelID                string                   `json:"model_id"`
 	Category               []string                 `json:"category"`
 	ModelDescription       string                   `json:"model_description"`
 	Label                  string                   `json:"label"`

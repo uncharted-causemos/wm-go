@@ -33,6 +33,7 @@ var datacubeFields = map[string]wm.Field{
 	"id":             wm.FieldDatacubeID,
 	"type":           wm.FieldDatacubeType,
 	"model":          wm.FieldDatacubeModel,
+	"model_id":       wm.FieldDatacubeModelID,
 	"category":       wm.FieldDatacubeCategory,
 	"label":          wm.FieldDatacubeLabel,
 	"maintainer":     wm.FieldDatacubeMaintainer,

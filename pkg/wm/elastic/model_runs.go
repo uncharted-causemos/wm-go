@@ -1,8 +1,10 @@
 package elastic
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/tidwall/gjson"
@@ -127,8 +129,49 @@ func (es *ES) getAvailableRunIDMap(model string) (map[string]bool, error) {
 	return runIDs, nil
 }
 
+func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
+	index := "model_scenarios"
+	rBody := fmt.Sprintf(`{
+		"query": { 
+			"bool": { 
+				"filter": [ 
+					{ "term":  { "model": "%s" }}
+				]
+			}
+		}
+	}`, modelID)
+	res, err := es.client.Search(
+		es.client.Search.WithIndex(index),
+		es.client.Search.WithSize(maxNumberOfRuns),
+		es.client.Search.WithBody(strings.NewReader(rBody)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	body := read(res.Body)
+	if res.IsError() {
+		return nil, errors.New(body)
+	}
+	var runs []*wm.ModelRun
+	for _, hit := range gjson.Get(body, "hits.hits").Array() {
+		source := hit.Get("_source").String()
+		var run wm.ModelRun
+		if err := json.Unmarshal([]byte(source), &run); err != nil {
+			return nil, err
+		}
+		runs = append(runs, &run)
+	}
+	return runs, nil
+}
+
 // GetModelRuns returns model runs
 func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
+
+	// If model is numeric we are dealing with supermaas model id (new data)
+	if _, err := strconv.Atoi(model); err == nil {
+		return es.getScenarios(model)
+	}
+
 	data := map[string]interface{}{
 		"Model": model,
 	}
