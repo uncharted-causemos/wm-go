@@ -195,7 +195,7 @@ func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
 		if isSearchField[filter.Field] {
 			searches = append(searches, filter)
 		} else {
-			filters = append(searches, filter)
+			filters = append(filters, filter)
 		}
 	}
 	queryContext, err := buildQueryClauses(searches)
