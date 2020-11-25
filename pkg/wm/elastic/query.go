@@ -33,6 +33,7 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeAdmin1:       "admin1",
 	wm.FieldDatacubeAdmin2:       "admin2",
 	wm.FieldDatacubePeriod:       "period",
+	wm.FieldDatacubeVariable:     "variable",
 	wm.FieldDatacubeSearch:       "_search",
 
 	// Analysis Fields

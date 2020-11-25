@@ -58,6 +58,7 @@ const (
 	FieldDatacubeAdmin1
 	FieldDatacubeAdmin2
 	FieldDatacubePeriod
+	FieldDatacubeVariable
 	FieldDatacubeSearch
 
 	// Analysis fields

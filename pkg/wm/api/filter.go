@@ -45,6 +45,7 @@ var datacubeFields = map[string]wm.Field{
 	"admin1":         wm.FieldDatacubeAdmin1,
 	"admin2":         wm.FieldDatacubeAdmin2,
 	"period":         wm.FieldDatacubePeriod,
+	"variable":       wm.FieldDatacubeVariable,
 	"_search":        wm.FieldDatacubeSearch,
 }
 
@@ -170,6 +171,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeCountry,
 		wm.FieldDatacubeAdmin1,
 		wm.FieldDatacubeAdmin2,
+		wm.FieldDatacubeVariable,
 		wm.FieldDatacubeSearch,
 		wm.FieldAnalysisProjectID,
 		wm.FieldIndicatorVariable,
