@@ -17,6 +17,7 @@ const parametersIndex = "parameters"
 const modelTimeseriesIndex = "model-timeseries"
 
 const modelRunIndex = "model-run-parameters"
+const modelScenariosIndex = "model_scenarios"
 const maxNumberOfRuns = 10000
 
 // HACK: This function gets the run parameters data for given model including the ones that we don't have in our existing `model-run-parameters` index.
@@ -130,7 +131,6 @@ func (es *ES) getAvailableRunIDMap(model string) (map[string]bool, error) {
 }
 
 func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
-	index := "model_scenarios"
 	rBody := fmt.Sprintf(`{
 		"query": { 
 			"bool": { 
@@ -141,7 +141,7 @@ func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
 		}
 	}`, modelID)
 	res, err := es.client.Search(
-		es.client.Search.WithIndex(index),
+		es.client.Search.WithIndex(modelScenariosIndex),
 		es.client.Search.WithSize(maxNumberOfRuns),
 		es.client.Search.WithBody(strings.NewReader(rBody)),
 	)
