@@ -33,10 +33,15 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeAdmin1:       "admin1",
 	wm.FieldDatacubeAdmin2:       "admin2",
 	wm.FieldDatacubePeriod:       "period",
+	wm.FieldDatacubeVariable:     "variable",
 	wm.FieldDatacubeSearch:       "_search",
 
 	// Analysis Fields
 	wm.FieldAnalysisProjectID: "project_id",
+
+	// Indicator Fields
+	wm.FieldIndicatorVariable: "variable",
+	wm.FieldIndicatorDataset:  "dataset",
 }
 
 const (
@@ -190,7 +195,7 @@ func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
 		if isSearchField[filter.Field] {
 			searches = append(searches, filter)
 		} else {
-			filters = append(searches, filter)
+			filters = append(filters, filter)
 		}
 	}
 	queryContext, err := buildQueryClauses(searches)
