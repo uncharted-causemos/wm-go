@@ -13,6 +13,10 @@ type datacubesResponse struct {
 
 type countDatacubesResponse uint64
 
+type indicatorDataResponse struct {
+	*wm.IndicatorDataPoint
+}
+
 // Render allows to satisfy the render.Renderer interface.
 func (d *datacubesResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
@@ -20,6 +24,11 @@ func (d *datacubesResponse) Render(w http.ResponseWriter, r *http.Request) error
 
 // Render satisfies the render.Renderer interface.
 func (cd countDatacubesResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (d *indicatorDataResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -53,4 +62,21 @@ func (a *api) countDatacubes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.Render(w, r, countDatacubesResponse(count))
+}
+
+func (a *api) getIndicatorData(w http.ResponseWriter, r *http.Request) {
+	indicator := getIndicator(r)
+	model := getModel(r)
+
+	//For now, only handle a single indicatorName
+	indicatorData, err := a.maas.GetIndicatorData(indicator, model)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	list := []render.Renderer{}
+	for _, indicator := range indicatorData {
+		list = append(list, &indicatorDataResponse{indicator})
+	}
+	render.RenderList(w, r, list)
 }
