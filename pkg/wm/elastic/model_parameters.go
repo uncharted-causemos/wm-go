@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -17,8 +17,8 @@ const (
 
 // GetModelParameters returns model runs
 func (es *ES) GetModelParameters(model string) ([]*wm.ModelParameter, error) {
-	// If model is numeric we are dealing with supermaas model id (new data)
-	if _, err := strconv.Atoi(model); err == nil {
+	// If model is uuid we are dealing with new supermaas data
+	if _, err := uuid.Parse(model); err == nil {
 		return es.getModelParameters(model)
 	}
 	// For legacy data  (old maas)
