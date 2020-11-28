@@ -26,6 +26,7 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeMaintainer:   "maintainer",
 	wm.FieldDatacubeSource:       "source",
 	wm.FieldDatacubeOutputName:   "output_name",
+	wm.FieldDatacubeOutputUnits:  "output_units",
 	wm.FieldDatacubeParameters:   "parameters",
 	wm.FieldDatacubeConceptName:  "concepts.name",
 	wm.FieldDatacubeConceptScore: "concepts.score",
@@ -42,6 +43,7 @@ var fieldNames = map[wm.Field]string{
 	// Indicator Fields
 	wm.FieldIndicatorVariable: "variable",
 	wm.FieldIndicatorDataset:  "dataset",
+	wm.FieldIndicatorUnit:     "value_unit",
 }
 
 const (

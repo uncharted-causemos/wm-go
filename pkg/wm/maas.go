@@ -30,6 +30,7 @@ type IndicatorDataPoint struct {
 	Admin2    string  `json:"admin2"`
 	Country   string  `json:"country"`
 	Dataset   string  `json:"dataset"`
+	Unit      string  `json:"value_unit"`
 	Mean      float64 `json:"mean"`
 	Sum       float64 `json:"sum"`
 	Timestamp float64 `json:"timestamp"`
@@ -85,7 +86,7 @@ type MaaS interface {
 	GetModelParameters(model string) ([]*ModelParameter, error)
 
 	// GetIndicatorData returns the indicator time series
-	GetIndicatorData(indicatorName string, modelName string) ([]*IndicatorDataPoint, error)
+	GetIndicatorData(indicatorName string, modelName string, unit []string) ([]*IndicatorDataPoint, error)
 
 	// SearchDatacubes search and returns datacubes
 	SearchDatacubes(filters []*Filter) ([]*Datacube, error)

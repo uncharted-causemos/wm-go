@@ -38,6 +38,7 @@ var datacubeFields = map[string]wm.Field{
 	"maintainer":     wm.FieldDatacubeMaintainer,
 	"source":         wm.FieldDatacubeSource,
 	"output_name":    wm.FieldDatacubeOutputName,
+	"output_units":   wm.FieldDatacubeOutputUnits,
 	"parameters":     wm.FieldDatacubeParameters,
 	"concepts.name":  wm.FieldDatacubeConceptName,
 	"concepts.score": wm.FieldDatacubeConceptScore,
@@ -56,6 +57,7 @@ var analysisFields = map[string]wm.Field{
 var indicatorFields = map[string]wm.Field{
 	"variable": wm.FieldIndicatorVariable,
 	"dataset": wm.FieldIndicatorDataset,
+	"value_unit": wm.FieldIndicatorUnit,
 }
 
 var operands = map[string]wm.Operand{
@@ -166,6 +168,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeMaintainer,
 		wm.FieldDatacubeSource,
 		wm.FieldDatacubeOutputName,
+		wm.FieldDatacubeOutputUnits,
 		wm.FieldDatacubeParameters,
 		wm.FieldDatacubeConceptName,
 		wm.FieldDatacubeCountry,
@@ -175,7 +178,8 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeSearch,
 		wm.FieldAnalysisProjectID,
 		wm.FieldIndicatorVariable,
-		wm.FieldIndicatorDataset:
+		wm.FieldIndicatorDataset,
+		wm.FieldIndicatorUnit:
 		strVals, err = parseStringValues(raw)
 	case wm.FieldHedging,
 		wm.FieldPolarity,
