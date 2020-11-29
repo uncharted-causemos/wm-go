@@ -45,6 +45,7 @@ const (
 	FieldDatacubeID
 	FieldDatacubeType
 	FieldDatacubeModel
+	FieldDatacubeModelID
 	FieldDatacubeCategory
 	FieldDatacubeLabel
 	FieldDatacubeMaintainer

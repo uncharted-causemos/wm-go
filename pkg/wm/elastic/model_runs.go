@@ -1,10 +1,12 @@
 package elastic
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -15,6 +17,7 @@ const parametersIndex = "parameters"
 const modelTimeseriesIndex = "model-timeseries"
 
 const modelRunIndex = "model-run-parameters"
+const modelScenariosIndex = "model_scenarios"
 const maxNumberOfRuns = 10000
 
 // HACK: This function gets the run parameters data for given model including the ones that we don't have in our existing `model-run-parameters` index.
@@ -127,8 +130,48 @@ func (es *ES) getAvailableRunIDMap(model string) (map[string]bool, error) {
 	return runIDs, nil
 }
 
+func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
+	rBody := fmt.Sprintf(`{
+		"query": { 
+			"bool": { 
+				"filter": [ 
+					{ "term":  { "model_id": "%s" }}
+				]
+			}
+		}
+	}`, modelID)
+	res, err := es.client.Search(
+		es.client.Search.WithIndex(modelScenariosIndex),
+		es.client.Search.WithSize(maxNumberOfRuns),
+		es.client.Search.WithBody(strings.NewReader(rBody)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	body := read(res.Body)
+	if res.IsError() {
+		return nil, errors.New(body)
+	}
+	var runs []*wm.ModelRun
+	for _, hit := range gjson.Get(body, "hits.hits").Array() {
+		source := hit.Get("_source").String()
+		var run wm.ModelRun
+		if err := json.Unmarshal([]byte(source), &run); err != nil {
+			return nil, err
+		}
+		runs = append(runs, &run)
+	}
+	return runs, nil
+}
+
 // GetModelRuns returns model runs
 func (es *ES) GetModelRuns(model string) ([]*wm.ModelRun, error) {
+
+	// If model is uuid we are dealing with new supermaas data
+	if _, err := uuid.Parse(model); err == nil {
+		return es.getScenarios(model)
+	}
+
 	data := map[string]interface{}{
 		"Model": model,
 	}

@@ -21,6 +21,7 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeID:           "id",
 	wm.FieldDatacubeType:         "type",
 	wm.FieldDatacubeModel:        "model",
+	wm.FieldDatacubeModelID:      "model_id",
 	wm.FieldDatacubeCategory:     "category",
 	wm.FieldDatacubeLabel:        "label",
 	wm.FieldDatacubeMaintainer:   "maintainer",
