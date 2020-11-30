@@ -34,6 +34,11 @@ func getModel(r *http.Request) string {
 	return r.URL.Query().Get("model")
 }
 
+func getUnits(r *http.Request) ([]string, bool) {
+	units, ok := r.URL.Query()["unit"]
+	return units, ok
+}
+
 func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error) {
 	raw := r.URL.Query().Get("filters")
 	if raw == "" {

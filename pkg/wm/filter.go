@@ -68,6 +68,7 @@ const (
 	// Indicator fields
 	FieldIndicatorVariable
 	FieldIndicatorDataset
+	FieldIndicatorUnit
 )
 
 // Filter defines a filter to be used in the queries.
