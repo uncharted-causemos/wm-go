@@ -13,11 +13,12 @@ type TileDataSpecs []TileDataSpec
 
 // TileDataSpec defines the tile data specifications to be used in the queries.
 type TileDataSpec struct {
-	Model     string `json:"model"`
-	RunID     string `json:"runId"`
-	Feature   string `json:"feature"`
-	Date      string `json:"date"`
-	ValueProp string `json:"valueProp"`
+	Model        string `json:"model"`
+	RunID        string `json:"runId"`
+	Feature      string `json:"feature"`
+	Date         string `json:"date"`
+	ValueProp    string `json:"valueProp"`
+	MaxPrecision uint32 `json:"maxPrecision"`
 }
 
 // Point is a lon/lat point
