@@ -124,6 +124,10 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		timemillis := startTime.Unix() * 1000
 		modelMaxPrecision, ok := modelMaxPrecision[strings.ToLower(spec.Model)]
 		if !ok {
+			modelMaxPrecision = spec.MaxPrecision
+		}
+		if modelMaxPrecision == 0 {
+			// if zero value (not set)
 			modelMaxPrecision = 99
 		}
 		key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
@@ -161,7 +165,8 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		// Convert tile bin positions into z/x/y tile coordinates and save as geotiles
 		totalBins := tile.Bins.TotalBins
 		totalBinsXY := uint32(math.Pow(2, (math.Log(float64(totalBins)) / math.Log(4))))
-
+		fmt.Println(key)
+		fmt.Printf("Total Bins: %d, Coord: %v, BinStats: %v \n", tile.Bins.TotalBins, tile.Coord, tile.Bins.Stats)
 		// bin(subtile) precision
 		binPrecision := tile.Coord.Z + uint32(math.Log2(float64(totalBinsXY)))
 
