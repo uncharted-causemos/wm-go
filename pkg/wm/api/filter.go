@@ -56,8 +56,8 @@ var analysisFields = map[string]wm.Field{
 }
 
 var indicatorFields = map[string]wm.Field{
-	"variable": wm.FieldIndicatorVariable,
-	"dataset": wm.FieldIndicatorDataset,
+	"variable":   wm.FieldIndicatorVariable,
+	"dataset":    wm.FieldIndicatorDataset,
 	"value_unit": wm.FieldIndicatorUnit,
 }
 
@@ -164,6 +164,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeID,
 		wm.FieldDatacubeType,
 		wm.FieldDatacubeModel,
+		wm.FieldDatacubeModelID,
 		wm.FieldDatacubeCategory,
 		wm.FieldDatacubeLabel,
 		wm.FieldDatacubeMaintainer,
