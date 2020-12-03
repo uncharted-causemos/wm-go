@@ -135,7 +135,8 @@ func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
 		"query": { 
 			"bool": { 
 				"filter": [ 
-					{ "term":  { "model_id": "%s" }}
+					{ "term":  { "model_id": "%s" }},
+					{ "term":  { "output_tile": "READY" }}
 				]
 			}
 		}
