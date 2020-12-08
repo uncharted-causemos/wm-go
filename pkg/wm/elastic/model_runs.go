@@ -139,7 +139,12 @@ func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
 					{ "term":  { "output_tile": "READY" }}
 				]
 			}
-		}
+		},
+		"sort": [
+			{
+				"created": { "order": "desc" }
+			}
+		]
 	}`, modelID)
 	res, err := es.client.Search(
 		es.client.Search.WithIndex(modelScenariosIndex),
@@ -155,11 +160,13 @@ func (es *ES) getScenarios(modelID string) ([]*wm.ModelRun, error) {
 	}
 	var runs []*wm.ModelRun
 	for _, hit := range gjson.Get(body, "hits.hits").Array() {
-		source := hit.Get("_source").String()
+		source := hit.Get("_source")
+		sourceStr := source.String()
 		var run wm.ModelRun
-		if err := json.Unmarshal([]byte(source), &run); err != nil {
+		if err := json.Unmarshal([]byte(sourceStr), &run); err != nil {
 			return nil, err
 		}
+		run.Model = source.Get("model_id").String()
 		runs = append(runs, &run)
 	}
 	return runs, nil
