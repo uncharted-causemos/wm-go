@@ -38,9 +38,6 @@ var fieldNames = map[wm.Field]string{
 	wm.FieldDatacubeVariable:     "variable",
 	wm.FieldDatacubeSearch:       "_search",
 
-	// Analysis Fields
-	wm.FieldAnalysisProjectID: "project_id",
-
 	// Indicator Fields
 	wm.FieldIndicatorVariable: "variable",
 	wm.FieldIndicatorDataset:  "dataset",
