@@ -16,7 +16,6 @@ type FilterContext int
 const (
 	ContextKB FilterContext = iota
 	ContextDatacube
-	ContextAnalysis
 	ContextIndicator
 )
 
@@ -61,9 +60,6 @@ const (
 	FieldDatacubePeriod
 	FieldDatacubeVariable
 	FieldDatacubeSearch
-
-	// Analysis fields
-	FieldAnalysisProjectID
 
 	// Indicator fields
 	FieldIndicatorVariable

@@ -51,10 +51,6 @@ var datacubeFields = map[string]wm.Field{
 	"_search":        wm.FieldDatacubeSearch,
 }
 
-var analysisFields = map[string]wm.Field{
-	"project_id": wm.FieldAnalysisProjectID,
-}
-
 var indicatorFields = map[string]wm.Field{
 	"variable":   wm.FieldIndicatorVariable,
 	"dataset":    wm.FieldIndicatorDataset,
@@ -99,8 +95,6 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 		field, ok = fields[fieldStr]
 	case wm.ContextDatacube:
 		field, ok = datacubeFields[fieldStr]
-	case wm.ContextAnalysis:
-		field, ok = analysisFields[fieldStr]
 	case wm.ContextIndicator:
 		field, ok = indicatorFields[fieldStr]
 	default:
@@ -178,7 +172,6 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldDatacubeAdmin2,
 		wm.FieldDatacubeVariable,
 		wm.FieldDatacubeSearch,
-		wm.FieldAnalysisProjectID,
 		wm.FieldIndicatorVariable,
 		wm.FieldIndicatorDataset,
 		wm.FieldIndicatorUnit:
