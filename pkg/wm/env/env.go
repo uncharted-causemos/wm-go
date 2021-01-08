@@ -16,12 +16,6 @@ type Specification struct {
 
 	ElasticURL string `required:"true" envconfig:"ELASTIC_URL"`
 
-	DgraphURLS []string `required:"true" envconfig:"DGRAPH_URLS"`
-
-	MaasURL      string `required:"true" envconfig:"MAAS_URL"`
-	MaasUser     string `required:"true" envconfig:"MAAS_USERNAME"`
-	MaasPassword string `json:"-" required:"true" envconfig:"MAAS_PASSWORD"`
-
 	AwsS3Id     string `required:"true" envconfig:"AWS_S3_ID"`
 	AwsS3Secret string `required:"true" envconfig:"AWS_S3_SECRET"`
 	AwsS3Token  string `required:"true" envconfig:"AWS_S3_TOKEN"`
