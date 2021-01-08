@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -15,17 +14,8 @@ const (
 	modelParametersIndex = "model_parameters"
 )
 
-// GetModelParameters returns model runs
-func (es *ES) GetModelParameters(model string) ([]*wm.ModelParameter, error) {
-	// If model is uuid we are dealing with new supermaas data
-	if _, err := uuid.Parse(model); err == nil {
-		return es.getModelParameters(model)
-	}
-	// For legacy data  (old maas)
-	return es.modelService.GetModelParameters(model)
-}
-
-func (es *ES) getModelParameters(modelID string) ([]*wm.ModelParameter, error) {
+// GetModelParameters returns model parameters
+func (es *ES) GetModelParameters(modelID string) ([]*wm.ModelParameter, error) {
 	rBody := fmt.Sprintf(`{
 		"query": { 
 			"bool": { 

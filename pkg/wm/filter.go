@@ -14,8 +14,7 @@ type FilterContext int
 
 // Available filter context
 const (
-	ContextKB FilterContext = iota
-	ContextDatacube
+	ContextDatacube = iota
 	ContextIndicator
 )
 
@@ -24,24 +23,8 @@ type Field int
 
 // Available field types.
 const (
-	FieldBeliefScore Field = iota
-	FieldCause
-	FieldConcept
-	FieldEffect
-	FieldEvidenceSource
-	FieldGroundingScore
-	FieldHedging
-	FieldLocation
-	FieldNumEvidence
-	FieldOrganization
-	FieldPolarity
-	FieldPublicationYear
-	FieldReader
-	FieldRefutingEvidence
-	FieldQuality
-
 	// Datacubes fields
-	FieldDatacubeID
+	FieldDatacubeID = iota
 	FieldDatacubeType
 	FieldDatacubeModel
 	FieldDatacubeModelID

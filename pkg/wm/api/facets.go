@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/go-chi/render"
@@ -24,17 +25,18 @@ func (a *api) getFacets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filters, err := getFilters(r, wm.ContextKB)
+	filters, err := getFilters(r, wm.ContextDatacube)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return
 	}
+	fmt.Println(filters, facetNames)
+	// NYI
+	// fs, err := a.kb.GetFacets(facetNames, filters)
+	// if err != nil {
+	// 	a.errorResponse(w, err, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	fs, err := a.kb.GetFacets(facetNames, filters)
-	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
-	}
-
-	render.Render(w, r, &facetsResponse{fs})
+	render.Render(w, r, &facetsResponse{})
 }

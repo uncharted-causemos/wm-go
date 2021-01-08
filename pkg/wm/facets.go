@@ -10,24 +10,8 @@ type Facet struct {
 
 // Facets represent the results of a facets query.
 type Facets struct {
-	// Document facets
-	Location        []Facet `json:"location,omitempty"`
-	Organization    []Facet `json:"organization,omitempty"`
-	PublicationYear []Facet `json:"publicationYear,omitempty"`
-
-	// Factor facets
-	Concept        []Facet `json:"concept,omitempty"`
-	GroundingScore []Facet `json:"groundingScore,omitempty"`
-
-	// Statement facets
-	Cause            []Facet `json:"cause,omitempty"`
-	Effect           []Facet `json:"effect,omitempty"`
-	Polarity         []Facet `json:"polarity,omitempty"`
-	BeliefScore      []Facet `json:"beliefScore,omitempty"`
-	NumEvidence      []Facet `json:"numEvidence,omitempty"`
-	Reader           []Facet `json:"reader,omitempty"`
-	RefutingEvidence []Facet `json:"refutingEvidence,omitempty"`
-	Quality          []Facet `json:"quality,omitempty"`
-	Hedging          []Facet `json:"hedging,omitempty"`
-	EvidenceSource   []Facet `json:"evidenceSource,omitempty"`
+	// Datacubes facets
+	Type     []Facet `json:"type,omitempty"`
+	Category []Facet `json:"category,omitempty"`
+	// TODO: add more fields
 }

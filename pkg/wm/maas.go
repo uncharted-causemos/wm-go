@@ -98,9 +98,3 @@ type MaaS interface {
 	// GetConcepts returns list of concepts
 	GetConcepts() ([]string, error)
 }
-
-// ModelService defines the interface for external REST API
-type ModelService interface {
-	GetModelParameters(model string) ([]*ModelParameter, error)
-	GetConcepts() ([]string, error)
-}

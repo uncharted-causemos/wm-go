@@ -19,8 +19,6 @@ const (
 )
 
 type api struct {
-	graph          wm.Graph
-	kb             wm.KnowledgeBase
 	maas           wm.MaaS
 	dataOutputTile wm.DataOutputTile
 	logger         *zap.SugaredLogger
@@ -33,20 +31,12 @@ func New(cfg *Config) (chi.Router, error) {
 	}
 
 	a := api{
-		graph:          cfg.Graph,
-		kb:             cfg.KnowledgeBase,
 		maas:           cfg.MaaS,
 		dataOutputTile: cfg.DataOutputTile,
 		logger:         cfg.Logger,
 	}
 
 	r := chi.NewRouter()
-
-	r.Route("/{"+paramProjectID+":[a-f0-9-]+}", func(r chi.Router) {
-		r.Use(render.SetContentType(render.ContentTypeJSON))
-
-		r.Get("/facets", a.getFacets)
-	})
 
 	r.Route("/maas", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
