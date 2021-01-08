@@ -21,21 +21,21 @@ func TestParseFilters(t *testing.T) {
 		},
 		{
 			`{"clauses":[
-				{"field":"cause","operand":"or","isNot":false,"values":["a","b","c"]}
+				{"field":"category","operand":"or","isNot":false,"values":["a","b","c"]}
 			]}`,
 			false,
 			1,
 		},
 		{
 			`{"clauses":[
-				{"field":"cause","operand":"or","isNot":false,"values":["a","b","c"]},
-				{"field":"effect","operand":"or","isNot":false,"values":["d","e"]}
+				{"field":"category","operand":"or","isNot":false,"values":["a","b","c"]},
+				{"field":"type","operand":"or","isNot":false,"values":["d","e"]}
 			]}`,
 			false,
 			2,
 		},
 	} {
-		got, err := parseFilters([]byte(test.raw), wm.ContextKB)
+		got, err := parseFilters([]byte(test.raw), wm.ContextDatacube)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("parseFilters returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))
@@ -53,37 +53,27 @@ func TestParseFilter(t *testing.T) {
 		want  *wm.Filter
 	}{
 		{
-			`{"field":"cause","operand":"or","isNot":false,"values":["a","b","c"]}`,
+			`{"field":"category","operand":"or","isNot":false,"values":["a","b","c"]}`,
 			false,
 			&wm.Filter{
-				Field:        wm.FieldCause,
+				Field:        wm.FieldDatacubeCategory,
 				Operand:      wm.OperandOr,
 				IsNot:        false,
 				StringValues: []string{"a", "b", "c"},
 			},
 		},
 		{
-			`{"field":"polarity","operand":"and","isNot":true,"values":[1]}`,
+			`{"field":"period","operand":"and","isNot":false,"values":[[2010,2020]]}`,
 			false,
 			&wm.Filter{
-				Field:     wm.FieldPolarity,
-				Operand:   wm.OperandAnd,
-				IsNot:     true,
-				IntValues: []int{1},
-			},
-		},
-		{
-			`{"field":"beliefScore","operand":"and","isNot":false,"values":[[0.5,0.9]]}`,
-			false,
-			&wm.Filter{
-				Field:   wm.FieldBeliefScore,
+				Field:   wm.FieldDatacubePeriod,
 				Operand: wm.OperandAnd,
 				IsNot:   false,
-				Range:   wm.Range{Minimum: 0.5, Maximum: 0.9, IsClosed: false},
+				Range:   wm.Range{Minimum: 2010, Maximum: 2020, IsClosed: false},
 			},
 		},
 	} {
-		got, err := parseFilter([]byte(test.raw), wm.ContextKB)
+		got, err := parseFilter([]byte(test.raw), wm.ContextDatacube)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("parseFilter returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))
@@ -104,7 +94,7 @@ func TestParseValues(t *testing.T) {
 		wantRange   wm.Range
 	}{
 		{
-			wm.FieldLocation,
+			wm.FieldDatacubeCountry,
 			`[]`,
 			false,
 			[]string{},
@@ -112,31 +102,23 @@ func TestParseValues(t *testing.T) {
 			wm.Range{},
 		},
 		{
-			wm.FieldLocation,
-			`["toronto"]`,
+			wm.FieldDatacubeCountry,
+			`["Ethiopia"]`,
 			false,
-			[]string{"toronto"},
+			[]string{"Ethiopia"},
 			nil,
 			wm.Range{},
 		},
 		{
-			wm.FieldPolarity,
-			`[0,3]`,
-			false,
-			nil,
-			[]int{0, 3},
-			wm.Range{},
-		},
-		{
-			wm.FieldBeliefScore,
-			`[[0.5,0.75]]`,
+			wm.FieldDatacubePeriod,
+			`[[2010,2020]]`,
 			false,
 			nil,
 			nil,
-			wm.Range{Minimum: 0.5, Maximum: 0.75, IsClosed: false},
+			wm.Range{Minimum: 2010, Maximum: 2020, IsClosed: false},
 		},
 		{
-			wm.FieldBeliefScore,
+			wm.FieldDatacubePeriod,
 			`"broken"`,
 			true,
 			nil,
