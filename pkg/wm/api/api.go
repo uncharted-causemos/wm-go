@@ -16,6 +16,7 @@ const (
 	paramX         = "x"
 	paramY         = "y"
 	paramModelID   = "modelID"
+	paramRunID     = "runID"
 )
 
 type api struct {
@@ -44,9 +45,11 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/models/{"+paramModelID+"}/runs", a.getModelRuns)
 		r.Get("/models/{"+paramModelID+"}/parameters", a.getModelParameters)
 		r.Get("/datacubes", a.getDatacubes)
-		r.Get("/indicator-data", a.getIndicatorData)
 		r.Get("/datacubes/count", a.countDatacubes)
+		r.Get("/indicator-data", a.getIndicatorData)
 		r.Get("/concepts", a.getConcepts)
+		r.Get("/output/{"+paramRunID+"}/timeseries", a.getModelOutputTimeseries)
+		r.Get("/output/{"+paramRunID+"}/stats", a.getModelOutputStats)
 	})
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {
