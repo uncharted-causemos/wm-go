@@ -34,6 +34,10 @@ func getModel(r *http.Request) string {
 	return r.URL.Query().Get("model")
 }
 
+func getFeature(r *http.Request) string {
+	return r.URL.Query().Get("feature")
+}
+
 func getUnits(r *http.Request) ([]string, bool) {
 	units, ok := r.URL.Query()["unit"]
 	return units, ok

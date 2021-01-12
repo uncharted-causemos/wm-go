@@ -7,6 +7,23 @@ type ModelRun struct {
 	Parameters []ModelRunParameter `json:"parameters"`
 }
 
+// ModelOutputTimeseries represent time series model output data
+type ModelOutputTimeseries struct {
+	Timeseries []TimeseriesValue `json:"timeseries"`
+}
+
+// TimeseriesValue represent a timeseries data point
+type TimeseriesValue struct {
+	Timestamp int64   `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
+
+// ModelOutputStat represent min and max stat of the model output data
+type ModelOutputStat struct {
+	Min float64 `json:"min"`
+	Max float64 `json:"max"`
+}
+
 // ModelRunParameter represent a model run parameter value
 type ModelRunParameter struct {
 	Name  string `json:"name"`
@@ -95,6 +112,12 @@ type MaaS interface {
 	// CountDatacubes returns datacubes count
 	CountDatacubes(filters []*Filter) (uint64, error)
 
-	// GetConcepts returns list of concepts
+	// GetConcepts returns a list of concepts
 	GetConcepts() ([]string, error)
+
+	// GetOutputStats returns model output stats
+	GetOutputStats(runID string, feature string) (*ModelOutputStat, error)
+
+	// GetOutputTimeseries returns model output timeseries
+	GetOutputTimeseries(runID string, feature string) (*ModelOutputTimeseries, error)
 }
