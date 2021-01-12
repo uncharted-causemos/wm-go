@@ -13,10 +13,8 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/api"
-	"gitlab.uncharted.software/WM/wm-go/pkg/wm/dgraph"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
-	"gitlab.uncharted.software/WM/wm-go/pkg/wm/modelservice"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/storage"
 	"go.uber.org/zap"
 )
@@ -60,13 +58,8 @@ func main() {
 	})
 	r.Use(c.Handler)
 
-	ms, err := modelservice.New(s.MaasURL, s.MaasUser, s.MaasPassword)
-	if err != nil {
-		sugar.Fatal(err)
-	}
 	es, err := elastic.New(&elastic.Config{
-		Addr:         s.ElasticURL,
-		ModelService: ms,
+		Addr: s.ElasticURL,
 	})
 	if err != nil {
 		sugar.Fatal(err)
@@ -83,18 +76,9 @@ func main() {
 		sugar.Fatal(err)
 	}
 
-	dg, err := dgraph.New(&dgraph.Config{
-		Addrs: s.DgraphURLS,
-	})
-	if err != nil {
-		sugar.Fatal(err)
-	}
-
 	apiRouter, err := api.New(&api.Config{
-		KnowledgeBase:  es,
 		MaaS:           es,
 		DataOutputTile: s3,
-		Graph:          dg,
 		Logger:         sugar,
 	})
 	if err != nil {

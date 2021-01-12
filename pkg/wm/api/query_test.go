@@ -83,7 +83,7 @@ func TestGetFilters(t *testing.T) {
 			&http.Request{
 				URL: &url.URL{
 					RawQuery: `facets=["topic","score"]&filters={"clauses":[
-						{"field":"cause","operand":"or","isNot":false,"values":["a","b","c"]}
+						{"field":"category","operand":"or","isNot":false,"values":["a","b","c"]}
 					]}`,
 				},
 			},
@@ -94,8 +94,8 @@ func TestGetFilters(t *testing.T) {
 			&http.Request{
 				URL: &url.URL{
 					RawQuery: `facets=["topic","score"]&filters={"clauses":[
-						{"field":"cause","operand":"or","isNot":false,"values":["a","b","c"]},
-						{"field":"effect","operand":"or","isNot":false,"values":["d","e"]}
+						{"field":"category","operand":"or","isNot":false,"values":["a","b","c"]},
+						{"field":"type","operand":"or","isNot":false,"values":["d","e"]}
 					]}`,
 				},
 			},
@@ -121,7 +121,7 @@ func TestGetFilters(t *testing.T) {
 			0,
 		},
 	} {
-		got, err := getFilters(test.r, wm.ContextKB)
+		got, err := getFilters(test.r, wm.ContextDatacube)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("getFilters returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))

@@ -11,24 +11,6 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-var fields = map[string]wm.Field{
-	"location":         wm.FieldLocation,
-	"organization":     wm.FieldOrganization,
-	"publicationYear":  wm.FieldPublicationYear,
-	"concept":          wm.FieldConcept,
-	"groundingScore":   wm.FieldGroundingScore,
-	"cause":            wm.FieldCause,
-	"effect":           wm.FieldEffect,
-	"polarity":         wm.FieldPolarity,
-	"beliefScore":      wm.FieldBeliefScore,
-	"numEvidence":      wm.FieldNumEvidence,
-	"reader":           wm.FieldReader,
-	"refutingEvidence": wm.FieldRefutingEvidence,
-	"quality":          wm.FieldQuality,
-	"hedging":          wm.FieldHedging,
-	"evidenceSource":   wm.FieldEvidenceSource,
-}
-
 var datacubeFields = map[string]wm.Field{
 	"id":             wm.FieldDatacubeID,
 	"type":           wm.FieldDatacubeType,
@@ -91,8 +73,6 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 	var ok bool
 
 	switch context {
-	case wm.ContextKB:
-		field, ok = fields[fieldStr]
 	case wm.ContextDatacube:
 		field, ok = datacubeFields[fieldStr]
 	case wm.ContextIndicator:
@@ -147,14 +127,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 	var err error
 
 	switch field {
-	case wm.FieldCause,
-		wm.FieldConcept,
-		wm.FieldEffect,
-		wm.FieldEvidenceSource,
-		wm.FieldLocation,
-		wm.FieldOrganization,
-		wm.FieldQuality,
-		wm.FieldReader,
+	case
 		wm.FieldDatacubeID,
 		wm.FieldDatacubeType,
 		wm.FieldDatacubeModel,
@@ -176,14 +149,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		wm.FieldIndicatorDataset,
 		wm.FieldIndicatorUnit:
 		strVals, err = parseStringValues(raw)
-	case wm.FieldHedging,
-		wm.FieldPolarity,
-		wm.FieldPublicationYear,
-		wm.FieldRefutingEvidence:
-		intVals, err = parseIntValues(raw)
-	case wm.FieldBeliefScore,
-		wm.FieldGroundingScore,
-		wm.FieldNumEvidence,
+	case
 		wm.FieldDatacubePeriod,
 		wm.FieldDatacubeConceptScore:
 		rng, err = parseRange(raw)
