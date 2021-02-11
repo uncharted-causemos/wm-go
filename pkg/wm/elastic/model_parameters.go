@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	modelParametersIndex = "model_parameters"
+	modelParametersIndex = "data-model-parameters"
 )
 
 // GetModelParameters returns model parameters
