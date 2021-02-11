@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	modelTimeseriesIndex  = "model_timeseries"
-	modelOutputStatsIndex = "model_output_stats"
+	modelTimeseriesIndex  = "data-model-timeseries"
+	modelOutputStatsIndex = "data-model-output-stats"
 )
 
 // GetOutputStats returns model output stats

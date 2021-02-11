@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-const datacubesIndex = "datacubes"
-const indicatorDataIndex = "indicator"
+const datacubesIndex = "data-datacubes"
+const indicatorDataIndex = "data-indicators"
 const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
@@ -91,18 +92,18 @@ func (es *ES) GetIndicatorData(indicatorName string, modelName string, units []s
 	options := queryOptions{
 		filters: []*wm.Filter{
 			{
-				Field: wm.FieldIndicatorVariable,
+				Field:        wm.FieldIndicatorVariable,
 				StringValues: []string{indicatorName},
 			},
 			{
-				Field: wm.FieldIndicatorDataset,
+				Field:        wm.FieldIndicatorDataset,
 				StringValues: []string{modelName},
 			},
 		},
 	}
 	if len(units) > 0 {
-		options.filters = append(options.filters, &wm.Filter {
-			Field: wm.FieldIndicatorUnit,
+		options.filters = append(options.filters, &wm.Filter{
+			Field:        wm.FieldIndicatorUnit,
 			StringValues: units,
 		})
 	}

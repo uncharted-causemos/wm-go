@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	modelScenariosIndex = "model_scenarios"
+	modelScenariosIndex = "data-model-scenarios"
 	maxNumberOfRuns     = 10000
 )
 
