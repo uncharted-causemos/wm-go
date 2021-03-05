@@ -121,3 +121,19 @@ type MaaS interface {
 	// GetOutputTimeseries returns model output timeseries
 	GetOutputTimeseries(runID string, feature string) (*ModelOutputTimeseries, error)
 }
+
+// DataOutput defines the methods that output database implementation needs to satisfy
+type DataOutput interface {
+	// GetTile returns mapbox vector tile
+	GetTile(zoom, x, y uint32, specs TileDataSpecs, expression string) (*Tile, error)
+
+	// TODO
+	// GetTimeseries
+	// GetStats
+	// GetRegionAggregation
+}
+
+// VectorTile defines methods that tile storage/database needs to satisfy
+type VectorTile interface {
+	GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, error)
+}

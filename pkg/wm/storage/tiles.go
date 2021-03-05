@@ -44,6 +44,11 @@ type geoTilesResult struct {
 	data  []geoTile
 }
 
+// GetVectorTile returns mapbox vectortile
+func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, error) {
+	return []byte{}, nil
+}
+
 // GetTile returns the tile containing model run output specified by the spec
 func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs, expression string) (*wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)

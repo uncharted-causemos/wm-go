@@ -77,9 +77,10 @@ func main() {
 	}
 
 	apiRouter, err := api.New(&api.Config{
-		MaaS:           es,
-		DataOutputTile: s3,
-		Logger:         sugar,
+		MaaS:       es,
+		DataOutput: s3,
+		VectorTile: s3,
+		Logger:     sugar,
 	})
 	if err != nil {
 		sugar.Fatal(err)
