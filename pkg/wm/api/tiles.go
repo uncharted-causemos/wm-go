@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
 const contentTypeMVT = "application/vnd.mapbox-vector-tile"
@@ -21,12 +22,25 @@ func (a *api) getVectorTile(w http.ResponseWriter, r *http.Request) {
 		}
 		zxy[i] = uint32(v)
 	}
+	debug := r.URL.Query().Get("debug")
 	tileSet := chi.URLParam(r, paramTileSetName)
 	tile, err := a.vectorTile.GetVectorTile(zxy[0], zxy[1], zxy[2], tileSet)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
+	// if debug flag is provided, write the string representation of the tile
+	if strings.ToLower(debug) == "true" {
+		tileJSON, err := wm.MvtToJSON(tile)
+		if err != nil {
+			a.errorResponse(w, err, http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(tileJSON)
+		return
+	}
+
 	w.Header().Set("Content-Type", contentTypeMVT)
 	w.Header().Set("Content-Encoding", contentEncodingGzip)
 	w.Write(tile)
@@ -56,15 +70,20 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	// if debug flag is provided, write the string representation of the tile
-	if strings.ToLower(debug) == "true" {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(tile.String()))
-		return
-	}
 	result, err := tile.MVT()
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	// if debug flag is provided, write the string representation of the tile
+	if strings.ToLower(debug) == "true" {
+		tileJSON, err := wm.MvtToJSON(result)
+		if err != nil {
+			a.errorResponse(w, err, http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(tileJSON)
 		return
 	}
 	w.Header().Set("Content-Type", contentTypeMVT)

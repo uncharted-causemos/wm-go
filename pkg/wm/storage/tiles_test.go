@@ -21,7 +21,7 @@ func toPolygon(z, x, y uint32) orb.Polygon {
 }
 
 func TestTiles(t *testing.T) {
-	s, err := New(nil, "")
+	s, err := New(nil)
 	if err != nil {
 		log.Fatal(err)
 	}

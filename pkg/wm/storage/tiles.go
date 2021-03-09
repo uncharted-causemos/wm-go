@@ -44,11 +44,6 @@ type geoTilesResult struct {
 	data  []geoTile
 }
 
-// GetVectorTile returns mapbox vectortile
-func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, error) {
-	return []byte{}, nil
-}
-
 // GetTile returns the tile containing model run output specified by the spec
 func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs, expression string) (*wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
@@ -136,7 +131,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 
 		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
-			Bucket: aws.String(s.bucket),
+			Bucket: aws.String(outputBucket),
 			Key:    aws.String(key),
 		})
 		err = req.Send()

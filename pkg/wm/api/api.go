@@ -60,7 +60,7 @@ func New(cfg *Config) (chi.Router, error) {
 	})
 
 	r.Route("/maas/tiles", func(r chi.Router) {
-		r.Get(fmt.Sprintf("/{%s}/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramTileSetName, paramZoom, paramX, paramY), a.getVectorTile)
+		r.Get(fmt.Sprintf("/{%s}/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}.pbf", paramTileSetName, paramZoom, paramX, paramY), a.getVectorTile)
 	})
 
 	return r, nil

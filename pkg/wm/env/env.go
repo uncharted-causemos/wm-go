@@ -20,7 +20,6 @@ type Specification struct {
 	AwsS3Secret string `required:"true" envconfig:"AWS_S3_SECRET"`
 	AwsS3Token  string `required:"true" envconfig:"AWS_S3_TOKEN"`
 	AwsS3URL    string `required:"true" envconfig:"AWS_S3_URL"`
-	AwsS3Bucket string `required:"true" envconfig:"AWS_S3_BUCKET"`
 }
 
 // Load imports the environment variables and returns them in an Specification.
