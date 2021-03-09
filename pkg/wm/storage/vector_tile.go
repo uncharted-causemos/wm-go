@@ -11,8 +11,7 @@ import (
 
 // GetVectorTile returns mapbox vectortile
 func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, error) {
-	key := fmt.Sprintf("%d/%d/%d.pbf", zoom, x, y)
-	fmt.Println(tilesetName, key)
+	key := fmt.Sprintf("%s/%d/%d/%d.pbf", tilesetName, zoom, x, y)
 
 	// Retrieve protobuf tile from S3
 	req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
