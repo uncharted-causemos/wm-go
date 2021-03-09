@@ -59,6 +59,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get(fmt.Sprintf("/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
 	})
 
+	// TODO: Merge grid tiles route (/maas/output/tiles) with this route
 	r.Route("/maas/tiles", func(r chi.Router) {
 		r.Get(fmt.Sprintf("/{%s}/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramTileSetName, paramZoom, paramX, paramY), a.getVectorTile)
 	})
