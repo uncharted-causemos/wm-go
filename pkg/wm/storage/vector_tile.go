@@ -23,7 +23,7 @@ func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, 
 		if awsErr, ok := err.(awserr.Error); ok {
 			if awsErr.Code() == s3.ErrCodeNoSuchKey {
 				// Tile not found errors are expected
-				return nil, err
+				return []byte{}, nil
 			}
 			return nil, err
 		}
