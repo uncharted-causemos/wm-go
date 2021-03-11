@@ -65,21 +65,21 @@ func main() {
 		sugar.Fatal(err)
 	}
 
-	bucket := s.AwsS3Bucket
 	s3, err := storage.New(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(s.AwsS3Id, s.AwsS3Secret, s.AwsS3Token),
 		S3ForcePathStyle: aws.Bool(true),
 		Region:           aws.String(endpoints.UsEast1RegionID),
 		Endpoint:         aws.String(s.AwsS3URL), // LocalStack/Minio S3 Port
-	}, bucket)
+	})
 	if err != nil {
 		sugar.Fatal(err)
 	}
 
 	apiRouter, err := api.New(&api.Config{
-		MaaS:           es,
-		DataOutputTile: s3,
-		Logger:         sugar,
+		MaaS:       es,
+		DataOutput: s3,
+		VectorTile: s3,
+		Logger:     sugar,
 	})
 	if err != nil {
 		sugar.Fatal(err)

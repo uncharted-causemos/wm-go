@@ -11,18 +11,20 @@ import (
 
 // URL parameter strings
 const (
-	paramProjectID = "projectID"
-	paramZoom      = "zoom"
-	paramX         = "x"
-	paramY         = "y"
-	paramModelID   = "modelID"
-	paramRunID     = "runID"
+	paramProjectID   = "projectID"
+	paramZoom        = "zoom"
+	paramX           = "x"
+	paramY           = "y"
+	paramModelID     = "modelID"
+	paramRunID       = "runID"
+	paramTileSetName = "tileSetName"
 )
 
 type api struct {
-	maas           wm.MaaS
-	dataOutputTile wm.DataOutputTile
-	logger         *zap.SugaredLogger
+	maas       wm.MaaS
+	dataOutput wm.DataOutput
+	vectorTile wm.VectorTile
+	logger     *zap.SugaredLogger
 }
 
 // New returns a chi router with the various endpoints defined.
@@ -32,9 +34,10 @@ func New(cfg *Config) (chi.Router, error) {
 	}
 
 	a := api{
-		maas:           cfg.MaaS,
-		dataOutputTile: cfg.DataOutputTile,
-		logger:         cfg.Logger,
+		maas:       cfg.MaaS,
+		dataOutput: cfg.DataOutput,
+		vectorTile: cfg.VectorTile,
+		logger:     cfg.Logger,
 	}
 
 	r := chi.NewRouter()
@@ -54,6 +57,11 @@ func New(cfg *Config) (chi.Router, error) {
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {
 		r.Get(fmt.Sprintf("/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramZoom, paramX, paramY), a.getTile)
+	})
+
+	// TODO: Merge grid tiles route (/maas/output/tiles) with this route
+	r.Route("/maas/tiles", func(r chi.Router) {
+		r.Get(fmt.Sprintf("/{%s}/{%s:[0-9]+}/{%s:[0-9]+}/{%s:[0-9]+}", paramTileSetName, paramZoom, paramX, paramY), a.getVectorTile)
 	})
 
 	return r, nil

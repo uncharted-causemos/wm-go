@@ -9,9 +9,10 @@ import (
 
 // Config defines the parameters needed to instantiate the API router.
 type Config struct {
-	MaaS           wm.MaaS
-	DataOutputTile wm.DataOutputTile
-	Logger         *zap.SugaredLogger
+	MaaS       wm.MaaS
+	DataOutput wm.DataOutput
+	VectorTile wm.VectorTile
+	Logger     *zap.SugaredLogger
 }
 
 // init validates the config and fills in defaults for missing optional
@@ -21,6 +22,12 @@ func (cfg *Config) init() error {
 		return errors.New("MaaS cannot be nil")
 	}
 	if cfg.Logger == nil {
+		return errors.New("Logger cannot be nil")
+	}
+	if cfg.DataOutput == nil {
+		return errors.New("DataOutput cannot be nil")
+	}
+	if cfg.VectorTile == nil {
 		return errors.New("Logger cannot be nil")
 	}
 	return nil

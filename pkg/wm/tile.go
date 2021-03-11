@@ -86,3 +86,16 @@ func NewTile(zoom, x, y uint32, layerName string) *Tile {
 		features,
 	}
 }
+
+// MvtToJSON parses mapbox vector tile into json. Json representation of the vector tile would be useful for debugging
+func MvtToJSON(tile []byte) ([]byte, error) {
+	layers, err := mvt.UnmarshalGzipped(tile)
+	if err != nil {
+		return nil, err
+	}
+	json, err := json.MarshalIndent(layers, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	return json, nil
+}

@@ -131,7 +131,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 
 		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
-			Bucket: aws.String(s.bucket),
+			Bucket: aws.String(outputBucket),
 			Key:    aws.String(key),
 		})
 		err = req.Send()
