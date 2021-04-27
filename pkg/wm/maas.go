@@ -44,7 +44,7 @@ type ModelOutputRegionalAdmins struct {
 // ModelOutputStat represent a data point of regional data
 type ModelOutputAdminData struct {
 	ID     string  `json:"id"`
-	Value  string  `json:"value"`
+	Value  float64  `json:"value"`
 }
 
 // ModelRunParameter represent a model run parameter value
