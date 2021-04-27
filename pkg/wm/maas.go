@@ -7,6 +7,15 @@ type ModelRun struct {
 	Parameters []ModelRunParameter `json:"parameters"`
 }
 
+type ModelOutputParams struct {
+	ModelId         string `json:"model_id"`
+	RunId           string `json:"run_id"`
+	Feature         string `json:"feature"`
+	Resolution      string `json:"resolution"`
+	TemporalAggFunc string `json:"temporal_agg"`
+	SpatialAggFunc  string `json:"spatial_agg"`
+}
+
 // ModelOutputTimeseries represent time series model output data
 type ModelOutputTimeseries struct {
 	Timeseries []TimeseriesValue `json:"timeseries"`
@@ -22,6 +31,20 @@ type TimeseriesValue struct {
 type ModelOutputStat struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`
+}
+
+// ModelOutputRegionalAdmins represent regional data for all admin levels
+type ModelOutputRegionalAdmins struct {
+	Country   []ModelOutputAdminData  `json:"country"`
+	Admin1    []ModelOutputAdminData  `json:"admin1"`
+	Admin2    []ModelOutputAdminData  `json:"admin2"`
+	Admin3    []ModelOutputAdminData  `json:"admin3"`
+}
+
+// ModelOutputStat represent a data point of regional data
+type ModelOutputAdminData struct {
+	ID     string  `json:"id"`
+	Value  string  `json:"value"`
 }
 
 // ModelRunParameter represent a model run parameter value
@@ -127,10 +150,17 @@ type DataOutput interface {
 	// GetTile returns mapbox vector tile
 	GetTile(zoom, x, y uint32, specs TileDataSpecs, expression string) (*Tile, error)
 
-	// TODO
-	// GetTimeseries
-	// GetStats
-	// GetRegionAggregation
+	// GetOutputStats returns model output stats
+	GetOutputStats(params ModelOutputParams) (*ModelOutputStat, error)
+
+	// GetOutputTimeseries returns model output timeseries
+	GetOutputTimeseries(params ModelOutputParams) (*ModelOutputTimeseries, error)
+
+	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
+	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)
+
+	// GetModelSummary returns a single aggregate value for each run in a model
+	GetModelSummary(modelId string, feature string) (map[string]float64, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
