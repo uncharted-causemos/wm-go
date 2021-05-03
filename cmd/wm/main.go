@@ -70,7 +70,7 @@ func main() {
 		S3ForcePathStyle: aws.Bool(true),
 		Region:           aws.String(endpoints.UsEast1RegionID),
 		Endpoint:         aws.String(s.AwsS3URL), // LocalStack/Minio S3 Port
-	})
+	}, sugar)
 	if err != nil {
 		sugar.Fatal(err)
 	}

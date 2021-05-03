@@ -51,8 +51,16 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/datacubes/count", a.countDatacubes)
 		r.Get("/indicator-data", a.getIndicatorData)
 		r.Get("/concepts", a.getConcepts)
+
+		//TODO Remove once the versions below are returning data
 		r.Get("/output/{"+paramRunID+"}/timeseries", a.getModelOutputTimeseries)
 		r.Get("/output/{"+paramRunID+"}/stats", a.getModelOutputStats)
+
+		//New timeseries and stats, replaces above endpoints
+		r.Get("/output/timeseries", a.getDataOutputTimeseries)
+		r.Get("/output/stats", a.getDataOutputStats)
+		r.Get("/output/regional-data", a.getDataOutputRegional)
+		r.Get("/model-summary", a.getModelSummary)
 	})
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {

@@ -17,12 +17,30 @@ func (msr *modelOutputStatsResponse) Render(w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
-type modelOutputTimeseries struct {
-	*wm.ModelOutputTimeseries
+type oldModelOutputTimeseries struct {
+	*wm.OldModelOutputTimeseries
 }
 
 // Render allows to satisfy the render.Renderer interface.
-func (msr *modelOutputTimeseries) Render(w http.ResponseWriter, r *http.Request) error {
+func (msr *oldModelOutputTimeseries) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type modelOutputTimeseriesValue struct {
+	*wm.TimeseriesValue
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputTimeseriesValue) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type modelOutputRegionalData struct {
+	*wm.ModelOutputRegionalAdmins
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputRegionalData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -41,5 +59,54 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	render.Render(w, r, &modelOutputTimeseries{timeseries})
+	render.Render(w, r, &oldModelOutputTimeseries{timeseries})
+}
+
+
+
+
+func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
+	params := getModelOutputParams(r)
+	stats, err := a.dataOutput.GetOutputStats(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.Render(w, r, &modelOutputStatsResponse{stats})
+}
+
+func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
+	params := getModelOutputParams(r)
+	timeseries, err := a.dataOutput.GetOutputTimeseries(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	list := []render.Renderer{}
+	for _, point := range timeseries {
+		list = append(list, &modelOutputTimeseriesValue{&point})
+	}
+	render.RenderList(w, r, list)
+}
+
+func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) {
+	params := getModelOutputParams(r)
+	timestamp := getTimestamp(r)
+	data, err := a.dataOutput.GetRegionAggregation(params, timestamp)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.Render(w, r, &modelOutputRegionalData{data})
+}
+
+func (a *api) getModelSummary(w http.ResponseWriter, r *http.Request) {
+	modelID := getModelID(r)
+	feature := getFeature(r)
+	summary, err := a.dataOutput.GetModelSummary(modelID, feature)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.JSON(w, r, summary)
 }

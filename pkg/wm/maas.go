@@ -7,8 +7,18 @@ type ModelRun struct {
 	Parameters []ModelRunParameter `json:"parameters"`
 }
 
-// ModelOutputTimeseries represent time series model output data
-type ModelOutputTimeseries struct {
+// ModelOutputParams represent common parameters for requesting model run data
+type ModelOutputParams struct {
+	ModelID         string `json:"model_id"`
+	RunID           string `json:"run_id"`
+	Feature         string `json:"feature"`
+	Resolution      string `json:"resolution"`
+	TemporalAggFunc string `json:"temporal_agg"`
+	SpatialAggFunc  string `json:"spatial_agg"`
+}
+
+// OldModelOutputTimeseries represent the old time series model output data
+type OldModelOutputTimeseries struct {
 	Timeseries []TimeseriesValue `json:"timeseries"`
 }
 
@@ -22,6 +32,20 @@ type TimeseriesValue struct {
 type ModelOutputStat struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`
+}
+
+// ModelOutputRegionalAdmins represent regional data for all admin levels
+type ModelOutputRegionalAdmins struct {
+	Country   []ModelOutputAdminData  `json:"country"`
+	Admin1    []ModelOutputAdminData  `json:"admin1"`
+	Admin2    []ModelOutputAdminData  `json:"admin2"`
+	Admin3    []ModelOutputAdminData  `json:"admin3"`
+}
+
+// ModelOutputAdminData represent a data point of regional data
+type ModelOutputAdminData struct {
+	ID     string  `json:"id"`
+	Value  float64  `json:"value"`
 }
 
 // ModelRunParameter represent a model run parameter value
@@ -119,7 +143,7 @@ type MaaS interface {
 	GetOutputStats(runID string, feature string) (*ModelOutputStat, error)
 
 	// GetOutputTimeseries returns model output timeseries
-	GetOutputTimeseries(runID string, feature string) (*ModelOutputTimeseries, error)
+	GetOutputTimeseries(runID string, feature string) (*OldModelOutputTimeseries, error)
 }
 
 // DataOutput defines the methods that output database implementation needs to satisfy
@@ -127,10 +151,17 @@ type DataOutput interface {
 	// GetTile returns mapbox vector tile
 	GetTile(zoom, x, y uint32, specs TileDataSpecs, expression string) (*Tile, error)
 
-	// TODO
-	// GetTimeseries
-	// GetStats
-	// GetRegionAggregation
+	// GetOutputStats returns model output stats
+	GetOutputStats(params ModelOutputParams) (*ModelOutputStat, error)
+
+	// GetOutputTimeseries returns model output timeseries
+	GetOutputTimeseries(params ModelOutputParams) ([]TimeseriesValue, error)
+
+	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
+	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)
+
+	// GetModelSummary returns a single aggregate value for each run in a model
+	GetModelSummary(modelID string, feature string) (map[string]float64, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
