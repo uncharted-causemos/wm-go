@@ -24,12 +24,12 @@ func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputSt
 	statsAt0 := make(map[string]map[string]float64)
 	err = json.Unmarshal(buf, &statsAt0)
 	if err != nil {
-		fmt.Printf("Error while unmarshalling %s\n", err)
+		s.logger.Errorw("Error while unmarshalling", "err", err)
 		return nil, err
 	}
 
 	if len(statsAt0) == 0 {
-		fmt.Println("No stats found")
+		s.logger.Errorf("No stats found")
 		return nil, nil
 	}
 
@@ -59,7 +59,7 @@ func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) (*wm.ModelOut
 	var series []wm.TimeseriesValue
 	err = json.Unmarshal(buf, &series)
 	if err != nil {
-		fmt.Printf("Error while unmarshalling %s\n", err)
+		s.logger.Errorw("Error while unmarshalling", "err", err)
 		return nil, err
 	}
 	return &wm.ModelOutputTimeseries{Timeseries: series}, nil
@@ -82,7 +82,7 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		var points []interface{}
 		err = json.Unmarshal(buf, &points)
 		if err != nil {
-			fmt.Printf("Error while unmarshalling %s\n", err)
+			s.logger.Errorw("Error while unmarshalling", "err", err)
 			return nil, err
 		}
 		data[level] = points
@@ -91,7 +91,7 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 	var regionalData wm.ModelOutputRegionalAdmins
 	err := mapstructure.Decode(data, &regionalData)
 	if err != nil {
-		fmt.Printf("Error while unmarshalling admin regions %s\n", err)
+		s.logger.Errorw("Error while unmarshalling admin regions", "err", err)
 		return nil, err
 	}
 	return &regionalData, nil
@@ -118,7 +118,7 @@ func getAggregationFile(s *Storage, key *string) ([]byte, error) {
 
 	err := req.Send()
 	if err != nil {
-		fmt.Printf("Fetching agg file from S3 returned error %s\n", err)
+		s.logger.Errorw("Fetching agg file from S3 returned error", "err", err)
 		return nil, err
 	}
 
@@ -126,7 +126,7 @@ func getAggregationFile(s *Storage, key *string) ([]byte, error) {
 	buf, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		fmt.Printf("Error reading response from S3 request %s\n", err)
+		s.logger.Errorw("Error reading response from S3 request", "err", err)
 		return nil, err
 	}
 	return buf, nil
