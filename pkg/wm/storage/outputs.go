@@ -13,7 +13,7 @@ import (
 // GetOutputStats returns model output stats
 func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputStat, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/stats.json",
-		params.ModelId, params.RunId, params.Resolution, params.Feature)
+		params.ModelID, params.RunID, params.Resolution, params.Feature)
 
 	buf, err := getAggregationFile(s, aws.String(key))
 	if err != nil {
@@ -49,7 +49,7 @@ func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputSt
 // GetOutputTimeseries returns model output timeseries
 func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) (*wm.ModelOutputTimeseries, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
-		params.ModelId, params.RunId, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
+		params.ModelID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
 
 	buf, err := getAggregationFile(s, aws.String(key))
 	if err != nil {
@@ -71,7 +71,7 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 	data := make(map[string][]interface{})
 	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
 		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/s_%s_t_%s.json",
-			params.ModelId, params.RunId, params.Resolution, params.Feature, level,
+			params.ModelID, params.RunID, params.Resolution, params.Feature, level,
 			timestamp, params.SpatialAggFunc, params.TemporalAggFunc)
 
 		buf, err := getAggregationFile(s, aws.String(key))
@@ -98,7 +98,7 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 }
 
 // GetModelSummary returns a single aggregate value for each run in a model
-func (s *Storage) GetModelSummary(modelId string, feature string) (map[string]float64, error) {
+func (s *Storage) GetModelSummary(modelID string, feature string) (map[string]float64, error) {
 	//TODO: implementation needed
 	values := make(map[string]float64)
 	values["2d80c9f0-1e44-4a6c-91fe-2ebb26e39dea"] = 313639493

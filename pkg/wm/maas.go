@@ -7,9 +7,10 @@ type ModelRun struct {
 	Parameters []ModelRunParameter `json:"parameters"`
 }
 
+// ModelOutputParams represent common parameters for requesting model run data
 type ModelOutputParams struct {
-	ModelId         string `json:"model_id"`
-	RunId           string `json:"run_id"`
+	ModelID         string `json:"model_id"`
+	RunID           string `json:"run_id"`
 	Feature         string `json:"feature"`
 	Resolution      string `json:"resolution"`
 	TemporalAggFunc string `json:"temporal_agg"`
@@ -160,7 +161,7 @@ type DataOutput interface {
 	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)
 
 	// GetModelSummary returns a single aggregate value for each run in a model
-	GetModelSummary(modelId string, feature string) (map[string]float64, error)
+	GetModelSummary(modelID string, feature string) (map[string]float64, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy

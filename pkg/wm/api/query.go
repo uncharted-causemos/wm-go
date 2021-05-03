@@ -42,15 +42,15 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
-func getModelId(r *http.Request) string {
+func getModelID(r *http.Request) string {
 	return r.URL.Query().Get("model_id")
 }
 
 func getModelOutputParams(r *http.Request) wm.ModelOutputParams {
 	// This could be neater with github.com/gorilla/schema but no need for this dependency
 	var params wm.ModelOutputParams
-	params.ModelId = getModelId(r)
-	params.RunId = r.URL.Query().Get("run_id")
+	params.ModelID = getModelID(r)
+	params.RunID = r.URL.Query().Get("run_id")
 	params.Feature = getFeature(r)
 	params.Resolution = r.URL.Query().Get("resolution")
 	params.TemporalAggFunc = r.URL.Query().Get("temporal_agg")
