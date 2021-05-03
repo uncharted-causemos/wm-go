@@ -59,7 +59,7 @@ func (es *ES) GetOutputStats(runID string, feature string) (*wm.ModelOutputStat,
 }
 
 // GetOutputTimeseries returns model output timeseries
-func (es *ES) GetOutputTimeseries(runID string, feature string) (*wm.ModelOutputTimeseries, error) {
+func (es *ES) GetOutputTimeseries(runID string, feature string) (*wm.OldModelOutputTimeseries, error) {
 	zoom := 8
 	rBody := fmt.Sprintf(`{
 		"query": {
@@ -100,5 +100,5 @@ func (es *ES) GetOutputTimeseries(runID string, feature string) (*wm.ModelOutput
 		}
 		series = append(series, val)
 	}
-	return &wm.ModelOutputTimeseries{Timeseries: series}, nil
+	return &wm.OldModelOutputTimeseries{Timeseries: series}, nil
 }

@@ -18,7 +18,10 @@ type ModelOutputParams struct {
 }
 
 // ModelOutputTimeseries represent time series model output data
-type ModelOutputTimeseries struct {
+type ModelOutputTimeseries []TimeseriesValue
+
+// OldModelOutputTimeseries represent the old time series model output data
+type OldModelOutputTimeseries struct {
 	Timeseries []TimeseriesValue `json:"timeseries"`
 }
 
@@ -143,7 +146,7 @@ type MaaS interface {
 	GetOutputStats(runID string, feature string) (*ModelOutputStat, error)
 
 	// GetOutputTimeseries returns model output timeseries
-	GetOutputTimeseries(runID string, feature string) (*ModelOutputTimeseries, error)
+	GetOutputTimeseries(runID string, feature string) (*OldModelOutputTimeseries, error)
 }
 
 // DataOutput defines the methods that output database implementation needs to satisfy

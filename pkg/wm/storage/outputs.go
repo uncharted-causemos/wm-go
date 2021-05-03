@@ -62,7 +62,8 @@ func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) (*wm.ModelOut
 		s.logger.Errorw("Error while unmarshalling", "err", err)
 		return nil, err
 	}
-	return &wm.ModelOutputTimeseries{Timeseries: series}, nil
+	ret := wm.ModelOutputTimeseries(series)
+	return &ret, nil
 }
 
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
