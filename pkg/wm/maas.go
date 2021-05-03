@@ -45,7 +45,7 @@ type ModelOutputRegionalAdmins struct {
 	Admin3    []ModelOutputAdminData  `json:"admin3"`
 }
 
-// ModelOutputStat represent a data point of regional data
+// ModelOutputAdminData represent a data point of regional data
 type ModelOutputAdminData struct {
 	ID     string  `json:"id"`
 	Value  float64  `json:"value"`
