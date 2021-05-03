@@ -17,9 +17,6 @@ type ModelOutputParams struct {
 	SpatialAggFunc  string `json:"spatial_agg"`
 }
 
-// ModelOutputTimeseries represent time series model output data
-type ModelOutputTimeseries []TimeseriesValue
-
 // OldModelOutputTimeseries represent the old time series model output data
 type OldModelOutputTimeseries struct {
 	Timeseries []TimeseriesValue `json:"timeseries"`
@@ -158,7 +155,7 @@ type DataOutput interface {
 	GetOutputStats(params ModelOutputParams) (*ModelOutputStat, error)
 
 	// GetOutputTimeseries returns model output timeseries
-	GetOutputTimeseries(params ModelOutputParams) (*ModelOutputTimeseries, error)
+	GetOutputTimeseries(params ModelOutputParams) ([]TimeseriesValue, error)
 
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)

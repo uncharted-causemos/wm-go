@@ -47,7 +47,7 @@ func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputSt
 }
 
 // GetOutputTimeseries returns model output timeseries
-func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) (*wm.ModelOutputTimeseries, error) {
+func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) ([]wm.TimeseriesValue, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
 		params.ModelID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
 
@@ -62,8 +62,7 @@ func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) (*wm.ModelOut
 		s.logger.Errorw("Error while unmarshalling", "err", err)
 		return nil, err
 	}
-	ret := wm.ModelOutputTimeseries(series)
-	return &ret, nil
+	return series, nil
 }
 
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
