@@ -27,7 +27,7 @@ func (msr *oldModelOutputTimeseries) Render(w http.ResponseWriter, r *http.Reque
 }
 
 type modelOutputTimeseriesValue struct {
-	*wm.TimeseriesValue
+	wm.TimeseriesValue
 }
 
 // Render allows to satisfy the render.Renderer interface.
@@ -84,7 +84,7 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	}
 	list := []render.Renderer{}
 	for _, point := range timeseries {
-		list = append(list, &modelOutputTimeseriesValue{&point})
+		list = append(list, &modelOutputTimeseriesValue{point})
 	}
 	render.RenderList(w, r, list)
 }
