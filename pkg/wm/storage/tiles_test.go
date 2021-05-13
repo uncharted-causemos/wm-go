@@ -26,7 +26,7 @@ func TestTiles(t *testing.T) {
 		log.Fatal(err)
 	}
 	specs := wm.GridTileOutputSpecs{
-		wm.GridTileOutputSpec{ModelID: "consumption_model", RunID: "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", Feature: "FEATURE_NAME", Timestamp: "2020-01"},
+		wm.GridTileOutputSpec{ModelID: "consumption_model", RunID: "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", Feature: "FEATURE_NAME", Date: "2020-01"},
 	}
 	s.GetTile(9, 322, 244, specs, "")
 	require.NotNil(t, s)
