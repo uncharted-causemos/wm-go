@@ -77,13 +77,13 @@ func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error)
 	return filters, nil
 }
 
-func getTileDataSpecs(r *http.Request) (wm.TileDataSpecs, error) {
+func getGridTileOutputSpecs(r *http.Request) (wm.GridTileOutputSpecs, error) {
 	raw := r.URL.Query().Get("specs")
 	if raw == "" {
 		return nil, errors.New("The specs list is missing from the query")
 	}
 
-	var specs []wm.TileDataSpec
+	var specs []wm.GridTileOutputSpec
 	if err := json.Unmarshal([]byte(raw), &specs); err != nil {
 		return nil, err
 	}

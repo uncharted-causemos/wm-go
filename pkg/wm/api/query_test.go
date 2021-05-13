@@ -136,21 +136,21 @@ func TestGetTileDataSpecs(t *testing.T) {
 	for _, test := range []struct {
 		r     *http.Request
 		isErr bool
-		want  wm.TileDataSpecs
+		want  wm.GridTileOutputSpecs
 	}{
 		{
 			&http.Request{
 				URL: &url.URL{
 					RawQuery: `specs=[
-						{"model":"population", "runId":"rid", "feature":"f1", "date":"2020-01", "valueProp": "v1"},
-					  {"model":"population2", "runId":"rid2", "feature":"f2", "date":"2020-02", "valueProp": "v2"}
+						{"model_id":"population", "runId":"rid", "feature":"f1", "timestamp": 1620845198, "valueProp": "v1"},
+					  {"model_id":"population2", "runId":"rid2", "feature":"f2", "timestamp":"2020-02", "valueProp": "v2"}
 					]`,
 				},
 			},
 			false,
-			wm.TileDataSpecs{
-				wm.TileDataSpec{Model: "population", RunID: "rid", Feature: "f1", Date: "2020-01", ValueProp: "v1"},
-				wm.TileDataSpec{Model: "population2", RunID: "rid2", Feature: "f2", Date: "2020-02", ValueProp: "v2"},
+			wm.GridTileOutputSpecs{
+				wm.GridTileOutputSpec{ModelID: "population", RunID: "rid", Feature: "f1", Timestamp: 1620845198, ValueProp: "v1"},
+				wm.GridTileOutputSpec{ModelID: "population2", RunID: "rid2", Feature: "f2", Timestamp: 1620845198, ValueProp: "v2"},
 			},
 		},
 		{
@@ -169,10 +169,10 @@ func TestGetTileDataSpecs(t *testing.T) {
 				},
 			},
 			false,
-			wm.TileDataSpecs{},
+			wm.GridTileOutputSpecs{},
 		},
 	} {
-		got, err := getTileDataSpecs(test.r)
+		got, err := getGridTileOutputSpecs(test.r)
 		if err != nil {
 			if !test.isErr {
 				t.Errorf("getTileRequestSpecs returned err:\n%v\nfor:\n%v", err, spew.Sdump(test))

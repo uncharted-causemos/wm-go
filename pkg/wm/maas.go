@@ -36,16 +36,16 @@ type ModelOutputStat struct {
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
 type ModelOutputRegionalAdmins struct {
-	Country   []ModelOutputAdminData  `json:"country"`
-	Admin1    []ModelOutputAdminData  `json:"admin1"`
-	Admin2    []ModelOutputAdminData  `json:"admin2"`
-	Admin3    []ModelOutputAdminData  `json:"admin3"`
+	Country []ModelOutputAdminData `json:"country"`
+	Admin1  []ModelOutputAdminData `json:"admin1"`
+	Admin2  []ModelOutputAdminData `json:"admin2"`
+	Admin3  []ModelOutputAdminData `json:"admin3"`
 }
 
 // ModelOutputAdminData represent a data point of regional data
 type ModelOutputAdminData struct {
-	ID     string  `json:"id"`
-	Value  float64  `json:"value"`
+	ID    string  `json:"id"`
+	Value float64 `json:"value"`
 }
 
 // ModelRunParameter represent a model run parameter value
@@ -149,7 +149,7 @@ type MaaS interface {
 // DataOutput defines the methods that output database implementation needs to satisfy
 type DataOutput interface {
 	// GetTile returns mapbox vector tile
-	GetTile(zoom, x, y uint32, specs TileDataSpecs, expression string) (*Tile, error)
+	GetTile(zoom, x, y uint32, specs GridTileOutputSpecs, expression string) (*Tile, error)
 
 	// GetOutputStats returns model output stats
 	GetOutputStats(params ModelOutputParams) (*ModelOutputStat, error)
