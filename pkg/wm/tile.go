@@ -13,6 +13,9 @@ type GridTileOutputSpecs []GridTileOutputSpec
 
 // GridTileOutputSpec defines the tile output specifications to be used in the queries.
 type GridTileOutputSpec struct {
+	Model string `json:"model"` // will be deprecated
+	Date  string `json:"date"`  // will be deprecated
+
 	ModelID         string `json:"modelId"`
 	RunID           string `json:"runId"`
 	Feature         string `json:"feature"`

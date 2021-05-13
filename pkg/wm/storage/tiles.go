@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"strings"
+	"time"
 
 	"github.com/Knetic/govaluate"
 	"github.com/aws/aws-sdk-go/aws"
@@ -120,12 +122,26 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			// if zero value (not set)
 			modelMaxPrecision = 99
 		}
+
+		bucketName := maasOutputBucket
 		key := fmt.Sprintf("%s/%s/%s/%s/tiles/%d-%d-%d-%d.tile", spec.ModelID, spec.RunID, spec.Resolution, spec.Feature, spec.Timestamp, zoom, x, y)
-		fmt.Println(key)
+
+		if spec.Model != "" {
+			// For Backward compatibility to support old api and tile outputs
+			// TODO: Remove this part if we no longer need to display old tile outputs
+			startTime, err := time.Parse(time.RFC3339, spec.Date)
+			if err != nil {
+				er <- err
+				return
+			}
+			timemillis := startTime.Unix() * 1000
+			key = fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
+			bucketName = outputBucket
+		}
 
 		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
-			Bucket: aws.String(maasOutputBucket),
+			Bucket: aws.String(bucketName),
 			Key:    aws.String(key),
 		})
 
