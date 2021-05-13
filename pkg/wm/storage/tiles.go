@@ -171,7 +171,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 		// the output (output resolution at which models look good), aggregate up each tile grid cell to bigger grid cell at max precision
 		type binAgg struct {
 			sum    float64
-			weight uint32 // or just count if agg is not weighted
+			weight float64 // or just count if agg is not weighted
 		}
 		tileMap := make(map[string]*binAgg)
 		var gts []geoTile
@@ -188,18 +188,18 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			if _, ok := tileMap[coord]; !ok {
 				tileMap[coord] = &binAgg{}
 			}
-			tileMap[coord].sum += getTileBinValue(binStats, spec.TemporalAggFunc, spec.SpatialAggFunc)
-			tileMap[coord].weight++
+			sum, weight := getTileBinValue(binStats, spec.TemporalAggFunc, spec.SpatialAggFunc)
+			tileMap[coord].sum += sum
+			tileMap[coord].weight += weight
 		}
 
 		// Create geotiles
 		for coord, agg := range tileMap {
-			var value float64
-			if spec.SpatialAggFunc == "mean" {
-				value = agg.sum / float64(agg.weight)
-			} else {
+			value := agg.sum / float64(agg.weight) // default to mean
+			if spec.SpatialAggFunc == "sum" {
 				value = agg.sum
 			}
+
 			gts = append(gts, geoTile{
 				Key:                coord,
 				SpatialAggregation: geoTileAggregation{Value: value},
@@ -222,16 +222,15 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 	return out, er
 }
 
-func getTileBinValue(tileBinStats *pb.TileStats, temporalAggFunc string, spatialAggFunc string) float64 {
-	var value float64
-	// Note: proto buf contract only support either spatial sum or avg for now
-	// TODO: support more agg function combinations as well.
-	if spatialAggFunc == "sum" && temporalAggFunc == "sum" {
-		value = tileBinStats.Sum
-	} else if spatialAggFunc == "mean" && temporalAggFunc == "mean" {
-		value = tileBinStats.Avg
+func getTileBinValue(tileBinStats *pb.TileStats, temporalAggFunc string, spatialAggFunc string) (float64, float64) {
+	// For old api
+	if temporalAggFunc == "" && spatialAggFunc == "" {
+		return tileBinStats.Avg, 1
 	}
-	return value
+	// Note: proto buf contract only support either spatial sum or avg for now and doesn't have a notion of temporal agg
+	// TODO: support more agg function combinations as well when proto buf is updated and data is available
+	value := tileBinStats.Sum
+	return value, float64(tileBinStats.Count)
 }
 
 // createFeatures processes and merges the geotile results and returns a list of geojson features
