@@ -14,7 +14,7 @@ import (
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
-	pb "gitlab.uncharted.software/WM/wm-proto/tiles"
+	pb "gitlab.uncharted.software/WM/wm-go/proto/tiles"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -204,7 +204,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			if _, ok := tileMap[coord]; !ok {
 				tileMap[coord] = &binAgg{}
 			}
-			sum, weight := getTileBinValue(binStats, spec.TemporalAggFunc, spec.SpatialAggFunc)
+			sum, weight := getTileBinValue(binStats, spec.TemporalAggFunc)
 			tileMap[coord].sum += sum
 			tileMap[coord].weight += weight
 		}
@@ -238,15 +238,15 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 	return out, er
 }
 
-func getTileBinValue(tileBinStats *pb.TileStats, temporalAggFunc string, spatialAggFunc string) (float64, float64) {
-	// For old api
-	if temporalAggFunc == "" && spatialAggFunc == "" {
+func getTileBinValue(tileBinStats *pb.TileStats, temporalAggFunc string) (float64, float64) {
+	//For old api backward compatibility
+	if temporalAggFunc == "" {
 		return tileBinStats.Avg, 1
+	} else if temporalAggFunc == "sum" {
+		return tileBinStats.SSumTSum, tileBinStats.Weight
+	} else {
+		return tileBinStats.SSumTMean, tileBinStats.Weight
 	}
-	// Note: proto buf contract only support either spatial sum or avg for now and doesn't have a notion of temporal agg
-	// TODO: support more agg function combinations as well when proto buf is updated and data is available
-	value := tileBinStats.Sum
-	return value, float64(tileBinStats.Count)
 }
 
 // createFeatures processes and merges the geotile results and returns a list of geojson features
