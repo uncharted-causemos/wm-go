@@ -14,7 +14,7 @@ import (
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
-	pb "gitlab.uncharted.software/WM/wm-proto/tiles"
+	pb "gitlab.uncharted.software/WM/wm-go/proto/tiles"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -40,12 +40,12 @@ type geoTileAggregation struct {
 type geoTilesResult struct {
 	bound bound
 	zoom  int
-	spec  wm.TileDataSpec
+	spec  wm.GridTileOutputSpec
 	data  []geoTile
 }
 
 // GetTile returns the tile containing model run output specified by the spec
-func (s *Storage) GetTile(zoom, x, y uint32, specs wm.TileDataSpecs, expression string) (*wm.Tile, error) {
+func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expression string) (*wm.Tile, error) {
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
 
 	var errChs []chan error
@@ -110,31 +110,43 @@ func evaluateExpression(features []*geojson.Feature, expression string) error {
 }
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
-func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan geoTilesResult, chan error) {
+func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (chan geoTilesResult, chan error) {
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
 		defer close(er)
 		defer close(out)
-		startTime, err := time.Parse(time.RFC3339, spec.Date)
-		if err != nil {
-			er <- err
-			return
-		}
-		timemillis := startTime.Unix() * 1000
+
 		modelMaxPrecision := spec.MaxPrecision
 		if modelMaxPrecision == 0 {
 			// if zero value (not set)
 			modelMaxPrecision = 99
 		}
-		key := fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
+
+		bucketName := maasOutputBucket
+		key := fmt.Sprintf("%s/%s/%s/%s/tiles/%d-%d-%d-%d.tile", spec.ModelID, spec.RunID, spec.Resolution, spec.Feature, spec.Timestamp, zoom, x, y)
+
+		if spec.Model != "" {
+			// For Backward compatibility to support old api and tile outputs
+			// TODO: Remove this part if we no longer need to display old tile outputs
+			startTime, err := time.Parse(time.RFC3339, spec.Date)
+			if err != nil {
+				er <- err
+				return
+			}
+			timemillis := startTime.Unix() * 1000
+			key = fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
+			bucketName = outputBucket
+		}
 
 		// Retrieve protobuf tile from S3
 		req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
-			Bucket: aws.String(outputBucket),
+			Bucket: aws.String(bucketName),
 			Key:    aws.String(key),
 		})
-		err = req.Send()
+
+		//TODO: Need validation and better error handling
+		err := req.Send()
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == s3.ErrCodeNoSuchKey {
@@ -171,9 +183,11 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		if binPrecision > modelMaxPrecision {
 			precisionDiff = binPrecision - modelMaxPrecision
 		}
+		// Note: If there is precision(or zoom level) difference beteween requested tile and the max precision of
+		// the output (output resolution at which models look good), aggregate up each tile grid cell to bigger grid cell at max precision
 		type binAgg struct {
-			sum   float64
-			count uint32
+			sum    float64
+			weight float64 // or just count if agg is not weighted
 		}
 		tileMap := make(map[string]*binAgg)
 		var gts []geoTile
@@ -190,13 +204,18 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 			if _, ok := tileMap[coord]; !ok {
 				tileMap[coord] = &binAgg{}
 			}
-			tileMap[coord].sum += binStats.Avg
-			tileMap[coord].count++
+			sum, weight := getTileBinValue(binStats, spec.TemporalAggFunc)
+			tileMap[coord].sum += sum
+			tileMap[coord].weight += weight
 		}
 
 		// Create geotiles
 		for coord, agg := range tileMap {
-			value := agg.sum / float64(agg.count)
+			value := agg.sum / float64(agg.weight) // default to mean
+			if spec.SpatialAggFunc == "sum" {
+				value = agg.sum
+			}
+
 			gts = append(gts, geoTile{
 				Key:                coord,
 				SpatialAggregation: geoTileAggregation{Value: value},
@@ -217,6 +236,17 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.TileDataSpec) (chan ge
 		out <- result
 	}()
 	return out, er
+}
+
+func getTileBinValue(tileBinStats *pb.TileStats, temporalAggFunc string) (float64, float64) {
+	//For old api backward compatibility
+	if temporalAggFunc == "" {
+		return tileBinStats.Avg, 1
+	} else if temporalAggFunc == "sum" {
+		return tileBinStats.SSumTSum, tileBinStats.Weight
+	} else {
+		return tileBinStats.SSumTMean, tileBinStats.Weight
+	}
 }
 
 // createFeatures processes and merges the geotile results and returns a list of geojson features

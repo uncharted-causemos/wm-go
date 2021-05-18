@@ -8,17 +8,23 @@ import (
 	"github.com/paulmach/orb/maptile"
 )
 
-// TileDataSpecs is a list of TileDataSpecs
-type TileDataSpecs []TileDataSpec
+// GridTileOutputSpecs is a list of GridTileOutputSpecs
+type GridTileOutputSpecs []GridTileOutputSpec
 
-// TileDataSpec defines the tile data specifications to be used in the queries.
-type TileDataSpec struct {
-	Model        string `json:"model"`
-	RunID        string `json:"runId"`
-	Feature      string `json:"feature"`
-	Date         string `json:"date"`
-	ValueProp    string `json:"valueProp"`
-	MaxPrecision uint32 `json:"maxPrecision"`
+// GridTileOutputSpec defines the tile output specifications to be used in the queries.
+type GridTileOutputSpec struct {
+	Model string `json:"model"` // will be deprecated
+	Date  string `json:"date"`  // will be deprecated
+
+	ModelID         string `json:"modelId"`
+	RunID           string `json:"runId"`
+	Feature         string `json:"feature"`
+	Timestamp       int    `json:"timestamp"`
+	Resolution      string `json:"resolution"`
+	TemporalAggFunc string `json:"temporalAgg"`
+	SpatialAggFunc  string `json:"spatialAgg"`
+	ValueProp       string `json:"valueProp"` // property name that will be set for this run output.
+	MaxPrecision    uint32 `json:"maxPrecision"`
 }
 
 // Point is a lon/lat point

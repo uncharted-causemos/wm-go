@@ -47,7 +47,7 @@ func (a *api) getVectorTile(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getTile(w http.ResponseWriter, r *http.Request) {
-	specs, err := getTileDataSpecs(r)
+	specs, err := getGridTileOutputSpecs(r)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusBadRequest)
 		return

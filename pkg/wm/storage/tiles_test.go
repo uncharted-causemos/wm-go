@@ -25,8 +25,8 @@ func TestTiles(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	specs := wm.TileDataSpecs{
-		wm.TileDataSpec{Model: "consumption_model", RunID: "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", Feature: "FEATURE_NAME", Date: "2020-01"},
+	specs := wm.GridTileOutputSpecs{
+		wm.GridTileOutputSpec{ModelID: "consumption_model", RunID: "1aee48cd4d5286732367dc223f7b21e97bc23619815f7140763c2f9f7541dfac", Feature: "FEATURE_NAME", Date: "2020-01"},
 	}
 	s.GetTile(9, 322, 244, specs, "")
 	require.NotNil(t, s)
@@ -40,14 +40,14 @@ func TestCreateFeatures(t *testing.T) {
 		{
 			input: []geoTilesResult{
 				{
-					spec: wm.TileDataSpec{ValueProp: "crop"},
+					spec: wm.GridTileOutputSpec{ValueProp: "crop"},
 					data: []geoTile{
 						{Key: "5/19/15", SpatialAggregation: geoTileAggregation{Value: 3}},
 						{Key: "5/20/15", SpatialAggregation: geoTileAggregation{Value: 5}},
 					},
 				},
 				{
-					spec: wm.TileDataSpec{ValueProp: "rainfall"},
+					spec: wm.GridTileOutputSpec{ValueProp: "rainfall"},
 					data: []geoTile{
 						{Key: "5/19/15", SpatialAggregation: geoTileAggregation{Value: 30}},
 						{Key: "5/20/15", SpatialAggregation: geoTileAggregation{Value: 49}},
