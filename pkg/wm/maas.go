@@ -159,9 +159,6 @@ type DataOutput interface {
 
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)
-
-	// GetModelSummary returns a single aggregate value for each run in a model
-	GetModelSummary(modelID string, feature string) (map[string]float64, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy

@@ -99,14 +99,3 @@ func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) {
 	}
 	render.Render(w, r, &modelOutputRegionalData{data})
 }
-
-func (a *api) getModelSummary(w http.ResponseWriter, r *http.Request) {
-	modelID := getModelID(r)
-	feature := getFeature(r)
-	summary, err := a.dataOutput.GetModelSummary(modelID, feature)
-	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
-	}
-	render.JSON(w, r, summary)
-}
