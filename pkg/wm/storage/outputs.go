@@ -97,18 +97,6 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 	return &regionalData, nil
 }
 
-// GetModelSummary returns a single aggregate value for each run in a model
-func (s *Storage) GetModelSummary(modelID string, feature string) (map[string]float64, error) {
-	//TODO: implementation needed
-	values := make(map[string]float64)
-	values["2d80c9f0-1e44-4a6c-91fe-2ebb26e39dea"] = 313639493
-	values["2ff53645-d481-4ff7-a067-e13f392f30a4"] = 115408980
-	values["25e0971b-c229-4c9a-a0f9-c121fce51309"] = 116547768
-	values["057d28d5-a7ed-472b-ae37-ba16571944ea"] = 146281019
-	values["967a0a69-552f-4861-ad7f-0c1bd8bab856"] = 204827768
-	return values, nil
-}
-
 func getAggregationFile(s *Storage, key *string) ([]byte, error) {
 	// Retrieve timeseries files from S3
 	req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
