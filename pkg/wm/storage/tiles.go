@@ -123,7 +123,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			modelMaxPrecision = 99
 		}
 
-		bucketName := maasOutputBucket
+		bucketName := maasModelOutputBucket
 		key := fmt.Sprintf("%s/%s/%s/%s/tiles/%d-%d-%d-%d.tile", spec.ModelID, spec.RunID, spec.Resolution, spec.Feature, spec.Timestamp, zoom, x, y)
 
 		if spec.Model != "" {

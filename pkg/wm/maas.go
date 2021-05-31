@@ -28,6 +28,16 @@ type TimeseriesValue struct {
 	Value     float64 `json:"value"`
 }
 
+// ModelOutputRawDataPoint represent a raw data point
+type ModelOutputRawDataPoint struct {
+	Timestamp int64   `json:"timestamp"`
+	Country   string  `json:"country"`
+	Admin1    string  `json:"admin1"`
+	Admin2    string  `json:"admin2"`
+	Admin3    string  `json:"admin3"`
+	Value     float64 `json:"value"`
+}
+
 // ModelOutputStat represent min and max stat of the model output data
 type ModelOutputStat struct {
 	Min float64 `json:"min"`
@@ -155,10 +165,13 @@ type DataOutput interface {
 	GetOutputStats(params ModelOutputParams) (*ModelOutputStat, error)
 
 	// GetOutputTimeseries returns model output timeseries
-	GetOutputTimeseries(params ModelOutputParams) ([]TimeseriesValue, error)
+	GetOutputTimeseries(params ModelOutputParams) ([]*TimeseriesValue, error)
 
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)
+
+	// GetRawData returns a single aggregate value for each run in a model
+	GetRawData(params ModelOutputParams) ([]*ModelOutputRawDataPoint, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
