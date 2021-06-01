@@ -19,7 +19,7 @@ func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputSt
 	if params.RunID == "indicator" {
 		bucket = maasIndicatorOutputBucket
 	}
-	buf, err := getAggregationFile(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) ([]*wm.Timese
 	if params.RunID == "indicator" {
 		bucket = maasIndicatorOutputBucket
 	}
-	buf, err := getAggregationFile(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		if params.RunID == "indicator" {
 			bucket = maasIndicatorOutputBucket
 		}
-		buf, err := getAggregationFile(s, bucket, aws.String(key))
+		buf, err := getFileFromS3(s, bucket, aws.String(key))
 		if err != nil {
 			return nil, err
 		}
@@ -118,7 +118,7 @@ func (s *Storage) GetRawData(params wm.ModelOutputParams) ([]*wm.ModelOutputRawD
 	if params.RunID == "indicator" {
 		bucket = maasIndicatorOutputBucket
 	}
-	buf, err := getAggregationFile(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
 	if err != nil {
 		return nil, err
 	}
@@ -132,8 +132,7 @@ func (s *Storage) GetRawData(params wm.ModelOutputParams) ([]*wm.ModelOutputRawD
 	return series, nil
 }
 
-func getAggregationFile(s *Storage, bucket string, key *string) ([]byte, error) {
-	// Retrieve timeseries files from S3
+func getFileFromS3(s *Storage, bucket string, key *string) ([]byte, error) {
 	req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    key,
