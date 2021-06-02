@@ -27,7 +27,7 @@ func (msr *oldModelOutputTimeseries) Render(w http.ResponseWriter, r *http.Reque
 }
 
 type modelOutputTimeseriesValue struct {
-	wm.TimeseriesValue
+	*wm.TimeseriesValue
 }
 
 // Render allows to satisfy the render.Renderer interface.
@@ -41,6 +41,15 @@ type modelOutputRegionalData struct {
 
 // Render allows to satisfy the render.Renderer interface.
 func (msr *modelOutputRegionalData) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type modelOutputRawDataPoint struct {
+	*wm.ModelOutputRawDataPoint
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputRawDataPoint) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -98,4 +107,18 @@ func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.Render(w, r, &modelOutputRegionalData{data})
+}
+
+func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) {
+	params := getModelOutputParams(r)
+	data, err := a.dataOutput.GetRawData(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	list := []render.Renderer{}
+	for _, point := range data {
+		list = append(list, &modelOutputRawDataPoint{point})
+	}
+	render.RenderList(w, r, list)
 }
