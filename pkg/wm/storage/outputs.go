@@ -86,18 +86,19 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		if params.RunID == "indicator" {
 			bucket = maasIndicatorOutputBucket
 		}
+
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
 		if err != nil {
-			return nil, err
+			data[level] = nil
+		} else {
+			var points []interface{}
+			err = json.Unmarshal(buf, &points)
+			if err != nil {
+				s.logger.Errorw("Error while unmarshalling", "err", err)
+				return nil, err
+			}
+			data[level] = points
 		}
-
-		var points []interface{}
-		err = json.Unmarshal(buf, &points)
-		if err != nil {
-			s.logger.Errorw("Error while unmarshalling", "err", err)
-			return nil, err
-		}
-		data[level] = points
 	}
 
 	var regionalData wm.ModelOutputRegionalAdmins
