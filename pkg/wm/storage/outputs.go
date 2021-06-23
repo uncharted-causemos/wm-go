@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/mapstructure"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -88,8 +89,14 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		}
 
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
+
 		if err != nil {
-			data[level] = nil
+			regerr, ok := err.(awserr.RequestFailure);
+			if regerr.Code() == "NoSuchKey" && ok {
+				data[level] = nil
+			} else {
+				return nil, err
+			}
 		} else {
 			var points []interface{}
 			err = json.Unmarshal(buf, &points)
