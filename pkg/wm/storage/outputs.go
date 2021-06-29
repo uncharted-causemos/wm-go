@@ -91,8 +91,8 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
 
 		if err != nil {
-			regerr, ok := err.(awserr.RequestFailure);
-			if regerr.Code() == "NoSuchKey" && ok {
+			reqerr, ok := err.(awserr.RequestFailure);
+			if reqerr.Code() == "NoSuchKey" && ok {
 				data[level] = make([]interface{}, 0)
 			} else {
 				return nil, err
