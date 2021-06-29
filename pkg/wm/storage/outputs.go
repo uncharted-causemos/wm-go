@@ -93,7 +93,7 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		if err != nil {
 			regerr, ok := err.(awserr.RequestFailure);
 			if regerr.Code() == "NoSuchKey" && ok {
-				data[level] = nil
+				data[level] = make([]interface{}, 0)
 			} else {
 				return nil, err
 			}
