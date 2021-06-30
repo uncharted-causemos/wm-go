@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/mapstructure"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -86,18 +87,25 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 		if params.RunID == "indicator" {
 			bucket = maasIndicatorOutputBucket
 		}
-		buf, err := getFileFromS3(s, bucket, aws.String(key))
-		if err != nil {
-			return nil, err
-		}
 
-		var points []interface{}
-		err = json.Unmarshal(buf, &points)
+		buf, err := getFileFromS3(s, bucket, aws.String(key))
+
 		if err != nil {
-			s.logger.Errorw("Error while unmarshalling", "err", err)
-			return nil, err
+			reqerr, ok := err.(awserr.RequestFailure);
+			if reqerr.Code() == "NoSuchKey" && ok {
+				data[level] = make([]interface{}, 0)
+			} else {
+				return nil, err
+			}
+		} else {
+			var points []interface{}
+			err = json.Unmarshal(buf, &points)
+			if err != nil {
+				s.logger.Errorw("Error while unmarshalling", "err", err)
+				return nil, err
+			}
+			data[level] = points
 		}
-		data[level] = points
 	}
 
 	var regionalData wm.ModelOutputRegionalAdmins
