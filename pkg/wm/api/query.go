@@ -42,14 +42,10 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
-func getModelID(r *http.Request) string {
-	return r.URL.Query().Get("model_id")
-}
-
-func getModelOutputParams(r *http.Request) wm.ModelOutputParams {
+func getDatacubeParams(r *http.Request) wm.DatacubeParams {
 	// This could be neater with github.com/gorilla/schema but no need for this dependency
-	var params wm.ModelOutputParams
-	params.ModelID = getModelID(r)
+	var params wm.DatacubeParams
+	params.DataID = r.URL.Query().Get("data_id")
 	params.RunID = r.URL.Query().Get("run_id")
 	params.Feature = getFeature(r)
 	params.Resolution = r.URL.Query().Get("resolution")

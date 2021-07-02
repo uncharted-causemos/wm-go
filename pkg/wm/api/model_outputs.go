@@ -75,7 +75,7 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 
 
 func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
-	params := getModelOutputParams(r)
+	params := getDatacubeParams(r)
 	stats, err := a.dataOutput.GetOutputStats(params)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
@@ -85,7 +85,7 @@ func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
-	params := getModelOutputParams(r)
+	params := getDatacubeParams(r)
 	timeseries, err := a.dataOutput.GetOutputTimeseries(params)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
@@ -99,7 +99,7 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) {
-	params := getModelOutputParams(r)
+	params := getDatacubeParams(r)
 	timestamp := getTimestamp(r)
 	data, err := a.dataOutput.GetRegionAggregation(params, timestamp)
 	if err != nil {
@@ -110,7 +110,7 @@ func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) {
-	params := getModelOutputParams(r)
+	params := getDatacubeParams(r)
 	data, err := a.dataOutput.GetRawData(params)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
