@@ -11,10 +11,10 @@ import (
 	"io/ioutil"
 )
 
-// GetOutputStats returns model output stats
-func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputStat, error) {
+// GetOutputStats returns datacube output stats
+func (s *Storage) GetOutputStats(params wm.DatacubeParams) (*wm.ModelOutputStat, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/stats.json",
-		params.ModelID, params.RunID, params.Resolution, params.Feature)
+		params.DataID, params.RunID, params.Resolution, params.Feature)
 
 	bucket := maasModelOutputBucket
 	if params.RunID == "indicator" {
@@ -51,10 +51,10 @@ func (s *Storage) GetOutputStats(params wm.ModelOutputParams) (*wm.ModelOutputSt
 	return &stats, nil
 }
 
-// GetOutputTimeseries returns model output timeseries
-func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) ([]*wm.TimeseriesValue, error) {
+// GetOutputTimeseries returns datacube output timeseries
+func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
-		params.ModelID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
+		params.DataID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
 
 	bucket := maasModelOutputBucket
 	if params.RunID == "indicator" {
@@ -75,12 +75,12 @@ func (s *Storage) GetOutputTimeseries(params wm.ModelOutputParams) ([]*wm.Timese
 }
 
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
-func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
+func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
 
 	data := make(map[string][]interface{})
 	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
 		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/s_%s_t_%s.json",
-			params.ModelID, params.RunID, params.Resolution, params.Feature, level,
+			params.DataID, params.RunID, params.Resolution, params.Feature, level,
 			timestamp, params.SpatialAggFunc, params.TemporalAggFunc)
 
 		bucket := maasModelOutputBucket
@@ -117,10 +117,10 @@ func (s *Storage) GetRegionAggregation(params wm.ModelOutputParams, timestamp st
 	return &regionalData, nil
 }
 
-// GetRawData returns model output or indicator raw data
-func (s *Storage) GetRawData(params wm.ModelOutputParams) ([]*wm.ModelOutputRawDataPoint, error) {
+// GetRawData returns datacube output or indicator raw data
+func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawDataPoint, error) {
 	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.json",
-		params.ModelID, params.RunID, params.Feature)
+		params.DataID, params.RunID, params.Feature)
 
 	bucket := maasModelOutputBucket
 	if params.RunID == "indicator" {

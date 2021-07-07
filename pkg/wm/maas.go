@@ -7,9 +7,9 @@ type ModelRun struct {
 	Parameters []ModelRunParameter `json:"parameters"`
 }
 
-// ModelOutputParams represent common parameters for requesting model run data
-type ModelOutputParams struct {
-	ModelID         string `json:"model_id"`
+// DatacubeParams represent common parameters for requesting model run data
+type DatacubeParams struct {
+	DataID          string `json:"data_id"`
 	RunID           string `json:"run_id"`
 	Feature         string `json:"feature"`
 	Resolution      string `json:"resolution"`
@@ -161,17 +161,17 @@ type DataOutput interface {
 	// GetTile returns mapbox vector tile
 	GetTile(zoom, x, y uint32, specs GridTileOutputSpecs, expression string) (*Tile, error)
 
-	// GetOutputStats returns model output stats
-	GetOutputStats(params ModelOutputParams) (*ModelOutputStat, error)
+	// GetOutputStats returns datacube output stats
+	GetOutputStats(params DatacubeParams) (*ModelOutputStat, error)
 
-	// GetOutputTimeseries returns model output timeseries
-	GetOutputTimeseries(params ModelOutputParams) ([]*TimeseriesValue, error)
+	// GetOutputTimeseries returns datacube output timeseries
+	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
 
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
-	GetRegionAggregation(params ModelOutputParams, timestamp string) (*ModelOutputRegionalAdmins, error)
+	GetRegionAggregation(params DatacubeParams, timestamp string) (*ModelOutputRegionalAdmins, error)
 
-	// GetRawData returns a single aggregate value for each run in a model
-	GetRawData(params ModelOutputParams) ([]*ModelOutputRawDataPoint, error)
+	// GetRawData returns datacube output or indicator raw data
+	GetRawData(params DatacubeParams) ([]*ModelOutputRawDataPoint, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
