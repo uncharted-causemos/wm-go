@@ -44,6 +44,7 @@ type ModelOutputStat struct {
 	Max float64 `json:"max"`
 }
 
+// ModelRegionalOutputStat contains a mapping from regional statistics filenames to ModelOutputStats
 type ModelRegionalOutputStat map[string]ModelOutputStat
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
