@@ -2,7 +2,7 @@ package api
 
 import (
 	"net/http"
-
+	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -14,6 +14,15 @@ type modelOutputStatsResponse struct {
 
 // Render allows to satisfy the render.Renderer interface.
 func (msr *modelOutputStatsResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type modelRegionalOutputStatsResponse struct {
+	*wm.ModelRegionalOutputStat
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelRegionalOutputStatsResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -72,11 +81,25 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 }
 
 
+func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request) {
+	params := getDatacubeParams(r)
+	regionMap := make(wm.ModelRegionalOutputStat)
+	for i := 1; i <= 4; i++ {
+		var regionKey = fmt.Sprintf("regional_level_%d_stats", i)
+		stats, err := a.dataOutput.GetOutputStats(params, regionKey)
+		if err != nil {
+			a.errorResponse(w, err, http.StatusInternalServerError)
+			return
+		}
+		regionMap[regionKey] = *stats
+	}
 
+	render.Render(w, r, &modelRegionalOutputStatsResponse{&regionMap})
+}
 
 func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
-	stats, err := a.dataOutput.GetOutputStats(params)
+	stats, err := a.dataOutput.GetOutputStats(params, "stats")
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return

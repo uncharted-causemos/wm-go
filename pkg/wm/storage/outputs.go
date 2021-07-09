@@ -12,9 +12,9 @@ import (
 )
 
 // GetOutputStats returns datacube output stats
-func (s *Storage) GetOutputStats(params wm.DatacubeParams) (*wm.ModelOutputStat, error) {
-	key := fmt.Sprintf("%s/%s/%s/%s/stats/stats.json",
-		params.DataID, params.RunID, params.Resolution, params.Feature)
+func (s *Storage) GetOutputStats(params wm.DatacubeParams, filename string) (*wm.ModelOutputStat, error) {
+	key := fmt.Sprintf("%s/%s/%s/%s/stats/%s.json",
+		params.DataID, params.RunID, params.Resolution, params.Feature, filename)
 
 	bucket := maasModelOutputBucket
 	if params.RunID == "indicator" {

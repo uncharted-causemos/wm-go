@@ -44,6 +44,8 @@ type ModelOutputStat struct {
 	Max float64 `json:"max"`
 }
 
+type ModelRegionalOutputStat map[string]ModelOutputStat
+
 // ModelOutputRegionalAdmins represent regional data for all admin levels
 type ModelOutputRegionalAdmins struct {
 	Country []ModelOutputAdminData `json:"country"`
@@ -162,7 +164,7 @@ type DataOutput interface {
 	GetTile(zoom, x, y uint32, specs GridTileOutputSpecs, expression string) (*Tile, error)
 
 	// GetOutputStats returns datacube output stats
-	GetOutputStats(params DatacubeParams) (*ModelOutputStat, error)
+	GetOutputStats(params DatacubeParams, filename string) (*ModelOutputStat, error)
 
 	// GetOutputTimeseries returns datacube output timeseries
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
