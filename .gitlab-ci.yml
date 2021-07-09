@@ -1,7 +1,7 @@
 # test runs test and lint jobs
 # prepare sets the environment variables that can be passed to the other jobs (eg. build, deploy)
 # build builds wm-go docker image and push it to the registry. 
-#      `latest` docker tag will be used for commits on master when the commit is not tagged
+#      `latest` docker tag will be used for commits on main when the commit is not tagged
 # deploy deploys the app to the openstack when there's new tag
 stages:
   - test
@@ -12,7 +12,7 @@ stages:
 .test_common:
   stage: test
   only:
-    - master
+    - main
     - merge_requests
   image: docker-hub.uncharted.software/golang:1.13
   variables:
@@ -44,7 +44,7 @@ test:
 environment:
   stage: prepare
   only:
-    - master
+    - main
     - tags
   image: docker-hub.uncharted.software/alpine
   artifacts:
@@ -59,7 +59,7 @@ environment:
 
         "${CI_COMMIT_TAG}") export DOCKER_TAG="${CI_COMMIT_TAG}" ;;
 
-        master) export DOCKER_TAG="latest" ;;
+        main) export DOCKER_TAG="latest" ;;
 
         *) echo "Unknown build ref $CI_COMMIT_REF_NAME"; exit 1 ;;
 
@@ -73,7 +73,7 @@ environment:
 build:
   stage: build
   only:
-    - master
+    - main
     - tags
   dependencies:
     - environment
