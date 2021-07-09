@@ -84,7 +84,7 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
 	regionMap := make(wm.ModelRegionalOutputStat)
-	for i := 1; i <= 4; i++ {
+	for i := 0; i < 4; i++ {
 		var regionKey = fmt.Sprintf("regional_level_%d_stats", i)
 		stats, err := a.dataOutput.GetOutputStats(params, regionKey)
 		if err != nil {
