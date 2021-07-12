@@ -11,10 +11,28 @@ import (
 	"io/ioutil"
 )
 
+// GetRegionalOutputStats returns regional output statistics
+func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelRegionalOutputStat, error) {
+	regionMap := make(map[string]*wm.ModelOutputStat)
+	for i, level := range []string{"country", "admin1", "admin2", "admin3"} {
+		var regionKey = fmt.Sprintf("regional_level_%d_stats", i)
+		stats, err := s.GetOutputStats(params, regionKey)
+		if err == nil {
+			regionMap[level] = stats
+		}
+	}
+	var statsByRegion wm.ModelRegionalOutputStat
+	err := mapstructure.Decode(regionMap, &statsByRegion)
+	if err != nil {
+		return nil, err
+	}
+	return &statsByRegion, nil
+}
+
 // GetOutputStats returns datacube output stats
-func (s *Storage) GetOutputStats(params wm.DatacubeParams) (*wm.ModelOutputStat, error) {
-	key := fmt.Sprintf("%s/%s/%s/%s/stats/stats.json",
-		params.DataID, params.RunID, params.Resolution, params.Feature)
+func (s *Storage) GetOutputStats(params wm.DatacubeParams, filename string) (*wm.ModelOutputStat, error) {
+	key := fmt.Sprintf("%s/%s/%s/%s/stats/%s.json",
+		params.DataID, params.RunID, params.Resolution, params.Feature, filename)
 
 	bucket := maasModelOutputBucket
 	if params.RunID == "indicator" {
