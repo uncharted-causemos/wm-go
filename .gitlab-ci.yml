@@ -96,12 +96,12 @@ build:
     - docker push docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}
 
     # Also tag the versioned image as 'latest'
-    - > 
-    if [ "$DOCKER_TAG" != "dev" ]
-    then
-      docker tag docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} docker.uncharted.software/worldmodeler/wm-go:latest
-      docker push docker.uncharted.software/worldmodeler/wm-go:latest
-    fi
+    - |
+      if [ "$DOCKER_TAG" != "dev" ]
+      then
+        docker tag docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} docker.uncharted.software/worldmodeler/wm-go:latest
+        docker push docker.uncharted.software/worldmodeler/wm-go:latest
+      fi
 
 openstack-deploy:
   stage: deploy
