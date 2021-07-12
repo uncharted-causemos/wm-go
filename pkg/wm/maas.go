@@ -172,7 +172,7 @@ type DataOutput interface {
 	// GetOutputStats returns datacube output stats
 	GetOutputStats(params DatacubeParams, filename string) (*ModelOutputStat, error)
 
-	// GetRegionalOutputStats returns datacube output stats
+	// GetRegionalOutputStats returns regional output statistics
 	GetRegionalOutputStats(params DatacubeParams) (*ModelRegionalOutputStat, error)
 
 	// GetOutputTimeseries returns datacube output timeseries

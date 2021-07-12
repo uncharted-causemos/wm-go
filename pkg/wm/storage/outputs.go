@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 )
 
+// GetRegionalOutputStats returns regional output statistics
 func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelRegionalOutputStat, error) {
 	regionMap := make(map[string]wm.ModelOutputStat)
 	for i, level := range []string{"country", "admin1", "admin2", "admin3"} {
