@@ -97,8 +97,8 @@ build:
 
 openstack-deploy:
   stage: deploy
-  # only:
-  #   - tags
+  only:
+    - tags
   dependencies:
     - environment
   image: docker-hub.uncharted.software/alpine
@@ -125,19 +125,17 @@ openstack-deploy:
     - echo "--- Deploying wm-go to Openstack ---"
     - echo DEPLOY DOCKER TAG ${DOCKER_TAG}
 
-    - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "cat wm-go/wm.env"
-
-    # # Pull new docker image and restart the container
-    # - echo "Pulling new docker image"
-    # - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker pull docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
-    # - echo "Remove running container"
-    # - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker stop wm-go || true && docker rm wm-go || true"
-    # - echo "Run new image with ${DOCKER_TAG}"
-    # - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker run --env-file wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
-    # # Delete the image with previous version tag
-    # - echo "Clean up previous wm-go images"
-    # - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker rmi $(docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
-    # - echo "wm-go ${DOCKER_TAG} is successfully deployed!"
+    # Pull new docker image and restart the container
+    - echo "Pulling new docker image"
+    - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker pull docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
+    - echo "Remove running container"
+    - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker stop wm-go || true && docker rm wm-go || true"
+    - echo "Run new image with ${DOCKER_TAG}"
+    - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker run --env-file wm-go/wm.env -d --restart always -p 4200:4200 -it --name wm-go docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG}"
+    # Delete the image with previous version tag
+    - echo "Clean up previous wm-go images"
+    - ssh -o "StrictHostKeyChecking=no" centos@${OPENSTACK_IP} "docker rmi $(docker images docker.uncharted.software/worldmodeler/wm-go -f before=docker.uncharted.software/worldmodeler/wm-go:${DOCKER_TAG} -q) || true"
+    - echo "wm-go ${DOCKER_TAG} is successfully deployed!"
   environment:
     name: openstack
     url: http://$OPENSTACK_IP:4200
