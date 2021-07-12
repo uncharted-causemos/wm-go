@@ -89,9 +89,9 @@ func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request)
 		stats, err := a.dataOutput.GetOutputStats(params, regionKey)
 		if err != nil {
 			a.errorResponse(w, err, http.StatusInternalServerError)
-			return
+		} else {
+			regionMap[level] = *stats
 		}
-		regionMap[level] = *stats
 	}
 
 	render.Render(w, r, &modelRegionalOutputStatsResponse{&regionMap})
