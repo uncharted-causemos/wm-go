@@ -87,9 +87,7 @@ func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request)
 	for i, level := range []string{"country", "admin1", "admin2", "admin3"} {
 		var regionKey = fmt.Sprintf("regional_level_%d_stats", i)
 		stats, err := a.dataOutput.GetOutputStats(params, regionKey)
-		if err != nil {
-			a.errorResponse(w, err, http.StatusInternalServerError)
-		} else {
+		if err == nil {
 			regionMap[level] = *stats
 		}
 	}
