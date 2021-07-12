@@ -46,10 +46,10 @@ type ModelOutputStat struct {
 
 // ModelRegionalOutputStat represent regional data for all admin levels
 type ModelRegionalOutputStat struct {
-	Country ModelOutputStat `json:"country"`
-	Admin1  ModelOutputStat `json:"admin1"`
-	Admin2  ModelOutputStat `json:"admin2"`
-	Admin3  ModelOutputStat `json:"admin3"`
+	Country *ModelOutputStat `json:"country"`
+	Admin1  *ModelOutputStat `json:"admin1"`
+	Admin2  *ModelOutputStat `json:"admin2"`
+	Admin3  *ModelOutputStat `json:"admin3"`
 }
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
