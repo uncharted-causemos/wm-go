@@ -44,8 +44,13 @@ type ModelOutputStat struct {
 	Max float64 `json:"max"`
 }
 
-// ModelRegionalOutputStat contains a mapping from regional statistics filenames to ModelOutputStats
-type ModelRegionalOutputStat map[string]ModelOutputStat
+// ModelRegionalOutputStat represent regional data for all admin levels
+type ModelRegionalOutputStat struct {
+	Country ModelOutputStat `json:"country"`
+	Admin1  ModelOutputStat `json:"admin1"`
+	Admin2  ModelOutputStat `json:"admin2"`
+	Admin3  ModelOutputStat `json:"admin3"`
+}
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
 type ModelOutputRegionalAdmins struct {
@@ -166,6 +171,9 @@ type DataOutput interface {
 
 	// GetOutputStats returns datacube output stats
 	GetOutputStats(params DatacubeParams, filename string) (*ModelOutputStat, error)
+
+	// GetRegionalOutputStats returns datacube output stats
+	GetRegionalOutputStats(params DatacubeParams) (*ModelRegionalOutputStat, error)
 
 	// GetOutputTimeseries returns datacube output timeseries
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)

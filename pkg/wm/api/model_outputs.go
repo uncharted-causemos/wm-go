@@ -1,11 +1,10 @@
 package api
 
 import (
-	"net/http"
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
+	"net/http"
 )
 
 type modelOutputStatsResponse struct {
@@ -83,16 +82,12 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
-	regionMap := make(wm.ModelRegionalOutputStat)
-	for i, level := range []string{"country", "admin1", "admin2", "admin3"} {
-		var regionKey = fmt.Sprintf("regional_level_%d_stats", i)
-		stats, err := a.dataOutput.GetOutputStats(params, regionKey)
-		if err == nil {
-			regionMap[level] = *stats
-		}
+	stats, err := a.dataOutput.GetRegionalOutputStats(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
 	}
-
-	render.Render(w, r, &modelRegionalOutputStatsResponse{&regionMap})
+	render.Render(w, r, &modelRegionalOutputStatsResponse{stats})
 }
 
 func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
