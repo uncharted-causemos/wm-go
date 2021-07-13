@@ -3,13 +3,19 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/mitchellh/mapstructure"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
-	"io/ioutil"
 )
+
+func getRegionLevels() []string {
+	return []string{"country", "admin1", "admin2", "admin3"}
+}
 
 // GetOutputStats returns datacube output stats
 func (s *Storage) GetOutputStats(params wm.DatacubeParams) (*wm.ModelOutputStat, error) {
@@ -74,6 +80,33 @@ func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.Timeserie
 	return series, nil
 }
 
+// GetOutputTimeseriesByRegion returns timeseries data for a specific region
+func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID string) ([]*wm.TimeseriesValue, error) {
+	// Deconstruct Region ID to get admin region levels
+	regions := strings.Split(regionID, "__")
+	regionLevel := getRegionLevels()[len(regions)-1]
+	fmt.Println(regionLevel)
+	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
+		params.DataID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
+
+	bucket := maasModelOutputBucket
+	if params.RunID == "indicator" {
+		bucket = maasIndicatorOutputBucket
+	}
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	if err != nil {
+		return nil, err
+	}
+
+	var series []*wm.TimeseriesValue
+	err = json.Unmarshal(buf, &series)
+	if err != nil {
+		s.logger.Errorw("Error while unmarshalling", "err", err)
+		return nil, err
+	}
+	return series, nil
+}
+
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
 
@@ -91,7 +124,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
 
 		if err != nil {
-			reqerr, ok := err.(awserr.RequestFailure);
+			reqerr, ok := err.(awserr.RequestFailure)
 			if reqerr.Code() == "NoSuchKey" && ok {
 				data[level] = make([]interface{}, 0)
 			} else {
