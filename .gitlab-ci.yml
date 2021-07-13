@@ -107,6 +107,7 @@ openstack-deploy:
   stage: deploy
   only:
     - main
+    - tags
   dependencies:
     - environment
   image: docker-hub.uncharted.software/alpine
