@@ -42,6 +42,10 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
+func getRegionID(r *http.Request) string {
+	return r.URL.Query().Get("region_id")
+}
+
 func getDatacubeParams(r *http.Request) wm.DatacubeParams {
 	// This could be neater with github.com/gorilla/schema but no need for this dependency
 	var params wm.DatacubeParams

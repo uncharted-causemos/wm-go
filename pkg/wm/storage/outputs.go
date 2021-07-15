@@ -1,9 +1,14 @@
 package storage
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -85,9 +90,8 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 	// Deconstruct Region ID to get admin region levels
 	regions := strings.Split(regionID, "__")
 	regionLevel := getRegionLevels()[len(regions)-1]
-	fmt.Println(regionLevel)
-	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
-		params.DataID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
+	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/%s.csv",
+		params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel, regionID)
 
 	bucket := maasModelOutputBucket
 	if params.RunID == "indicator" {
@@ -98,11 +102,49 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 		return nil, err
 	}
 
-	var series []*wm.TimeseriesValue
-	err = json.Unmarshal(buf, &series)
-	if err != nil {
-		s.logger.Errorw("Error while unmarshalling", "err", err)
-		return nil, err
+	// Read and parse csv
+	series := make([]*wm.TimeseriesValue, 0)
+	r := csv.NewReader(bytes.NewReader(buf))
+	isHeader := true
+	valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+	if params.SpatialAggFunc == "count" {
+		// when counting data points spatially, temporal aggregation function doesn't matter
+		valueCol = "s_count"
+	}
+	valueColIndex := -1
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		// Parse header and find the index of the target value column
+		if isHeader {
+			for i, v := range record {
+				if v == valueCol {
+					valueColIndex = i
+				}
+			}
+			if valueColIndex == -1 {
+				return nil, errors.New(fmt.Sprintf("csv: Column, %s does not exist.", valueCol))
+			}
+			isHeader = false
+		} else {
+			timestamp, err := strconv.ParseInt(record[0], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			value, err := strconv.ParseFloat(record[valueColIndex], 64)
+			if err != nil {
+				return nil, err
+			}
+			series = append(series, &wm.TimeseriesValue{
+				Timestamp: timestamp,
+				Value:     value,
+			})
+		}
 	}
 	return series, nil
 }

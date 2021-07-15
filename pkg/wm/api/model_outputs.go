@@ -71,9 +71,6 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, &oldModelOutputTimeseries{timeseries})
 }
 
-
-
-
 func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
 	stats, err := a.dataOutput.GetOutputStats(params)
@@ -86,7 +83,14 @@ func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
-	timeseries, err := a.dataOutput.GetOutputTimeseries(params)
+	regionID := getRegionID(r)
+	var timeseries []*wm.TimeseriesValue
+	var err error
+	if regionID != "" {
+		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
+	} else {
+		timeseries, err = a.dataOutput.GetOutputTimeseries(params)
+	}
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
