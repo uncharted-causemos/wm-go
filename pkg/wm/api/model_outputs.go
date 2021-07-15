@@ -86,10 +86,10 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	regionID := getRegionID(r)
 	var timeseries []*wm.TimeseriesValue
 	var err error
-	if regionID != "" {
-		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
-	} else {
+	if regionID == "" {
 		timeseries, err = a.dataOutput.GetOutputTimeseries(params)
+	} else {
+		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
 	}
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
