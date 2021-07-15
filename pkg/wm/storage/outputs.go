@@ -14,8 +14,8 @@ import (
 // GetRegionalOutputStats returns regional output statistics
 func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelRegionalOutputStat, error) {
 	regionMap := make(map[string]*wm.ModelOutputStat)
-	for i, level := range []string{"country", "admin1", "admin2", "admin3"} {
-		var regionKey = fmt.Sprintf("regional_level_%d_stats", i)
+	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
+		var regionKey = fmt.Sprintf("regional/%s", level)
 		stats, err := s.GetOutputStats(params, regionKey)
 		if err == nil {
 			regionMap[level] = stats
