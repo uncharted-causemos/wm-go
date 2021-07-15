@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -128,7 +127,7 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 				}
 			}
 			if valueColIndex == -1 {
-				return nil, errors.New(fmt.Sprintf("csv: Column, %s does not exist.", valueCol))
+				return nil, fmt.Errorf("csv: column, %s does not exist", valueCol)
 			}
 			isHeader = false
 		} else {
