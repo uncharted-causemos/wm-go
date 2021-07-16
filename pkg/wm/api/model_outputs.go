@@ -17,6 +17,15 @@ func (msr *modelOutputStatsResponse) Render(w http.ResponseWriter, r *http.Reque
 	return nil
 }
 
+type modelRegionalOutputStatsResponse struct {
+	*wm.ModelRegionalOutputStat
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelRegionalOutputStatsResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type oldModelOutputTimeseries struct {
 	*wm.OldModelOutputTimeseries
 }
@@ -71,9 +80,19 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, &oldModelOutputTimeseries{timeseries})
 }
 
+func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request) {
+	params := getDatacubeParams(r)
+	stats, err := a.dataOutput.GetRegionalOutputStats(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.Render(w, r, &modelRegionalOutputStatsResponse{stats})
+}
+
 func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
-	stats, err := a.dataOutput.GetOutputStats(params)
+	stats, err := a.dataOutput.GetOutputStats(params, "stats")
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
