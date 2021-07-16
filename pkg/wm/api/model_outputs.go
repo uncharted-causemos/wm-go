@@ -1,10 +1,11 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
-	"net/http"
 )
 
 type modelOutputStatsResponse struct {
@@ -79,7 +80,6 @@ func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, &oldModelOutputTimeseries{timeseries})
 }
 
-
 func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
 	stats, err := a.dataOutput.GetRegionalOutputStats(params)
@@ -102,7 +102,14 @@ func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
-	timeseries, err := a.dataOutput.GetOutputTimeseries(params)
+	regionID := getRegionID(r)
+	var timeseries []*wm.TimeseriesValue
+	var err error
+	if regionID == "" {
+		timeseries, err = a.dataOutput.GetOutputTimeseries(params)
+	} else {
+		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
+	}
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return

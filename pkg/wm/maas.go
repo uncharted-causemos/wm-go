@@ -178,6 +178,9 @@ type DataOutput interface {
 	// GetOutputTimeseries returns datacube output timeseries
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
 
+	// GetOutputTimeseriesByRegion returns timeseries data for a specific region
+	GetOutputTimeseriesByRegion(params DatacubeParams, regionID string) ([]*TimeseriesValue, error)
+
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 	GetRegionAggregation(params DatacubeParams, timestamp string) (*ModelOutputRegionalAdmins, error)
 
