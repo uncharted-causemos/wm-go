@@ -45,6 +45,7 @@ type ModelOutputRawDataPoint struct {
 	Value     float64 `json:"value"`
 }
 
+// ModelOutputHierarchy is a hierarchy where each region maps to a map of more specific regions.
 type ModelOutputHierarchy map[string]interface{}
 
 // ModelOutputStat represent min and max stat of the model output data
