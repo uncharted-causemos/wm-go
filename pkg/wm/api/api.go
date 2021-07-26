@@ -57,6 +57,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/output/{"+paramRunID+"}/stats", a.getModelOutputStats)
 
 		//New timeseries and stats, replaces above endpoints
+		r.Get("/output/hierarchy", a.getDataOutputHierarchy)
 		r.Get("/output/timeseries", a.getDataOutputTimeseries)
 		r.Get("/output/stats", a.getDataOutputStats)
 		r.Get("/output/regional-data", a.getDataOutputRegional)

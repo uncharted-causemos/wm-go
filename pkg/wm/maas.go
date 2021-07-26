@@ -17,6 +17,13 @@ type DatacubeParams struct {
 	SpatialAggFunc  string `json:"spatial_agg"`
 }
 
+// HierarchyParams represent parameters needed to fetch a region hierarchy
+type HierarchyParams struct {
+	DataID          string `json:"data_id"`
+	RunID           string `json:"run_id"`
+	Feature          string `json:"feature"`
+}
+
 // OldModelOutputTimeseries represent the old time series model output data
 type OldModelOutputTimeseries struct {
 	Timeseries []TimeseriesValue `json:"timeseries"`
@@ -37,6 +44,8 @@ type ModelOutputRawDataPoint struct {
 	Admin3    string  `json:"admin3"`
 	Value     float64 `json:"value"`
 }
+
+type ModelOutputHierarchy map[string]interface{}
 
 // ModelOutputStat represent min and max stat of the model output data
 type ModelOutputStat struct {
@@ -186,6 +195,9 @@ type DataOutput interface {
 
 	// GetRawData returns datacube output or indicator raw data
 	GetRawData(params DatacubeParams) ([]*ModelOutputRawDataPoint, error)
+
+	// GetRegionHierarchy returns region hierarchy output
+	GetRegionHierarchy(params HierarchyParams) (*ModelOutputHierarchy, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy

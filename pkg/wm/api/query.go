@@ -58,6 +58,14 @@ func getDatacubeParams(r *http.Request) wm.DatacubeParams {
 	return params
 }
 
+func getHierarchyParams(r *http.Request) wm.HierarchyParams {
+	var params wm.HierarchyParams
+	params.DataID = r.URL.Query().Get("data_id")
+	params.RunID = r.URL.Query().Get("run_id")
+	params.Feature = getFeature(r)
+	return params
+}
+
 func getUnits(r *http.Request) ([]string, bool) {
 	units, ok := r.URL.Query()["unit"]
 	return units, ok

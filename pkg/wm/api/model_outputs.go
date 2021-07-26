@@ -53,6 +53,14 @@ func (msr *modelOutputRegionalData) Render(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
+type modelOutputHierarchyData struct {
+	*wm.ModelOutputHierarchy
+}
+
+func (msr *modelOutputHierarchyData) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type modelOutputRawDataPoint struct {
 	*wm.ModelOutputRawDataPoint
 }
@@ -144,4 +152,14 @@ func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) {
 		list = append(list, &modelOutputRawDataPoint{point})
 	}
 	render.RenderList(w, r, list)
+}
+
+func (a *api) getDataOutputHierarchy(w http.ResponseWriter, r *http.Request) {
+	params := getHierarchyParams(r)
+	data, err := a.dataOutput.GetRegionHierarchy(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.Render(w, r, &modelOutputHierarchyData{data})
 }
