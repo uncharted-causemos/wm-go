@@ -209,7 +209,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 	return &regionalData, nil
 }
 
-// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
+// GetRegionHierarchy returns region hierarchy output
 func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutputHierarchy, error) {
 	key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/hierarchy.json",
 		params.DataID, params.RunID, params.Feature)
