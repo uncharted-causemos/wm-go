@@ -54,7 +54,6 @@ func New(cfg *Config) (chi.Router, error) {
 
 		//TODO Remove once the versions below are returning data
 		r.Get("/output/{"+paramRunID+"}/timeseries", a.getModelOutputTimeseries)
-		r.Get("/output/{"+paramRunID+"}/stats", a.getModelOutputStats)
 
 		//New timeseries and stats, replaces above endpoints
 		r.Get("/output/timeseries", a.getDataOutputTimeseries)

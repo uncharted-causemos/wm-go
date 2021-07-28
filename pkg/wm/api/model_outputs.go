@@ -8,12 +8,12 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
-type modelOutputStatsResponse struct {
-	*wm.ModelOutputStat
+type outputStatsResponse struct {
+	*wm.OutputStatWithZoom
 }
 
 // Render allows to satisfy the render.Renderer interface.
-func (msr *modelOutputStatsResponse) Render(w http.ResponseWriter, r *http.Request) error {
+func (msr *outputStatsResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -62,15 +62,6 @@ func (msr *modelOutputRawDataPoint) Render(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (a *api) getModelOutputStats(w http.ResponseWriter, r *http.Request) {
-	stats, err := a.maas.GetOutputStats(chi.URLParam(r, paramRunID), getFeature(r))
-	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
-	}
-	render.Render(w, r, &modelOutputStatsResponse{stats})
-}
-
 func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
 	timeseries, err := a.maas.GetOutputTimeseries(chi.URLParam(r, paramRunID), getFeature(r))
 	if err != nil {
@@ -92,12 +83,17 @@ func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request)
 
 func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) {
 	params := getDatacubeParams(r)
-	stats, err := a.dataOutput.GetOutputStats(params, "stats")
+	timestamp := getTimestamp(r)
+	stats, err := a.dataOutput.GetOutputStats(params, timestamp)
 	if err != nil {
 		a.errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	render.Render(w, r, &modelOutputStatsResponse{stats})
+	list := []render.Renderer{}
+	for _, stat := range stats {
+		list = append(list, &outputStatsResponse{stat})
+	}
+	render.RenderList(w, r, list)
 }
 
 func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) {
