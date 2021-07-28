@@ -209,6 +209,28 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 	return &regionalData, nil
 }
 
+// GetRegionHierarchy returns region hierarchy output
+func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutputHierarchy, error) {
+	key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/hierarchy.json",
+		params.DataID, params.RunID, params.Feature)
+	bucket := maasModelOutputBucket
+	if params.RunID == "indicator" {
+		bucket = maasIndicatorOutputBucket
+	}
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	if err != nil {
+		s.logger.Errorw("Error while reading from S3", "err", err)
+		return nil, err
+	}
+	var output wm.ModelOutputHierarchy
+	err = json.Unmarshal(buf, &output)
+	if err != nil {
+		s.logger.Errorw("Error while unmarshalling", "err", err)
+		return nil, err
+	}
+	return &output, nil
+}
+
 // GetRawData returns datacube output or indicator raw data
 func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawDataPoint, error) {
 	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.json",

@@ -145,3 +145,13 @@ func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) {
 	}
 	render.RenderList(w, r, list)
 }
+
+func (a *api) getDataOutputHierarchy(w http.ResponseWriter, r *http.Request) {
+	params := getHierarchyParams(r)
+	data, err := a.dataOutput.GetRegionHierarchy(params)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	render.JSON(w, r, &data)
+}
