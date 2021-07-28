@@ -43,6 +43,8 @@ type ModelOutputStat struct {
 	Min float64 `json:"min"`
 	Max float64 `json:"max"`
 }
+
+// OutputStatWithZoom represent min and max stat of the output data for a specific zoom level
 type OutputStatWithZoom struct {
 	Zoom uint8   `json:"zoom"`
 	Min  float64 `json:"min"`
