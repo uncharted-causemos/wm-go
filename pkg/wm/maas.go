@@ -54,6 +54,13 @@ type ModelOutputStat struct {
 	Max float64 `json:"max"`
 }
 
+// OutputStatWithZoom represent min and max stat of the output data for a specific zoom level
+type OutputStatWithZoom struct {
+	Zoom uint8   `json:"zoom"`
+	Min  float64 `json:"min"`
+	Max  float64 `json:"max"`
+}
+
 // ModelRegionalOutputStat represent regional data for all admin levels
 type ModelRegionalOutputStat struct {
 	Country *ModelOutputStat `json:"country"`
@@ -180,7 +187,7 @@ type DataOutput interface {
 	GetTile(zoom, x, y uint32, specs GridTileOutputSpecs, expression string) (*Tile, error)
 
 	// GetOutputStats returns datacube output stats
-	GetOutputStats(params DatacubeParams, filename string) (*ModelOutputStat, error)
+	GetOutputStats(params DatacubeParams, timestamp string) ([]*OutputStatWithZoom, error)
 
 	// GetRegionalOutputStats returns regional output statistics
 	GetRegionalOutputStats(params DatacubeParams) (*ModelRegionalOutputStat, error)

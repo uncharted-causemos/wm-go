@@ -21,12 +21,31 @@ func getRegionLevels() []string {
 	return []string{"country", "admin1", "admin2", "admin3"}
 }
 
+// Get the s3 bucket based on the output runID
+func getBucket(outputRunID string) string {
+	bucket := maasModelOutputBucket
+	if outputRunID == "indicator" {
+		bucket = maasIndicatorOutputBucket
+	}
+	return bucket
+}
+
+// Get the index of provided string in given string slice
+func index(vs []string, t string) int {
+	for i, v := range vs {
+		if v == t {
+			return i
+		}
+	}
+	return -1
+}
+
 // GetRegionalOutputStats returns regional output statistics
 func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelRegionalOutputStat, error) {
 	regionMap := make(map[string]*wm.ModelOutputStat)
-	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
+	for _, level := range getRegionLevels() {
 		var regionKey = fmt.Sprintf("regional/%s", level)
-		stats, err := s.GetOutputStats(params, regionKey)
+		stats, err := s.getOutputStats(params, regionKey)
 		if err == nil {
 			regionMap[level] = stats
 		}
@@ -40,15 +59,11 @@ func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelReg
 }
 
 // GetOutputStats returns datacube output stats
-func (s *Storage) GetOutputStats(params wm.DatacubeParams, filename string) (*wm.ModelOutputStat, error) {
+func (s *Storage) getOutputStats(params wm.DatacubeParams, filename string) (*wm.ModelOutputStat, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/%s.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, filename)
 
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
-	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 	if err != nil {
 		return nil, err
 	}
@@ -79,16 +94,59 @@ func (s *Storage) GetOutputStats(params wm.DatacubeParams, filename string) (*wm
 	return &stats, nil
 }
 
+// GetOutputStats returns stats for grid output data
+func (s *Storage) GetOutputStats(params wm.DatacubeParams, timestamp string) ([]*wm.OutputStatWithZoom, error) {
+	key := fmt.Sprintf("%s/%s/%s/%s/stats/grid/%s.csv",
+		params.DataID, params.RunID, params.Resolution, params.Feature, timestamp)
+
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	if err != nil {
+		return nil, err
+	}
+	// Read and parse csv
+	r := csv.NewReader(bytes.NewReader(buf))
+	records, err := r.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	minCol := fmt.Sprintf("min_s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+	maxCol := fmt.Sprintf("max_s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+	minColIndex := index(records[0], minCol)
+	maxColIndex := index(records[0], maxCol)
+	if minColIndex == -1 || maxColIndex == -1 {
+		return nil, fmt.Errorf("csv: column, %s or %s does not exist", minCol, maxCol)
+	}
+
+	stats := make([]*wm.OutputStatWithZoom, 0)
+	for i := 1; i < len(records); i++ {
+		record := records[i]
+		zoom, err := strconv.ParseInt(record[0], 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		min, err := strconv.ParseFloat(record[minColIndex], 64)
+		if err != nil {
+			return nil, err
+		}
+		max, err := strconv.ParseFloat(record[maxColIndex], 64)
+		if err != nil {
+			return nil, err
+		}
+		stats = append(stats, &wm.OutputStatWithZoom{
+			Zoom: uint8(zoom),
+			Min:  min,
+			Max:  max,
+		})
+	}
+	return stats, nil
+}
+
 // GetOutputTimeseries returns datacube output timeseries
 func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
 
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
-	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 	if err != nil {
 		return nil, err
 	}
@@ -110,11 +168,7 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel, regionID)
 
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
-	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 	if err != nil {
 		return nil, err
 	}
@@ -139,11 +193,7 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 		}
 		// Parse header and find the index of the target value column
 		if isHeader {
-			for i, v := range record {
-				if v == valueCol {
-					valueColIndex = i
-				}
-			}
+			valueColIndex = index(record, valueCol)
 			if valueColIndex == -1 {
 				return nil, fmt.Errorf("csv: column, %s does not exist", valueCol)
 			}
@@ -175,12 +225,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 			params.DataID, params.RunID, params.Resolution, params.Feature, level,
 			timestamp, params.SpatialAggFunc, params.TemporalAggFunc)
 
-		bucket := maasModelOutputBucket
-		if params.RunID == "indicator" {
-			bucket = maasIndicatorOutputBucket
-		}
-
-		buf, err := getFileFromS3(s, bucket, aws.String(key))
+		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 
 		if err != nil {
 			reqerr, ok := err.(awserr.RequestFailure)
@@ -236,11 +281,7 @@ func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawData
 	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.json",
 		params.DataID, params.RunID, params.Feature)
 
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
-	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 	if err != nil {
 		return nil, err
 	}
