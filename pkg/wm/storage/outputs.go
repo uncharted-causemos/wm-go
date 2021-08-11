@@ -285,10 +285,10 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 	for i := 0; i < allOutputsFields.NumField(); i++ {
 		allOutputMap[allOutputsFields.Field(i).String()] = make([]string, 0)
 	}
-	for _, runId := range params.RunID {
-		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runId, params.Feature)
+	for _, runID := range params.RunID {
+		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runID, params.Feature)
 		bucket := maasModelOutputBucket
-		if runId == "indicator" {
+		if runID == "indicator" {
 			bucket = maasIndicatorOutputBucket
 		}
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
