@@ -302,8 +302,8 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 			s.logger.Errorw("Error while unmarshalling", "err", err)
 			return nil, err
 		}
-		for regionCategory, regions := range outputMap {
-			allOutputMap[regionCategory] = append(regions, allOutputMap[regionCategory]...)
+		for adminLevel, regions := range outputMap {
+			allOutputMap[adminLevel] = append(regions, allOutputMap[adminLevel]...)
 		}
 	}
 	err := mapstructure.Decode(allOutputMap, &regionalData)
