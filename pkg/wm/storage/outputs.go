@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -274,6 +275,43 @@ func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutput
 		return nil, err
 	}
 	return &output, nil
+}
+
+// GetHierarchyLists returns region hierarchies in list form
+func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
+	var regionalData wm.RegionListOutput
+	allOutputsFields := reflect.ValueOf(regionalData)
+	allOutputMap := make(map[string][]string)
+	for i := 0; i < allOutputsFields.NumField(); i++ {
+		allOutputMap[allOutputsFields.Field(i).String()] = make([]string, 0)
+	}
+	for _, runId := range params.RunID {
+		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runId, params.Feature)
+		bucket := maasModelOutputBucket
+		if runId == "indicator" {
+			bucket = maasIndicatorOutputBucket
+		}
+		buf, err := getFileFromS3(s, bucket, aws.String(key))
+		if err != nil {
+			s.logger.Errorw("Error while reading from S3", "err", err)
+			return nil, err
+		}
+		outputMap := make(map[string][]string)
+		err = json.Unmarshal(buf, &outputMap)
+		if err != nil {
+			s.logger.Errorw("Error while unmarshalling", "err", err)
+			return nil, err
+		}
+		for regionCategory, regions := range outputMap {
+			allOutputMap[regionCategory] = append(regions, allOutputMap[regionCategory]...)
+		}
+	}
+	err := mapstructure.Decode(allOutputMap, &regionalData)
+	if err != nil {
+		s.logger.Errorw("Error while unmarshalling admin regions", "err", err)
+		return nil, err
+	}
+	return &regionalData, nil
 }
 
 // GetRawData returns datacube output or indicator raw data
