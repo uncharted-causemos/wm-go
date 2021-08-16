@@ -53,13 +53,13 @@ func getQualifierName(r *http.Request) string {
 func getQualifierNames(r *http.Request) []string {
 	// Using these silly short names since it will be repeated in the URL for every element
 	// and we don't want to hit the URL length limit
-	return r.URL.Query()["qlf"]
+	return r.URL.Query()["qlf[]"]
 }
 
 func getQualifierOptions(r *http.Request) []string {
 	// Using these silly short names since it will be repeated in the URL for every element
 	// and we don't want to hit the URL length limit
-	return r.URL.Query()["q_opt"]
+	return r.URL.Query()["q_opt[]"]
 }
 
 func getDatacubeParams(r *http.Request) wm.DatacubeParams {
