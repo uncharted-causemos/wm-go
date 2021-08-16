@@ -300,6 +300,11 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/qualifiers/%s/s_%s_t_%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, qualifier,
 		params.SpatialAggFunc, params.TemporalAggFunc)
+	// Want to return one timeseries per column
+	// CSV format:
+	// timestamp,Battles,Protests,Riots,Strategic developments,Violence against civilians
+	// 852076800000,1583.0,0.0,0.0,0.0,313.0
+	// 854755200000,187.0,3.0,0.0,0.0,40.0
 
 	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 	if err != nil {
@@ -371,6 +376,11 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 		key := fmt.Sprintf("%s/%s/%s/%s/timeseries/qualifiers/%s/s_%s_t_%s.csv",
 			params.DataID, params.RunID, params.Resolution, params.Feature, qualifier,
 			params.SpatialAggFunc, params.TemporalAggFunc)
+		// Want to return one row
+		// CSV format:
+		// timestamp,Battles,Protests,Riots,Strategic developments,Violence against civilians
+		// 852076800000,1583.0,0.0,0.0,0.0,313.0
+		// 854755200000,187.0,3.0,0.0,0.0,40.0
 
 		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 		if err != nil {
@@ -407,7 +417,7 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 					for i := 1; i < len(record) && i < len(values); i++ {
 						value, err := strconv.ParseFloat(record[i], 64)
 						if err != nil {
-							values[i].Value = nil
+							values[i].Value = nil //set missing values to nil
 						} else {
 							values[i].Value = &value
 						}
