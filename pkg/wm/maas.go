@@ -222,9 +222,6 @@ type DataOutput interface {
 
 	// GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
 	GetQualifierData(params DatacubeParams, timestamp string, qualifiers []string) ([]*ModelOutputQualifierBreakdown, error)
-
-	//// GetQualifierRegionalData returns regional data for ALL admin regions at ONE timestamp broken down by qualifiers
-	//GetQualifierRegionalData(params DatacubeParams, timestamp string, qualifiers []string) ([]*ModelOutputRawDataPoint, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy

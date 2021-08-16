@@ -182,19 +182,3 @@ func (a *api) getDataOutputQualifierData(w http.ResponseWriter, r *http.Request)
 	}
 	render.RenderList(w, r, list)
 }
-
-//func (a *api) getDataOutputQualifierRegional(w http.ResponseWriter, r *http.Request) {
-//	params := getDatacubeParams(r)
-//	timestamp := getTimestamp(r)
-//	qualifiers := getQualifierNames(r)
-//	data, err := a.dataOutput.GetQualifierRegionalData(params, timestamp, qualifiers)
-//	if err != nil {
-//		a.errorResponse(w, err, http.StatusInternalServerError)
-//		return
-//	}
-//	list := []render.Renderer{}
-//	for _, point := range data {
-//		list = append(list, &modelOutputRawDataPoint{point})
-//	}
-//	render.RenderList(w, r, list)
-//}
