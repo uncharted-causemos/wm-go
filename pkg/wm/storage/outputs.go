@@ -343,6 +343,142 @@ func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawData
 	return series, nil
 }
 
+// GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
+func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier string, qualifierOptions []string) ([]*wm.ModelOutputQualifierTimeseries, error) {
+	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/qualifiers/%s/s_%s_t_%s.csv",
+		params.DataID, params.RunID, params.Resolution, params.Feature, qualifier,
+		params.SpatialAggFunc, params.TemporalAggFunc)
+	// Want to return one timeseries per column
+	// CSV format:
+	// timestamp,Battles,Protests,Riots,Strategic developments,Violence against civilians
+	// 852076800000,1583.0,0.0,0.0,0.0,313.0
+	// 854755200000,187.0,3.0,0.0,0.0,40.0
+
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	if err != nil {
+		s.logger.Errorw("Error while reading from S3", "err", err)
+		return nil, err
+	}
+
+	// Read and parse csv
+	var values []*wm.ModelOutputQualifierTimeseries
+	r := csv.NewReader(bytes.NewReader(buf))
+	isHeader := true
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		// Parse header and find the index of the target value column
+		if isHeader {
+			// The first column is timestamp, rest are values
+			numValues := len(record) - 1
+			if numValues < 1 {
+				break
+			}
+			values = make([]*wm.ModelOutputQualifierTimeseries, numValues)
+			for i := 0; i < numValues; i++ {
+				values[i] = &wm.ModelOutputQualifierTimeseries {
+					Name: record[i + 1], Timeseries: make([]*wm.TimeseriesValue, 0)}
+			}
+			isHeader = false
+		} else {
+			timestamp, err := strconv.ParseInt(record[0], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			for i := 1; i < len(record) && i < len(values); i++ {
+				value, err := strconv.ParseFloat(record[i], 64)
+				if err != nil {
+					continue
+				}
+				values[i].Timeseries = append(values[i].Timeseries, &wm.TimeseriesValue {
+					Timestamp: timestamp, Value: value})
+			}
+		}
+	}
+
+	// Filter the qualifier options, only include what's specified in qualifierOptions
+	filteredValues := make([]*wm.ModelOutputQualifierTimeseries, 0)
+	for _, timeseries := range values {
+		if timeseries != nil {
+			for _, name := range qualifierOptions {
+				if timeseries.Name == name {
+					filteredValues = append(filteredValues, timeseries)
+					break
+				}
+			}
+		}
+	}
+	return filteredValues, nil
+}
+
+// GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
+func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, qualifiers []string) ([]*wm.ModelOutputQualifierBreakdown, error) {
+	allQualifiers := make([]*wm.ModelOutputQualifierBreakdown, len(qualifiers))
+
+	for qualifierIndex, qualifier := range qualifiers {
+		key := fmt.Sprintf("%s/%s/%s/%s/timeseries/qualifiers/%s/s_%s_t_%s.csv",
+			params.DataID, params.RunID, params.Resolution, params.Feature, qualifier,
+			params.SpatialAggFunc, params.TemporalAggFunc)
+		// Want to return one row
+		// CSV format:
+		// timestamp,Battles,Protests,Riots,Strategic developments,Violence against civilians
+		// 852076800000,1583.0,0.0,0.0,0.0,313.0
+		// 854755200000,187.0,3.0,0.0,0.0,40.0
+
+		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+		if err != nil {
+			allQualifiers[qualifierIndex] = nil
+			continue
+		}
+
+		// Read and parse csv
+		var values []*wm.ModelOutputQualifierValue
+		r := csv.NewReader(bytes.NewReader(buf))
+		isHeader := true
+		for {
+			record, err := r.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+			// Parse header and find the index of the target value column
+			if isHeader {
+				// The first column is timestamp, rest are values
+				numValues := len(record) - 1
+				if numValues < 1 {
+					break
+				}
+				values = make([]*wm.ModelOutputQualifierValue, numValues)
+				for i := 0; i < numValues; i++ {
+					values[i] = &wm.ModelOutputQualifierValue {Name: record[i + 1]}
+				}
+				isHeader = false
+			} else {
+				if timestamp == record[0] {
+					for i := 1; i < len(record) && i < len(values); i++ {
+						value, err := strconv.ParseFloat(record[i], 64)
+						if err != nil {
+							values[i].Value = nil //set missing values to nil
+						} else {
+							values[i].Value = &value
+						}
+					}
+					break
+				}
+			}
+		}
+		allQualifiers[qualifierIndex] = &wm.ModelOutputQualifierBreakdown{Name: qualifier, Options: values}
+	}
+	return allQualifiers, nil
+}
+
 func getFileFromS3(s *Storage, bucket string, key *string) ([]byte, error) {
 	req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
@@ -351,7 +487,7 @@ func getFileFromS3(s *Storage, bucket string, key *string) ([]byte, error) {
 
 	err := req.Send()
 	if err != nil {
-		s.logger.Errorw("Fetching agg file from S3 returned error", "err", err)
+		s.logger.Errorw("Fetching agg file from S3 returned error", "key", key, "err", err)
 		return nil, err
 	}
 

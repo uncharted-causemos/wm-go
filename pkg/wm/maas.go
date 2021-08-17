@@ -52,6 +52,24 @@ type ModelOutputRawDataPoint struct {
 	Value     float64 `json:"value"`
 }
 
+// ModelOutputQualifierTimeseries represent a timeseries for one qualifier value
+type ModelOutputQualifierTimeseries struct {
+	Name       string             `json:"name"`
+	Timeseries []*TimeseriesValue `json:"timeseries"`
+}
+
+// ModelOutputQualifierBreakdown represent a list of qualifier breakdown values
+type ModelOutputQualifierBreakdown struct {
+	Name    string                       `json:"name"`
+	Options []*ModelOutputQualifierValue `json:"options"`
+}
+
+// ModelOutputQualifierValue represent a breakdown value for one qualifier value
+type ModelOutputQualifierValue struct {
+	Name  string   `json:"name"`
+	Value *float64 `json:"value"` //nil represents missing value
+}
+
 // ModelOutputHierarchy is a hierarchy where each region maps to a map of more specific regions.
 type ModelOutputHierarchy map[string]interface{}
 
@@ -191,9 +209,6 @@ type MaaS interface {
 
 	// GetOutputStats returns model output stats
 	GetOutputStats(runID string, feature string) (*ModelOutputStat, error)
-
-	// GetOutputTimeseries returns model output timeseries
-	GetOutputTimeseries(runID string, feature string) (*OldModelOutputTimeseries, error)
 }
 
 // DataOutput defines the methods that output database implementation needs to satisfy
@@ -216,7 +231,7 @@ type DataOutput interface {
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 	GetRegionAggregation(params DatacubeParams, timestamp string) (*ModelOutputRegionalAdmins, error)
 
-	// GetRawData returns datacube output or indicator raw data
+	// GetRawData returns datacube raw data
 	GetRawData(params DatacubeParams) ([]*ModelOutputRawDataPoint, error)
 
 	// GetRegionHierarchy returns region hierarchy output
@@ -224,6 +239,12 @@ type DataOutput interface {
 
 	// GetHierarchyLists returns region hierarchies in list form
 	GetHierarchyLists(params RegionListParams) (*RegionListOutput, error)
+
+	// GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
+	GetQualifierTimeseries(params DatacubeParams, qualifier string, qualifierOptions []string) ([]*ModelOutputQualifierTimeseries, error)
+
+	// GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
+	GetQualifierData(params DatacubeParams, timestamp string, qualifiers []string) ([]*ModelOutputQualifierBreakdown, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy

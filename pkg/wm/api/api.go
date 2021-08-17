@@ -52,10 +52,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/indicator-data", a.getIndicatorData)
 		r.Get("/concepts", a.getConcepts)
 
-		//TODO Remove once the versions below are returning data
-		r.Get("/output/{"+paramRunID+"}/timeseries", a.getModelOutputTimeseries)
-
-		//New timeseries and stats, replaces above endpoints
+		//New endpoints for data in Minio
 		r.Get("/output/hierarchy", a.getDataOutputHierarchy)
 		r.Get("/output/hierarchy-lists", a.getDataOutputRegionLists)
 		r.Get("/output/timeseries", a.getDataOutputTimeseries)
@@ -63,6 +60,8 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/output/regional-data", a.getDataOutputRegional)
 		r.Get("/output/regional-stats", a.getRegionalDataOutputStats)
 		r.Get("/output/raw-data", a.getDataOutputRaw)
+		r.Get("/output/qualifier-timeseries", a.getDataOutputQualifierTimeseries)
+		r.Get("/output/qualifier-data", a.getDataOutputQualifierData)
 	})
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {
