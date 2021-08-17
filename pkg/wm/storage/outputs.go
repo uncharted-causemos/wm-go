@@ -279,10 +279,12 @@ func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutput
 // GetHierarchyLists returns region hierarchies in list form
 func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
 	var regionalData wm.RegionListOutput
-	allOutputMap := make(map[string][]string)
+	// allOutputMap is meant to be a map from strings ie. 'country' to a set (map[string]bool is used as a set)
+	allOutputMap := make(map[string]map[string]bool)
 	for _, region := range getRegionLevels() {
-		allOutputMap[region] = make([]string, 0)
+		allOutputMap[region] = make(map[string]bool)
 	}
+	// Populate sets in allOutputMap map values with regions
 	for _, runID := range params.RunIDs {
 		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runID, params.Feature)
 		bucket := getBucket(runID)
@@ -298,10 +300,23 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 			return nil, err
 		}
 		for adminLevel, regions := range outputMap {
-			allOutputMap[adminLevel] = append(regions, allOutputMap[adminLevel]...)
+			for _, region := range regions {
+				allOutputMap[adminLevel][region] = true
+			}
 		}
 	}
-	err := mapstructure.Decode(allOutputMap, &regionalData)
+	// Get a map of strings to lists from allOutputMap (instead of strings to sets)
+	regionListMap := make(map[string][]string)
+	for adminLevel, regions := range allOutputMap {
+		keys := make([]string, len(regions))
+		i := 0
+		for k := range regions {
+			keys[i] = k
+			i++
+		}
+		regionListMap[adminLevel] = keys
+	}
+	err := mapstructure.Decode(regionListMap, &regionalData)
 	if err != nil {
 		s.logger.Errorw("Error while unmarshalling admin regions", "err", err)
 		return nil, err
