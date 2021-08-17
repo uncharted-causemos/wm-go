@@ -3,7 +3,6 @@ package api
 import (
 	"net/http"
 
-	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -23,15 +22,6 @@ type modelRegionalOutputStatsResponse struct {
 
 // Render allows to satisfy the render.Renderer interface.
 func (msr *modelRegionalOutputStatsResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	return nil
-}
-
-type oldModelOutputTimeseries struct {
-	*wm.OldModelOutputTimeseries
-}
-
-// Render allows to satisfy the render.Renderer interface.
-func (msr *oldModelOutputTimeseries) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
@@ -62,13 +52,22 @@ func (msr *modelOutputRawDataPoint) Render(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (a *api) getModelOutputTimeseries(w http.ResponseWriter, r *http.Request) {
-	timeseries, err := a.maas.GetOutputTimeseries(chi.URLParam(r, paramRunID), getFeature(r))
-	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
-	}
-	render.Render(w, r, &oldModelOutputTimeseries{timeseries})
+type modelOutputQualifierTimeseriesResponse struct {
+	*wm.ModelOutputQualifierTimeseries
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputQualifierTimeseriesResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type modelOutputQualifierValuesResponse struct {
+	*wm.ModelOutputQualifierBreakdown
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputQualifierValuesResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
 }
 
 func (a *api) getRegionalDataOutputStats(w http.ResponseWriter, r *http.Request) {
@@ -150,4 +149,36 @@ func (a *api) getDataOutputHierarchy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	render.JSON(w, r, &data)
+}
+
+func (a *api) getDataOutputQualifierTimeseries(w http.ResponseWriter, r *http.Request) {
+	params := getDatacubeParams(r)
+	qualifier := getQualifierName(r)
+	qualifierOptions := getQualifierOptions(r)
+	data, err := a.dataOutput.GetQualifierTimeseries(params, qualifier, qualifierOptions)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	list := []render.Renderer{}
+	for _, timeseries := range data {
+		list = append(list, &modelOutputQualifierTimeseriesResponse{timeseries})
+	}
+	render.RenderList(w, r, list)
+}
+
+func (a *api) getDataOutputQualifierData(w http.ResponseWriter, r *http.Request) {
+	params := getDatacubeParams(r)
+	timestamp := getTimestamp(r)
+	qualifiers := getQualifierNames(r)
+	data, err := a.dataOutput.GetQualifierData(params, timestamp, qualifiers)
+	if err != nil {
+		a.errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	list := []render.Renderer{}
+	for _, value := range data {
+		list = append(list, &modelOutputQualifierValuesResponse{value})
+	}
+	render.RenderList(w, r, list)
 }
