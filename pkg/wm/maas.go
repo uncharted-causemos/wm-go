@@ -27,7 +27,7 @@ type HierarchyParams struct {
 // RegionListParams represent parameters needed to fetch region lists representing the hierarchy
 type RegionListParams struct {
 	DataID          string `json:"data_id"`
-	RunID           []string `json:"run_id"`
+	RunIDs          []string `json:"run_ids"`
 	Feature         string `json:"feature"`
 }
 

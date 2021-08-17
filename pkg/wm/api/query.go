@@ -69,7 +69,7 @@ func getHierarchyParams(r *http.Request) wm.HierarchyParams {
 func getRegionListsParams(r *http.Request) wm.RegionListParams {
 	var params wm.RegionListParams
 	params.DataID = r.URL.Query().Get("data_id")
-	params.RunID = r.URL.Query()["run_id"]
+	params.RunIDs = r.URL.Query()["run_ids[]"]
 	params.Feature = getFeature(r)
 	return params
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -280,17 +279,13 @@ func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutput
 // GetHierarchyLists returns region hierarchies in list form
 func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
 	var regionalData wm.RegionListOutput
-	allOutputsFields := reflect.ValueOf(regionalData)
 	allOutputMap := make(map[string][]string)
-	for i := 0; i < allOutputsFields.NumField(); i++ {
-		allOutputMap[allOutputsFields.Field(i).String()] = make([]string, 0)
+	for _, region := range getRegionLevels() {
+		allOutputMap[region] = make([]string, 0)
 	}
-	for _, runID := range params.RunID {
+	for _, runID := range params.RunIDs {
 		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runID, params.Feature)
-		bucket := maasModelOutputBucket
-		if runID == "indicator" {
-			bucket = maasIndicatorOutputBucket
-		}
+		bucket := getBucket(runID)
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
 		if err != nil {
 			s.logger.Errorw("Error while reading from S3", "err", err)
