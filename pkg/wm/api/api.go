@@ -54,6 +54,7 @@ func New(cfg *Config) (chi.Router, error) {
 
 		//New endpoints for data in Minio
 		r.Get("/output/hierarchy", a.getDataOutputHierarchy)
+		r.Get("/output/hierarchy-lists", a.getDataOutputRegionLists)
 		r.Get("/output/timeseries", a.getDataOutputTimeseries)
 		r.Get("/output/stats", a.getDataOutputStats)
 		r.Get("/output/regional-data", a.getDataOutputRegional)

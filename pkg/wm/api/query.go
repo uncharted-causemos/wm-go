@@ -82,6 +82,14 @@ func getHierarchyParams(r *http.Request) wm.HierarchyParams {
 	return params
 }
 
+func getRegionListsParams(r *http.Request) wm.RegionListParams {
+	var params wm.RegionListParams
+	params.DataID = r.URL.Query().Get("data_id")
+	params.RunIDs = r.URL.Query()["run_ids[]"]
+	params.Feature = getFeature(r)
+	return params
+}
+
 func getUnits(r *http.Request) ([]string, bool) {
 	units, ok := r.URL.Query()["unit"]
 	return units, ok

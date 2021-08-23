@@ -276,6 +276,54 @@ func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutput
 	return &output, nil
 }
 
+// GetHierarchyLists returns region hierarchies in list form
+func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
+	var regionalData wm.RegionListOutput
+	// allOutputMap is meant to be a map from strings ie. 'country' to a set (map[string]bool is used as a set)
+	allOutputMap := make(map[string]map[string]bool)
+	for _, region := range getRegionLevels() {
+		allOutputMap[region] = make(map[string]bool)
+	}
+	// Populate sets in allOutputMap map values with regions
+	for _, runID := range params.RunIDs {
+		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runID, params.Feature)
+		bucket := getBucket(runID)
+		buf, err := getFileFromS3(s, bucket, aws.String(key))
+		if err != nil {
+			s.logger.Errorw("Error while reading from S3", "err", err)
+			return nil, err
+		}
+		outputMap := make(map[string][]string)
+		err = json.Unmarshal(buf, &outputMap)
+		if err != nil {
+			s.logger.Errorw("Error while unmarshalling", "err", err)
+			return nil, err
+		}
+		for adminLevel, regions := range outputMap {
+			for _, region := range regions {
+				allOutputMap[adminLevel][region] = true
+			}
+		}
+	}
+	// Get a map of strings to lists from allOutputMap (instead of strings to sets)
+	regionListMap := make(map[string][]string)
+	for adminLevel, regions := range allOutputMap {
+		keys := make([]string, len(regions))
+		i := 0
+		for k := range regions {
+			keys[i] = k
+			i++
+		}
+		regionListMap[adminLevel] = keys
+	}
+	err := mapstructure.Decode(regionListMap, &regionalData)
+	if err != nil {
+		s.logger.Errorw("Error while unmarshalling admin regions", "err", err)
+		return nil, err
+	}
+	return &regionalData, nil
+}
+
 // GetRawData returns datacube output or indicator raw data
 func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawDataPoint, error) {
 	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.json",

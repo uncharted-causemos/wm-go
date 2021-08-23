@@ -24,6 +24,18 @@ type HierarchyParams struct {
 	Feature          string `json:"feature"`
 }
 
+// RegionListParams represent parameters needed to fetch region lists representing the hierarchy
+type RegionListParams struct {
+	DataID          string `json:"data_id"`
+	RunIDs          []string `json:"run_ids"`
+	Feature         string `json:"feature"`
+}
+
+// OldModelOutputTimeseries represent the old time series model output data
+type OldModelOutputTimeseries struct {
+	Timeseries []TimeseriesValue `json:"timeseries"`
+}
+
 // TimeseriesValue represent a timeseries data point
 type TimeseriesValue struct {
 	Timestamp int64   `json:"timestamp"`
@@ -80,6 +92,14 @@ type ModelRegionalOutputStat struct {
 	Admin1  *ModelOutputStat `json:"admin1"`
 	Admin2  *ModelOutputStat `json:"admin2"`
 	Admin3  *ModelOutputStat `json:"admin3"`
+}
+
+// RegionListOutput represents region list hierarchies for all admin levels
+type RegionListOutput struct {
+	Country []string `json:"country"`
+	Admin1  []string `json:"admin1"`
+	Admin2  []string `json:"admin2"`
+	Admin3  []string `json:"admin3"`
 }
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
@@ -216,6 +236,9 @@ type DataOutput interface {
 
 	// GetRegionHierarchy returns region hierarchy output
 	GetRegionHierarchy(params HierarchyParams) (*ModelOutputHierarchy, error)
+
+	// GetHierarchyLists returns region hierarchies in list form
+	GetHierarchyLists(params RegionListParams) (*RegionListOutput, error)
 
 	// GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
 	GetQualifierTimeseries(params DatacubeParams, qualifier string, qualifierOptions []string) ([]*ModelOutputQualifierTimeseries, error)
