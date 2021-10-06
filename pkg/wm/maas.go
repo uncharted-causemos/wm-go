@@ -58,6 +58,12 @@ type ModelOutputQualifierTimeseries struct {
 	Timeseries []*TimeseriesValue `json:"timeseries"`
 }
 
+// ModelOutputRegionQualifierBreakdown represent a list of qualifier breakdown values for a specific region
+type ModelOutputRegionQualifierBreakdown struct {
+	ID     string             `json:"id"`
+	Values map[string]float64 `json:"values"`
+}
+
 // ModelOutputQualifierBreakdown represent a list of qualifier breakdown values
 type ModelOutputQualifierBreakdown struct {
 	Name    string                       `json:"name"`
@@ -108,6 +114,14 @@ type ModelOutputRegionalAdmins struct {
 	Admin1  []ModelOutputAdminData `json:"admin1"`
 	Admin2  []ModelOutputAdminData `json:"admin2"`
 	Admin3  []ModelOutputAdminData `json:"admin3"`
+}
+
+// ModelOutputRegionalQualifiers represent regional data for all admin levels broken down by qualifiers
+type ModelOutputRegionalQualifiers struct {
+	Country []ModelOutputRegionQualifierBreakdown `json:"country"`
+	Admin1  []ModelOutputRegionQualifierBreakdown `json:"admin1"`
+	Admin2  []ModelOutputRegionQualifierBreakdown `json:"admin2"`
+	Admin3  []ModelOutputRegionQualifierBreakdown `json:"admin3"`
 }
 
 // ModelOutputAdminData represent a data point of regional data
@@ -245,6 +259,9 @@ type DataOutput interface {
 
 	// GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
 	GetQualifierData(params DatacubeParams, timestamp string, qualifiers []string) ([]*ModelOutputQualifierBreakdown, error)
+
+	// GetQualifierRegional returns datacube output data broken down by qualifiers for ONE timestamp
+	GetQualifierRegional(params DatacubeParams, timestamp string, qualifier string) (*ModelOutputRegionalQualifiers, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
