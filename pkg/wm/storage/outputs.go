@@ -391,8 +391,8 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 			if err != nil {
 				return nil, err
 			}
-			for i := 1; i < len(record) && i < len(values); i++ {
-				value, err := strconv.ParseFloat(record[i], 64)
+			for i := 0; i + 1 < len(record) && i < len(values); i++ {
+				value, err := strconv.ParseFloat(record[i + 1], 64)
 				if err != nil {
 					continue
 				}
@@ -463,8 +463,8 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 				isHeader = false
 			} else {
 				if timestamp == record[0] {
-					for i := 1; i < len(record) && i < len(values); i++ {
-						value, err := strconv.ParseFloat(record[i], 64)
+					for i := 0; i + 1 < len(record) && i < len(values); i++ {
+						value, err := strconv.ParseFloat(record[i + 1], 64)
 						if err != nil {
 							values[i].Value = nil //set missing values to nil
 						} else {
