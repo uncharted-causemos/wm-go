@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
+	mw "gitlab.uncharted.software/WM/wm-go/pkg/middleware"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/api"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
@@ -45,8 +46,13 @@ func main() {
 
 	r := chi.NewRouter()
 
+	color := true
+	if s.Mode == "prod" {
+		color = false
+	}
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
+	r.Use(mw.NewZapRequestLogger(logger, color))
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(flate.DefaultCompression))
 
