@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"runtime"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -48,7 +47,7 @@ func main() {
 	r := chi.NewRouter()
 
 	color := true
-	if s.Mode == "prod" || runtime.GOOS == "windows" {
+	if s.Mode == "prod" {
 		color = false
 	}
 	r.Use(middleware.RequestID)
