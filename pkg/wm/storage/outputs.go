@@ -231,18 +231,19 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 			reqerr, ok := err.(awserr.RequestFailure)
 			if reqerr.Code() == "NoSuchKey" && ok {
 				data[level] = make([]interface{}, 0)
+				continue
 			} else {
 				return nil, err
 			}
-		} else {
-			var points []interface{}
-			err = json.Unmarshal(buf, &points)
-			if err != nil {
-				s.logger.Errorw("Error while unmarshalling", "err", err)
-				return nil, err
-			}
-			data[level] = points
 		}
+
+		var points []interface{}
+		err = json.Unmarshal(buf, &points)
+		if err != nil {
+			s.logger.Errorw("Error while unmarshalling", "err", err)
+			return nil, err
+		}
+		data[level] = points
 	}
 
 	var regionalData wm.ModelOutputRegionalAdmins
@@ -390,8 +391,8 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 			if err != nil {
 				return nil, err
 			}
-			for i := 1; i < len(record) && i < len(values); i++ {
-				value, err := strconv.ParseFloat(record[i], 64)
+			for i := 0; i + 1 < len(record) && i < len(values); i++ {
+				value, err := strconv.ParseFloat(record[i + 1], 64)
 				if err != nil {
 					continue
 				}
@@ -462,8 +463,8 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 				isHeader = false
 			} else {
 				if timestamp == record[0] {
-					for i := 1; i < len(record) && i < len(values); i++ {
-						value, err := strconv.ParseFloat(record[i], 64)
+					for i := 0; i + 1 < len(record) && i < len(values); i++ {
+						value, err := strconv.ParseFloat(record[i + 1], 64)
 						if err != nil {
 							values[i].Value = nil //set missing values to nil
 						} else {
@@ -477,6 +478,92 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 		allQualifiers[qualifierIndex] = &wm.ModelOutputQualifierBreakdown{Name: qualifier, Options: values}
 	}
 	return allQualifiers, nil
+}
+
+// GetQualifierRegional returns datacube output data broken down by qualifiers for ONE timestamp
+func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp string, qualifier string) (*wm.ModelOutputRegionalQualifiers, error) {
+
+	data := make(map[string][]*wm.ModelOutputRegionQualifierBreakdown)
+	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
+
+		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/qualifiers/%s.csv",
+			params.DataID, params.RunID, params.Resolution, params.Feature, level, timestamp, qualifier)
+		// Want to return all values from one column grouped by region
+		// CSV format:
+		// id,qualifier,s_sum_t_mean,s_mean_t_mean,s_sum_t_sum,s_mean_t_sum
+		// Central African Republic__Bangui,Protests,0.0,0.0,0.0,0.0
+		// Central African Republic__Bangui,Violence against civilians,0.0,0.0,0.0,0.0
+		// Central African Republic__Ouham,Violence against civilians,10.0,10.0,10.0,10.0
+
+		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+
+		if err != nil {
+			reqerr, ok := err.(awserr.RequestFailure)
+			if reqerr.Code() == "NoSuchKey" && ok {
+				data[level] = []*wm.ModelOutputRegionQualifierBreakdown{}
+				continue
+			} else {
+				return nil, err
+			}
+		}
+
+		// Read and parse csv
+		regionMap := make(map[string]map[string]float64)
+		r := csv.NewReader(bytes.NewReader(buf))
+		colName := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+		valueColIndex := -1
+		isHeader := true
+		for {
+			record, err := r.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return nil, err
+			}
+			// Parse header and find the index of the target value column
+			if isHeader {
+				valueColIndex = index(record, colName)
+				if valueColIndex == -1 {
+					return nil, fmt.Errorf("csv: column, %s does not exist", colName)
+				}
+				isHeader = false
+			} else {
+				region := record[0]
+				value, err := strconv.ParseFloat(record[valueColIndex], 64)
+				if err != nil {
+					continue
+				}
+
+				if regionValues, ok := regionMap[region]; ok {
+					regionValues[record[1]] = value
+				} else {
+					regionMap[region] = map[string]float64 {
+						record[1]: value,
+					}
+				}
+			}
+		}
+
+		var regions []*wm.ModelOutputRegionQualifierBreakdown
+		for k, v := range regionMap {
+			regions = append(regions, &wm.ModelOutputRegionQualifierBreakdown{
+				ID:     k,
+				Values: v,
+			})
+		}
+
+
+		data[level] = regions
+	}
+
+	var regionalData wm.ModelOutputRegionalQualifiers
+	err := mapstructure.Decode(data, &regionalData)
+	if err != nil {
+		s.logger.Errorw("Error while unmarshalling admin regions", "err", err)
+		return nil, err
+	}
+	return &regionalData, nil
 }
 
 func getFileFromS3(s *Storage, bucket string, key *string) ([]byte, error) {

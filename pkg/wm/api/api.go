@@ -62,6 +62,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/output/raw-data", a.wh(a.getDataOutputRaw))
 		r.Get("/output/qualifier-timeseries", a.wh(a.getDataOutputQualifierTimeseries))
 		r.Get("/output/qualifier-data", a.wh(a.getDataOutputQualifierData))
+		r.Get("/output/qualifier-regional", a.wh(a.getDataOutputQualifierRegional))
 	})
 
 	r.Route("/maas/output/tiles", func(r chi.Router) {

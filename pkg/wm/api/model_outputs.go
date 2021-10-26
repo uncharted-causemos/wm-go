@@ -192,3 +192,15 @@ func (a *api) getDataOutputQualifierData(w http.ResponseWriter, r *http.Request)
 	render.RenderList(w, r, list)
 	return nil
 }
+
+func (a *api) getDataOutputQualifierRegional(w http.ResponseWriter, r *http.Request) error {
+	params := getDatacubeParams(r)
+	timestamp := getTimestamp(r)
+	qualifier := getQualifierName(r)
+	data, err := a.dataOutput.GetQualifierRegional(params, timestamp, qualifier)
+	if err != nil {
+		return err
+	}
+	render.JSON(w, r, data)
+	return nil
+}
