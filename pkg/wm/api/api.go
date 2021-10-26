@@ -88,12 +88,13 @@ func (a *api) wh(handler func(http.ResponseWriter, *http.Request) error) func(ht
 
 		// Handle error
 		errCode := wm.ErrorCode(err)
+
 		if errCode == wm.EINTERNAL {
+			// Log error if it's an internal server error
 			a.logger.Errorf("ERROR: %s\n", err)
 		}
 
 		status := http.StatusInternalServerError
-
 		switch errCode {
 		case wm.ENOTFOUND:
 			status = http.StatusNotFound

@@ -33,13 +33,14 @@ func (d *indicatorDataResponse) Render(w http.ResponseWriter, r *http.Request) e
 }
 
 func (a *api) getDatacubes(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDatacubes"
 	filters, err := getFilters(r, wm.ContextDatacube)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	datacubes, err := a.maas.SearchDatacubes(filters)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	list := []render.Renderer{}
 	for _, datacube := range datacubes {
@@ -50,19 +51,21 @@ func (a *api) getDatacubes(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *api) countDatacubes(w http.ResponseWriter, r *http.Request) error {
+	op := "api.countDatacubes"
 	filters, err := getFilters(r, wm.ContextDatacube)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	count, err := a.maas.CountDatacubes(filters)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	render.Render(w, r, countDatacubesResponse(count))
 	return nil
 }
 
 func (a *api) getIndicatorData(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getIndicatorData"
 	indicator := getIndicator(r)
 	model := getModel(r)
 	units, ok := getUnits(r)
@@ -73,7 +76,7 @@ func (a *api) getIndicatorData(w http.ResponseWriter, r *http.Request) error {
 	//For now, only handle a single indicatorName
 	indicatorData, err := a.maas.GetIndicatorData(indicator, model, units)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	list := []render.Renderer{}
 	for _, indicator := range indicatorData {

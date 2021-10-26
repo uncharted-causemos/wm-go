@@ -13,6 +13,7 @@ const contentTypeMVT = "application/vnd.mapbox-vector-tile"
 const contentEncodingGzip = "gzip"
 
 func (a *api) getVectorTile(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getVectorTile"
 	var zxy [3]uint32
 	for i, key := range []string{paramZoom, paramX, paramY} {
 		v, err := strconv.ParseUint(chi.URLParam(r, key), 10, 32)
@@ -31,7 +32,7 @@ func (a *api) getVectorTile(w http.ResponseWriter, r *http.Request) error {
 	if strings.ToLower(debug) == "true" {
 		tileJSON, err := wm.MvtToJSON(tile)
 		if err != nil {
-			return err
+			return &wm.Error{Op: op, Err: err}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(tileJSON)
@@ -45,6 +46,7 @@ func (a *api) getVectorTile(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *api) getTile(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getTile"
 	specs, err := getGridTileOutputSpecs(r)
 	if err != nil {
 		return &wm.Error{Code: wm.EINVALID, Message: "Invalid tile specs"}
@@ -73,7 +75,7 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) error {
 	if strings.ToLower(debug) == "true" {
 		tileJSON, err := wm.MvtToJSON(result)
 		if err != nil {
-			return err
+			return &wm.Error{Op: op, Err: err}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(tileJSON)

@@ -18,9 +18,10 @@ func (mr *modelRunsResponse) Render(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (a *api) getModelRuns(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getModelRuns"
 	runs, err := a.maas.GetModelRuns(chi.URLParam(r, paramModelID))
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	list := []render.Renderer{}
 	for _, run := range runs {

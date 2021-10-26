@@ -46,6 +46,7 @@ var operands = map[string]wm.Operand{
 
 // parseFilters extracts a slice of filters from a byte slice.
 func parseFilters(raw []byte, context wm.FilterContext) ([]*wm.Filter, error) {
+	op := "api.parseFilters"
 	var fs []*wm.Filter
 
 	if err := parseArray(raw, func(val []byte) error {
@@ -57,7 +58,7 @@ func parseFilters(raw []byte, context wm.FilterContext) ([]*wm.Filter, error) {
 		fs = append(fs, f)
 		return nil
 	}, "clauses"); err != nil {
-		return nil, fmt.Errorf("parseFilters failed: %v", err)
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	return fs, nil
@@ -198,6 +199,7 @@ func parseStringValues(raw []byte) ([]string, error) {
 
 // parseIntValues extracts the contents of the values field as an int slice.
 func parseIntValues(raw []byte) ([]int, error) {
+	op := "api.parseIntValues"
 	var intVals []int
 
 	if err := parseArray(raw, func(val []byte) error {
@@ -208,7 +210,7 @@ func parseIntValues(raw []byte) ([]int, error) {
 		intVals = append(intVals, intVal)
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("parseIntValues failed: %v", err)
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	return intVals, nil
@@ -217,6 +219,7 @@ func parseIntValues(raw []byte) ([]int, error) {
 // parseRange extracts the contents of the values field as a 2-element float
 // array.
 func parseRange(raw []byte) (wm.Range, error) {
+	op := "api.parseRange"
 	var rng wm.Range
 
 	var fs []float64
@@ -230,11 +233,11 @@ func parseRange(raw []byte) (wm.Range, error) {
 			return nil
 		})
 	}); err != nil {
-		return rng, fmt.Errorf("parseRange failed: %v", err)
+		return rng, &wm.Error{Op: op, Err: err}
 	}
 
 	if len(fs) != 2 {
-		return rng, fmt.Errorf("Too many values (%d) for range filter", len(fs))
+		return rng, &wm.Error{Op: op, Err: fmt.Errorf("Too many values (%d) for range filter")}
 	}
 
 	rng.Minimum = fs[0]

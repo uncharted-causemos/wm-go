@@ -18,9 +18,10 @@ func (mr *modelParameterResponse) Render(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *api) getModelParameters(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getModelParameters"
 	params, err := a.maas.GetModelParameters(chi.URLParam(r, paramModelID))
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	list := []render.Renderer{}
 	for _, p := range params {

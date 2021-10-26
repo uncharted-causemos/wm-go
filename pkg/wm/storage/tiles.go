@@ -85,9 +85,10 @@ func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expre
 
 // evaluateExpression evaluate expression using feature properties as parameters and add the result back as new property to the given feature
 func evaluateExpression(features []*geojson.Feature, expression string) error {
+	op := "evaluateExpression"
 	exp, err := govaluate.NewEvaluableExpression(expression)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	for _, feature := range features {
 		parameters := make(map[string]interface{})

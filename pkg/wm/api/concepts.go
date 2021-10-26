@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
 type conceptResponse string
@@ -14,9 +15,10 @@ func (cr conceptResponse) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 func (a *api) getConcepts(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getConcepts"
 	concepts, err := a.maas.GetConcepts()
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	list := []render.Renderer{}
 	for _, c := range concepts {
