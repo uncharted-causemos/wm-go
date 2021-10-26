@@ -13,15 +13,15 @@ func (cr conceptResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (a *api) getConcepts(w http.ResponseWriter, r *http.Request) {
+func (a *api) getConcepts(w http.ResponseWriter, r *http.Request) error {
 	concepts, err := a.maas.GetConcepts()
 	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
+		return err
 	}
 	list := []render.Renderer{}
 	for _, c := range concepts {
 		list = append(list, conceptResponse(c))
 	}
 	render.RenderList(w, r, list)
+	return nil
 }

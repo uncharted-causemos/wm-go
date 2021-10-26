@@ -17,15 +17,15 @@ func (mr *modelParameterResponse) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (a *api) getModelParameters(w http.ResponseWriter, r *http.Request) {
+func (a *api) getModelParameters(w http.ResponseWriter, r *http.Request) error {
 	params, err := a.maas.GetModelParameters(chi.URLParam(r, paramModelID))
 	if err != nil {
-		a.errorResponse(w, err, http.StatusInternalServerError)
-		return
+		return err
 	}
 	list := []render.Renderer{}
 	for _, p := range params {
 		list = append(list, &modelParameterResponse{p})
 	}
 	render.RenderList(w, r, list)
+	return nil
 }

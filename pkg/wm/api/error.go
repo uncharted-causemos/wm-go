@@ -7,6 +7,15 @@ import (
 	"net/http"
 )
 
+// ClientError is an error whose details to be shared with client.
+type ClientError interface {
+	Error() string
+	// ResponseBody returns response body.
+	ResponseBody() ([]byte, error)
+	// ResponseHeaders returns http status code and headers.
+	ResponseHeaders() (int, map[string]string)
+}
+
 // HTTPError represent an http error
 type HTTPError struct {
 	Cause  error  `json:"-"`
@@ -28,6 +37,13 @@ func (e *HTTPError) ResponseBody() ([]byte, error) {
 		return nil, fmt.Errorf("Error while parsing response body: %v", err)
 	}
 	return body, nil
+}
+
+// ResponseHeaders returns http status code and headers.
+func (e *HTTPError) ResponseHeaders() (int, map[string]string) {
+	return e.Status, map[string]string{
+		"Content-Type": "application/json; charset=utf-8",
+	}
 }
 
 // NewHTTPError creates new HTTPError

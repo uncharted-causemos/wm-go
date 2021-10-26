@@ -381,8 +381,8 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 			}
 			values = make([]*wm.ModelOutputQualifierTimeseries, numValues)
 			for i := 0; i < numValues; i++ {
-				values[i] = &wm.ModelOutputQualifierTimeseries {
-					Name: record[i + 1], Timeseries: make([]*wm.TimeseriesValue, 0)}
+				values[i] = &wm.ModelOutputQualifierTimeseries{
+					Name: record[i+1], Timeseries: make([]*wm.TimeseriesValue, 0)}
 			}
 			isHeader = false
 		} else {
@@ -395,7 +395,7 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 				if err != nil {
 					continue
 				}
-				values[i].Timeseries = append(values[i].Timeseries, &wm.TimeseriesValue {
+				values[i].Timeseries = append(values[i].Timeseries, &wm.TimeseriesValue{
 					Timestamp: timestamp, Value: value})
 			}
 		}
@@ -457,7 +457,7 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 				}
 				values = make([]*wm.ModelOutputQualifierValue, numValues)
 				for i := 0; i < numValues; i++ {
-					values[i] = &wm.ModelOutputQualifierValue {Name: record[i + 1]}
+					values[i] = &wm.ModelOutputQualifierValue{Name: record[i+1]}
 				}
 				isHeader = false
 			} else {
