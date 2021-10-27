@@ -16,6 +16,7 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/api"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/elastic"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm/env"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm/storage"
 	"go.uber.org/zap"
 )
 
@@ -74,7 +75,7 @@ func main() {
 		sugar.Fatal(err)
 	}
 
-	s3, err := Storage.New(&aws.Config{
+	s3, err := storage.New(&aws.Config{
 		Credentials:      credentials.NewStaticCredentials(s.AwsS3Id, s.AwsS3Secret, s.AwsS3Token),
 		S3ForcePathStyle: aws.Bool(true),
 		Region:           aws.String(endpoints.UsEast1RegionID),
