@@ -42,7 +42,7 @@ func index(vs []string, t string) int {
 
 // GetRegionalOutputStats returns regional output statistics
 func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelRegionalOutputStat, error) {
-	op := "storage.GetRegionalOutputStats"
+	op := "Storage.GetRegionalOutputStats"
 	regionMap := make(map[string]*wm.ModelOutputStat)
 	for _, level := range getRegionLevels() {
 		var regionKey = fmt.Sprintf("regional/%s", level)
@@ -61,7 +61,7 @@ func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelReg
 
 // GetOutputStats returns datacube output stats
 func (s *Storage) getOutputStats(params wm.DatacubeParams, filename string) (*wm.ModelOutputStat, error) {
-	op := "storage.getOutputStats"
+	op := "Storage.getOutputStats"
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/%s.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, filename)
 
@@ -96,7 +96,7 @@ func (s *Storage) getOutputStats(params wm.DatacubeParams, filename string) (*wm
 
 // GetOutputStats returns stats for grid output data
 func (s *Storage) GetOutputStats(params wm.DatacubeParams, timestamp string) ([]*wm.OutputStatWithZoom, error) {
-	op := "storage.GetOutputStats"
+	op := "Storage.GetOutputStats"
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/grid/%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, timestamp)
 
@@ -144,7 +144,7 @@ func (s *Storage) GetOutputStats(params wm.DatacubeParams, timestamp string) ([]
 
 // GetOutputTimeseries returns datacube output timeseries
 func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
-	op := "storage.GetOutputTimeseries"
+	op := "Storage.GetOutputTimeseries"
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
 
@@ -163,7 +163,7 @@ func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.Timeserie
 
 // GetOutputTimeseriesByRegion returns timeseries data for a specific region
 func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID string) ([]*wm.TimeseriesValue, error) {
-	op := "storage.GetOutputTimeseriesByRegion"
+	op := "Storage.GetOutputTimeseriesByRegion"
 	// Deconstruct Region ID to get admin region levels
 	regions := strings.Split(regionID, "__")
 	regionLevel := getRegionLevels()[len(regions)-1]
@@ -220,7 +220,7 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
-	op := "storage.GetRegionAggregation"
+	op := "Storage.GetRegionAggregation"
 
 	data := make(map[string][]interface{})
 	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
@@ -258,7 +258,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 
 // GetRegionHierarchy returns region hierarchy output
 func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutputHierarchy, error) {
-	op := "storage.GetRegionHierarchy"
+	op := "Storage.GetRegionHierarchy"
 	key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/hierarchy.json",
 		params.DataID, params.RunID, params.Feature)
 	bucket := maasModelOutputBucket
@@ -279,7 +279,7 @@ func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutput
 
 // GetHierarchyLists returns region hierarchies in list form
 func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
-	op := "storage.GetHierarchyLists"
+	op := "Storage.GetHierarchyLists"
 	var regionalData wm.RegionListOutput
 	// allOutputMap is meant to be a map from strings ie. 'country' to a set (map[string]bool is used as a set)
 	allOutputMap := make(map[string]map[string]bool)
@@ -325,7 +325,7 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 
 // GetRawData returns datacube output or indicator raw data
 func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawDataPoint, error) {
-	op := "storage.GetRawData"
+	op := "Storage.GetRawData"
 	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.json",
 		params.DataID, params.RunID, params.Feature)
 
@@ -344,7 +344,7 @@ func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawData
 
 // GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
 func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier string, qualifierOptions []string) ([]*wm.ModelOutputQualifierTimeseries, error) {
-	op := "storage.GetQualifierTimeseries"
+	op := "Storage.GetQualifierTimeseries"
 	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/qualifiers/%s/s_%s_t_%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, qualifier,
 		params.SpatialAggFunc, params.TemporalAggFunc)
@@ -417,7 +417,7 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 
 // GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
 func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, qualifiers []string) ([]*wm.ModelOutputQualifierBreakdown, error) {
-	op := "storage.GetQualifierData"
+	op := "Storage.GetQualifierData"
 	allQualifiers := make([]*wm.ModelOutputQualifierBreakdown, len(qualifiers))
 
 	for qualifierIndex, qualifier := range qualifiers {
@@ -481,7 +481,7 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 
 // GetQualifierRegional returns datacube output data broken down by qualifiers for ONE timestamp
 func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp string, qualifier string) (*wm.ModelOutputRegionalQualifiers, error) {
-	op := "storage.GetQualifierRegional"
+	op := "Storage.GetQualifierRegional"
 
 	data := make(map[string][]*wm.ModelOutputRegionQualifierBreakdown)
 	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {

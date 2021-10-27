@@ -46,7 +46,7 @@ type geoTilesResult struct {
 
 // GetTile returns the tile containing model run output specified by the spec
 func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expression string) (*wm.Tile, error) {
-	op := "storage.GetTile"
+	op := "Storage.GetTile"
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
 
 	var errChs []chan error
@@ -113,7 +113,7 @@ func evaluateExpression(features []*geojson.Feature, expression string) error {
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
 func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (chan geoTilesResult, chan error) {
-	op := "storage.getRunOutput"
+	op := "Storage.getRunOutput"
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
