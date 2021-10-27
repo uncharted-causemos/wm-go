@@ -7,10 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
 // GetVectorTile returns mapbox vectortile
 func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, error) {
+	op := "storage.GetVectorTile"
 	key := fmt.Sprintf("%s/%d/%d/%d.pbf", tilesetName, zoom, x, y)
 
 	// Retrieve protobuf tile from S3
@@ -25,14 +27,13 @@ func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, 
 				// Tile not found errors are expected
 				return []byte{}, nil
 			}
-			return nil, err
 		}
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	defer resp.Body.Close()
 	buf, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	return buf, nil
 }

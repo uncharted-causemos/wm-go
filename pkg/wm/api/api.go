@@ -88,11 +88,7 @@ func (a *api) wh(handler func(http.ResponseWriter, *http.Request) error) func(ht
 
 		// Handle error
 		errCode := wm.ErrorCode(err)
-
-		if errCode == wm.EINTERNAL {
-			// Log error if it's an internal server error
-			a.logger.Errorf("ERROR: %s\n", err)
-		}
+		errMessage := wm.ErrorMessage(err)
 
 		status := http.StatusInternalServerError
 		switch errCode {
@@ -108,6 +104,11 @@ func (a *api) wh(handler func(http.ResponseWriter, *http.Request) error) func(ht
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
-		w.Write([]byte(wm.ErrorMessage(err)))
+		if errCode == wm.EINTERNAL {
+			// Log error if it's an internal server error
+			a.logger.Error(err)
+		} else {
+			w.Write([]byte(errMessage))
+		}
 	}
 }

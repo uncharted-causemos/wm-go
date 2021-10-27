@@ -237,7 +237,7 @@ func parseRange(raw []byte) (wm.Range, error) {
 	}
 
 	if len(fs) != 2 {
-		return rng, &wm.Error{Op: op, Err: fmt.Errorf("Too many values (%d) for range filter")}
+		return rng, &wm.Error{Op: op, Err: fmt.Errorf("Too many values (%d) for range filter", len(fs))}
 	}
 
 	rng.Minimum = fs[0]
