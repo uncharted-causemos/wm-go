@@ -49,7 +49,7 @@ func (a *api) getTile(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getTile"
 	specs, err := getGridTileOutputSpecs(r)
 	if err != nil {
-		return &wm.Error{Code: wm.EINVALID, Message: "Invalid tile specs"}
+		return &wm.Error{Op: op, Err: err}
 	}
 	expression := getTileDataExpression(r)
 	debug := r.URL.Query().Get("debug")

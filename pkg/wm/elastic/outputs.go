@@ -1,7 +1,6 @@
 package elastic
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -16,6 +15,7 @@ const (
 
 // GetOutputStats returns model output stats
 func (es *ES) GetOutputStats(runID string, feature string) (*wm.ModelOutputStat, error) {
+	op := "ES.GetModelRuns"
 	zoom := 8
 	rBody := fmt.Sprintf(`{
 		"query": {
@@ -34,18 +34,18 @@ func (es *ES) GetOutputStats(runID string, feature string) (*wm.ModelOutputStat,
 		es.client.Search.WithBody(strings.NewReader(rBody)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	defer res.Body.Close()
 	body := read(res.Body)
 	if res.IsError() {
-		return nil, errors.New(body)
+		return nil, &wm.Error{Op: op, Message: body}
 	}
 
 	hits := gjson.Get(body, "hits.hits").Array()
 
 	if len(hits) == 0 {
-		return nil, errors.New("GetOutputStats: No stats found")
+		return nil, &wm.Error{Code: wm.ENOTFOUND, Op: op, Message: "No stats found"}
 	}
 
 	source := hits[0].Get("_source")

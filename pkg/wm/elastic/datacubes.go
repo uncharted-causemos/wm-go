@@ -3,7 +3,6 @@ package elastic
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 
 	"github.com/tidwall/gjson"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -15,13 +14,14 @@ const defaultSize = 100
 
 // SearchDatacubes searches and returns datacubes
 func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
+	op := "ES.SearchDatacubes"
 	var datacubes []*wm.Datacube
 	options := queryOptions{
 		filters: filters,
 	}
 	query, err := buildBoolQuery(options)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	body := map[string]interface{}{
 		"size": defaultSize,
@@ -31,7 +31,7 @@ func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	res, err := es.client.Search(
 		es.client.Search.WithIndex(datacubesIndex),
@@ -41,14 +41,14 @@ func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
 	defer res.Body.Close()
 	resBody := read(res.Body)
 	if res.IsError() {
-		return nil, errors.New(resBody)
+		return nil, &wm.Error{Op: op, Message: resBody}
 	}
 	hits := gjson.Get(resBody, "hits.hits").Array()
 	for _, hit := range hits {
 		doc := hit.Get("_source").String()
 		var datacube *wm.Datacube
 		if err := json.Unmarshal([]byte(doc), &datacube); err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		datacube.SearchScore = hit.Get("_score").Float()
 		datacubes = append(datacubes, datacube)
@@ -58,6 +58,7 @@ func (es *ES) SearchDatacubes(filters []*wm.Filter) ([]*wm.Datacube, error) {
 
 // CountDatacubes returns data cube count
 func (es *ES) CountDatacubes(filters []*wm.Filter) (uint64, error) {
+	op := "ES.CountDatacubes"
 	options := queryOptions{
 		filters: filters,
 	}
@@ -81,7 +82,7 @@ func (es *ES) CountDatacubes(filters []*wm.Filter) (uint64, error) {
 	defer res.Body.Close()
 	resBody := read(res.Body)
 	if res.IsError() {
-		return 0, errors.New(resBody)
+		return 0, &wm.Error{Op: op, Message: resBody}
 	}
 	count := gjson.Get(resBody, "count").Uint()
 	return count, nil
@@ -89,6 +90,7 @@ func (es *ES) CountDatacubes(filters []*wm.Filter) (uint64, error) {
 
 // GetIndicatorData returns the indicator time series
 func (es *ES) GetIndicatorData(indicatorName string, modelName string, units []string) ([]*wm.IndicatorDataPoint, error) {
+	op := "ES.GetIndicatorData"
 	options := queryOptions{
 		filters: []*wm.Filter{
 			{
@@ -109,7 +111,7 @@ func (es *ES) GetIndicatorData(indicatorName string, modelName string, units []s
 	}
 	query, err := buildQuery(options)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	body := map[string]interface{}{}
 	if len(query) > 0 {
@@ -117,7 +119,7 @@ func (es *ES) GetIndicatorData(indicatorName string, modelName string, units []s
 	}
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(body); err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	res, err := es.client.Search(
 		es.client.Search.WithIndex(indicatorDataIndex),
@@ -128,7 +130,7 @@ func (es *ES) GetIndicatorData(indicatorName string, modelName string, units []s
 	defer res.Body.Close()
 	resBody := read(res.Body)
 	if res.IsError() {
-		return nil, errors.New(resBody)
+		return nil, &wm.Error{Op: op, Message: resBody}
 	}
 
 	hits := gjson.Get(resBody, "hits.hits").Array()
@@ -138,7 +140,7 @@ func (es *ES) GetIndicatorData(indicatorName string, modelName string, units []s
 		doc := hit.Get("_source").String()
 		var dataPoint *wm.IndicatorDataPoint
 		if err := json.Unmarshal([]byte(doc), &dataPoint); err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		dataPoints = append(dataPoints, dataPoint)
 	}

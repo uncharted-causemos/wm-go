@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -11,12 +10,12 @@ import (
 func getFacetNames(r *http.Request) ([]string, error) {
 	raw := r.URL.Query().Get("facets")
 	if raw == "" {
-		return nil, errors.New("The facets list is missing from the query")
+		return nil, &wm.Error{Code: wm.EINVALID, Message: "The facets list is missing from the query"}
 	}
 
 	var facetNames []string
 	if err := json.Unmarshal([]byte(raw), &facetNames); err != nil {
-		return nil, err
+		return nil, &wm.Error{Code: wm.EINVALID, Message: "Invalid facets list"}
 	}
 
 	return facetNames, nil
@@ -103,7 +102,7 @@ func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error)
 
 	filters, err := parseFilters([]byte(raw), context)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Code: wm.EINVALID, Message: "Invalid 'filters' parameter value"}
 	}
 
 	return filters, nil
@@ -112,12 +111,12 @@ func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error)
 func getGridTileOutputSpecs(r *http.Request) (wm.GridTileOutputSpecs, error) {
 	raw := r.URL.Query().Get("specs")
 	if raw == "" {
-		return nil, errors.New("The specs list is missing from the query")
+		return nil, &wm.Error{Code: wm.EINVALID, Message: "The 'specs' list is missing from the query"}
 	}
 
 	var specs []wm.GridTileOutputSpec
 	if err := json.Unmarshal([]byte(raw), &specs); err != nil {
-		return nil, err
+		return nil, &wm.Error{Code: wm.EINVALID, Message: "Invalid 'specs' parameter value"}
 	}
 
 	return specs, nil

@@ -30,8 +30,9 @@ type api struct {
 
 // New returns a chi router with the various endpoints defined.
 func New(cfg *Config) (chi.Router, error) {
+	op := "api.New"
 	if err := cfg.init(); err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	a := api{
