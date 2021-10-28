@@ -105,11 +105,12 @@ func (a *api) wh(handler func(http.ResponseWriter, *http.Request) error) func(ht
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
+		w.Write([]byte(errMessage))
 		if errCode == wm.EINTERNAL {
 			// Log error if it's an internal server error
 			a.logger.Error(err)
 		} else {
-			w.Write([]byte(errMessage))
+			a.logger.Debug(err)
 		}
 	}
 }
