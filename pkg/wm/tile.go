@@ -64,6 +64,7 @@ func (t *Tile) AddFeature(feature *geojson.Feature) {
 
 // MVT returns the tile as mapbox vector tile format
 func (t *Tile) MVT() ([]byte, error) {
+	op := "Tile.MVT"
 	collections := map[string]*geojson.FeatureCollection{
 		t.Layer: &t.Features,
 	}
@@ -71,7 +72,7 @@ func (t *Tile) MVT() ([]byte, error) {
 	layers.ProjectToTile(maptile.New(t.X, t.Y, maptile.Zoom(t.Zoom)))
 	data, err := mvt.MarshalGzipped(layers)
 	if err != nil {
-		return nil, err
+		return nil, &Error{Op: op, Err: err}
 	}
 	return data, nil
 }
@@ -95,13 +96,14 @@ func NewTile(zoom, x, y uint32, layerName string) *Tile {
 
 // MvtToJSON parses mapbox vector tile into json. Json representation of the vector tile would be useful for debugging
 func MvtToJSON(tile []byte) ([]byte, error) {
+	op := "MvtToJSON"
 	layers, err := mvt.UnmarshalGzipped(tile)
 	if err != nil {
-		return nil, err
+		return nil, &Error{Op: op, Err: err}
 	}
 	json, err := json.MarshalIndent(layers, "", "  ")
 	if err != nil {
-		return nil, err
+		return nil, &Error{Op: op, Err: err}
 	}
 	return json, nil
 }

@@ -1,8 +1,6 @@
 package elastic
 
 import (
-	"errors"
-
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
@@ -65,6 +63,7 @@ var operandClause = map[wm.Operand]string{
 
 // buildClause builds ES bool clause query satisfying given filter
 func buildClause(filter *wm.Filter) (map[string]interface{}, error) {
+	op := "buildClause"
 	clauseType := operandClause[filter.Operand]
 	fieldName, ok := fieldNames[filter.Field]
 	matchType := "term"
@@ -72,11 +71,11 @@ func buildClause(filter *wm.Filter) (map[string]interface{}, error) {
 		matchType = "match"
 	}
 	if !ok {
-		return nil, errors.New("buildClause: Unrecognized field")
+		return nil, &wm.Error{Op: op, Message: "Unrecognized field"}
 	}
 	var queries []interface{}
-	if filter.IsNot == true {
-		return nil, errors.New("buildClause: Not yet Implemented")
+	if filter.IsNot {
+		return nil, &wm.Error{Op: op, Message: "Not yet Implemented"}
 	}
 	if filter.StringValues != nil {
 		// Build terms
@@ -86,7 +85,7 @@ func buildClause(filter *wm.Filter) (map[string]interface{}, error) {
 			})
 		}
 	} else if filter.IntValues != nil {
-		return nil, errors.New("buildClause: Not Yet Implemented")
+		return nil, &wm.Error{Op: op, Message: "Not yet Implemented"}
 	} else {
 		// Build range
 		lt := "lt"
@@ -111,9 +110,10 @@ func buildClause(filter *wm.Filter) (map[string]interface{}, error) {
 // buildNestedFilter builds ES nested filter query with given filters.
 // Provided filters must have fields with same parent field
 func buildNestedClause(path string, filters []*wm.Filter) (map[string]interface{}, error) {
+	op := "buildNestedClause"
 	fs, err := buildClauses(filters)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	nested := map[string]interface{}{
 		"nested": map[string]interface{}{
@@ -130,11 +130,12 @@ func buildNestedClause(path string, filters []*wm.Filter) (map[string]interface{
 
 // buildFilters builds ES filter quires with given filters
 func buildClauses(filters []*wm.Filter) ([]interface{}, error) {
+	op := "ES.GetModelRuns"
 	var fs []interface{}
 	for _, filter := range filters {
 		f, err := buildClause(filter)
 		if err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		fs = append(fs, f)
 	}
@@ -143,6 +144,7 @@ func buildClauses(filters []*wm.Filter) ([]interface{}, error) {
 
 // buildFilterContext builds ES filter used in the filter context (root filter query)
 func buildQueryClauses(filters []*wm.Filter) ([]interface{}, error) {
+	op := "buildQueryClauses"
 	var results []interface{}
 	nested := make(map[string][]*wm.Filter)
 	var normals []*wm.Filter
@@ -157,14 +159,14 @@ func buildQueryClauses(filters []*wm.Filter) ([]interface{}, error) {
 	}
 	normalFilters, err := buildClauses(normals)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	results = append(results, normalFilters...)
 
 	for p, fs := range nested {
 		nestedFilter, err := buildNestedClause(p, fs)
 		if err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		results = append(results, nestedFilter)
 	}
@@ -184,6 +186,7 @@ func buildSearchQueries(term string, fields []string) ([]interface{}, error) {
 }
 
 func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
+	op := "buildBoolQuery"
 	boolClause := make(map[string]interface{})
 
 	// Matching document with searches will contribute to the score
@@ -200,11 +203,11 @@ func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
 	}
 	queryContext, err := buildQueryClauses(searches)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	filterContext, err := buildQueryClauses(filters)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	if queryContext != nil {
 		boolClause["must"] = queryContext
@@ -223,15 +226,16 @@ func buildBoolQuery(options queryOptions) (map[string]interface{}, error) {
 
 // TODO: this will be deprecated and replaced by buildBoolQuery. Need to update the corresponding tests as well.
 func buildQuery(options queryOptions) (map[string]interface{}, error) {
+	op := "buildQuery"
 	filterContext, err := buildQueryClauses(options.filters)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	boolClause := make(map[string]interface{})
 	if options.search.text != "" {
 		searchContext, err := buildSearchQueries(options.search.text, options.search.fields)
 		if err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		boolClause["should"] = searchContext
 		boolClause["minimum_should_match"] = 1

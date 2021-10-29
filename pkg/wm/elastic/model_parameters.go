@@ -2,7 +2,6 @@ package elastic
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -16,6 +15,7 @@ const (
 
 // GetModelParameters returns model parameters
 func (es *ES) GetModelParameters(modelID string) ([]*wm.ModelParameter, error) {
+	op := "ES.GetModelParameters"
 	rBody := fmt.Sprintf(`{
 		"query": { 
 			"bool": { 
@@ -31,18 +31,18 @@ func (es *ES) GetModelParameters(modelID string) ([]*wm.ModelParameter, error) {
 		es.client.Search.WithBody(strings.NewReader(rBody)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	body := read(res.Body)
 	if res.IsError() {
-		return nil, errors.New(body)
+		return nil, &wm.Error{Op: op, Message: body}
 	}
 	params := make([]*wm.ModelParameter, 0)
 	for _, hit := range gjson.Get(body, "hits.hits").Array() {
 		source := hit.Get("_source").String()
 		var param wm.ModelParameter
 		if err := json.Unmarshal([]byte(source), &param); err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		params = append(params, &param)
 	}

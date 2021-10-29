@@ -46,6 +46,7 @@ type geoTilesResult struct {
 
 // GetTile returns the tile containing model run output specified by the spec
 func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expression string) (*wm.Tile, error) {
+	op := "Storage.GetTile"
 	tile := wm.NewTile(zoom, x, y, tileDataLayerName)
 
 	var errChs []chan error
@@ -59,7 +60,7 @@ func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expre
 	}
 	for _, err := range errChs {
 		if e := <-err; e != nil {
-			return nil, e
+			return nil, &wm.Error{Op: op, Err: e}
 		}
 	}
 	for _, r := range resChs {
@@ -68,12 +69,12 @@ func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expre
 
 	features, err := createFeatures(results)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	if expression != "" {
 		if err := evaluateExpression(features, expression); err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 	}
 
@@ -85,9 +86,10 @@ func (s *Storage) GetTile(zoom, x, y uint32, specs wm.GridTileOutputSpecs, expre
 
 // evaluateExpression evaluate expression using feature properties as parameters and add the result back as new property to the given feature
 func evaluateExpression(features []*geojson.Feature, expression string) error {
+	op := "evaluateExpression"
 	exp, err := govaluate.NewEvaluableExpression(expression)
 	if err != nil {
-		return err
+		return &wm.Error{Op: op, Err: err}
 	}
 	for _, feature := range features {
 		parameters := make(map[string]interface{})
@@ -111,6 +113,7 @@ func evaluateExpression(features []*geojson.Feature, expression string) error {
 
 // getRunOutput returns geotiled bucket aggregation result of the model run output specified by the spec, bound and zoom
 func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (chan geoTilesResult, chan error) {
+	op := "Storage.getRunOutput"
 	out := make(chan geoTilesResult)
 	er := make(chan error)
 	go func() {
@@ -131,7 +134,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			// TODO: Remove this part if we no longer need to display old tile outputs
 			startTime, err := time.Parse(time.RFC3339, spec.Date)
 			if err != nil {
-				er <- err
+				er <- &wm.Error{Op: op, Err: err}
 				return
 			}
 			timemillis := startTime.Unix() * 1000
@@ -150,24 +153,24 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == s3.ErrCodeNoSuchKey {
-					// // Tile not found errors are expected
+					// Tile not found errors are expected
 					return
 				}
-				er <- err
+				er <- &wm.Error{Op: op, Err: err}
 				return
 			}
-			er <- err
+			er <- &wm.Error{Op: op, Err: err}
 			return
 		}
 		var tile pb.Tile
 		defer resp.Body.Close()
 		buf, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			er <- err
+			er <- &wm.Error{Op: op, Err: err}
 			return
 		}
 		if err := proto.Unmarshal(buf, &tile); err != nil {
-			er <- err
+			er <- &wm.Error{Op: op, Err: err}
 			return
 		}
 
@@ -251,13 +254,14 @@ func getTileBinValue(tileBinStats *pb.TileStats, temporalAggFunc string) (float6
 
 // createFeatures processes and merges the geotile results and returns a list of geojson features
 func createFeatures(results []geoTilesResult) ([]*geojson.Feature, error) {
+	op := "createFeatures"
 	featureMap := map[string]*geojson.Feature{}
 	for _, result := range results {
 		for _, gt := range result.data {
 			if _, ok := featureMap[gt.Key]; !ok {
 				var z, x, y uint32
 				if _, err := fmt.Sscanf(gt.Key, "%d/%d/%d", &z, &x, &y); err != nil {
-					return nil, err
+					return nil, &wm.Error{Op: op, Err: err}
 				}
 				polygon := maptile.New(x, y, maptile.Zoom(z)).Bound().ToPolygon()
 				f := geojson.NewFeature(polygon)

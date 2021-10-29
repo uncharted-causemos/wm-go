@@ -32,11 +32,15 @@ func main() {
 	var logger *zap.Logger
 	switch s.Mode {
 	case "dev":
-		logger, err = zap.NewDevelopment()
+		dev := zap.NewDevelopmentConfig()
+		dev.DisableStacktrace = true
+		logger, err = dev.Build()
 	case "prod":
-		logger, err = zap.NewProduction()
+		prod := zap.NewProductionConfig()
+		prod.DisableStacktrace = true
+		logger, err = prod.Build()
 	default:
-		err = fmt.Errorf("Invalid 'mode' flag: %s", s.Mode)
+		err = fmt.Errorf("invalid 'mode' flag: %s", s.Mode)
 	}
 	if err != nil {
 		log.Fatal(err)

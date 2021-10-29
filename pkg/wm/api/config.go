@@ -1,8 +1,6 @@
 package api
 
 import (
-	"errors"
-
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 	"go.uber.org/zap"
 )
@@ -18,17 +16,18 @@ type Config struct {
 // init validates the config and fills in defaults for missing optional
 // parameters.
 func (cfg *Config) init() error {
+	op := "Config.init"
 	if cfg.MaaS == nil {
-		return errors.New("MaaS cannot be nil")
+		return &wm.Error{Op: op, Message: "MaaS cannot be nil"}
 	}
 	if cfg.Logger == nil {
-		return errors.New("Logger cannot be nil")
+		return &wm.Error{Op: op, Message: "Logger cannot be nil"}
 	}
 	if cfg.DataOutput == nil {
-		return errors.New("DataOutput cannot be nil")
+		return &wm.Error{Op: op, Message: "DataOutput cannot be nil"}
 	}
 	if cfg.VectorTile == nil {
-		return errors.New("Logger cannot be nil")
+		return &wm.Error{Op: op, Message: "Logger cannot be nil"}
 	}
 	return nil
 }

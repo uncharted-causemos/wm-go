@@ -46,18 +46,19 @@ var operands = map[string]wm.Operand{
 
 // parseFilters extracts a slice of filters from a byte slice.
 func parseFilters(raw []byte, context wm.FilterContext) ([]*wm.Filter, error) {
+	op := "parseFilters"
 	var fs []*wm.Filter
 
 	if err := parseArray(raw, func(val []byte) error {
 		f, err := parseFilter(val, context)
 		if err != nil {
-			return err
+			return &wm.Error{Op: op, Err: err}
 		}
 
 		fs = append(fs, f)
 		return nil
 	}, "clauses"); err != nil {
-		return nil, fmt.Errorf("parseFilters failed: %v", err)
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	return fs, nil
@@ -65,9 +66,10 @@ func parseFilters(raw []byte, context wm.FilterContext) ([]*wm.Filter, error) {
 
 // parseFilter extracts a single filter from a byte slice.
 func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
+	op := "parseFilter"
 	fieldStr, err := jsonparser.GetString(raw, "field")
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	var field wm.Field
 	var ok bool
@@ -86,7 +88,7 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 
 	operandStr, err := jsonparser.GetString(raw, "operand")
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	operand, ok := operands[operandStr]
@@ -96,17 +98,17 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 
 	isNot, err := jsonparser.GetBoolean(raw, "isNot")
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	values, _, _, err := jsonparser.Get(raw, "values")
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	strVals, intVals, rng, err := parseValues(field, values)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	return &wm.Filter{
@@ -121,6 +123,7 @@ func parseFilter(raw []byte, context wm.FilterContext) (*wm.Filter, error) {
 
 // parseValues extracts the values field into an appropriately typed value.
 func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) {
+	op := "parseValues"
 	var strVals []string
 	var intVals []int
 	var rng wm.Range
@@ -157,7 +160,7 @@ func parseValues(field wm.Field, raw []byte) ([]string, []int, wm.Range, error) 
 		err = errors.New("parseValues failed: Unhandled values")
 	}
 	if err != nil {
-		return nil, nil, wm.Range{}, err
+		return nil, nil, wm.Range{}, &wm.Error{Op: op, Err: err}
 	}
 
 	return strVals, intVals, rng, nil
@@ -188,9 +191,10 @@ func parseArray(raw []byte, cb func([]byte) error, keys ...string) error {
 
 // parseStringValues extracts the contents of the values field as a string slice.
 func parseStringValues(raw []byte) ([]string, error) {
+	op := "parseStringValues"
 	var strVals []string
 	if err := json.Unmarshal(raw, &strVals); err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	return strVals, nil
@@ -198,17 +202,18 @@ func parseStringValues(raw []byte) ([]string, error) {
 
 // parseIntValues extracts the contents of the values field as an int slice.
 func parseIntValues(raw []byte) ([]int, error) {
+	op := "parseIntValues"
 	var intVals []int
 
 	if err := parseArray(raw, func(val []byte) error {
 		intVal, err := strconv.Atoi(string(val))
 		if err != nil {
-			return err
+			return &wm.Error{Op: op, Err: err}
 		}
 		intVals = append(intVals, intVal)
 		return nil
 	}); err != nil {
-		return nil, fmt.Errorf("parseIntValues failed: %v", err)
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 
 	return intVals, nil
@@ -217,6 +222,7 @@ func parseIntValues(raw []byte) ([]int, error) {
 // parseRange extracts the contents of the values field as a 2-element float
 // array.
 func parseRange(raw []byte) (wm.Range, error) {
+	op := "parseRange"
 	var rng wm.Range
 
 	var fs []float64
@@ -224,17 +230,17 @@ func parseRange(raw []byte) (wm.Range, error) {
 		return parseArray(val, func(subVal []byte) error {
 			f, err := strconv.ParseFloat(string(subVal), 64)
 			if err != nil {
-				return err
+				return &wm.Error{Op: op, Err: err}
 			}
 			fs = append(fs, f)
 			return nil
 		})
 	}); err != nil {
-		return rng, fmt.Errorf("parseRange failed: %v", err)
+		return rng, &wm.Error{Op: op, Err: err}
 	}
 
 	if len(fs) != 2 {
-		return rng, fmt.Errorf("Too many values (%d) for range filter", len(fs))
+		return rng, &wm.Error{Op: op, Err: fmt.Errorf("Too many values (%d) for range filter", len(fs))}
 	}
 
 	rng.Minimum = fs[0]

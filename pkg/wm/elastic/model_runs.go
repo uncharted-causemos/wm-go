@@ -2,7 +2,6 @@ package elastic
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -17,6 +16,7 @@ const (
 
 // GetModelRuns returns model runs
 func (es *ES) GetModelRuns(modelID string) ([]*wm.ModelRun, error) {
+	op := "ES.GetModelRuns"
 	rBody := fmt.Sprintf(`{
 		"query": {
 			"bool": {
@@ -38,11 +38,11 @@ func (es *ES) GetModelRuns(modelID string) ([]*wm.ModelRun, error) {
 		es.client.Search.WithBody(strings.NewReader(rBody)),
 	)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
 	}
 	body := read(res.Body)
 	if res.IsError() {
-		return nil, errors.New(body)
+		return nil, &wm.Error{Op: op, Message: body}
 	}
 	var runs []*wm.ModelRun
 	for _, hit := range gjson.Get(body, "hits.hits").Array() {
@@ -50,7 +50,7 @@ func (es *ES) GetModelRuns(modelID string) ([]*wm.ModelRun, error) {
 		sourceStr := source.String()
 		var run wm.ModelRun
 		if err := json.Unmarshal([]byte(sourceStr), &run); err != nil {
-			return nil, err
+			return nil, &wm.Error{Op: op, Err: err}
 		}
 		run.Model = source.Get("model_id").String()
 		runs = append(runs, &run)
