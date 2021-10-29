@@ -231,8 +231,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 
 		if err != nil {
-			reqerr, ok := err.(awserr.RequestFailure)
-			if reqerr.Code() == "NoSuchKey" && ok {
+			if wm.ErrorCode(err) == wm.ENOTFOUND {
 				data[level] = make([]interface{}, 0)
 				continue
 			} else {
@@ -498,8 +497,7 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 
 		if err != nil {
-			reqerr, ok := err.(awserr.RequestFailure)
-			if reqerr.Code() == "NoSuchKey" && ok {
+			if wm.ErrorCode(err) == wm.ENOTFOUND {
 				data[level] = []*wm.ModelOutputRegionQualifierBreakdown{}
 				continue
 			} else {
