@@ -107,8 +107,8 @@ func (s *Storage) GetOutputStats(params wm.DatacubeParams, timestamp string) ([]
 	// Read and parse csv
 	r := csv.NewReader(bytes.NewReader(buf))
 	records, err := r.ReadAll()
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
+	if err != nil || len(records) == 0 {
+		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Invalid output stats file. s3_key: %s", key)}
 	}
 	minCol := fmt.Sprintf("min_s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
 	maxCol := fmt.Sprintf("max_s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
