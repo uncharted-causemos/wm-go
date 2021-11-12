@@ -101,12 +101,19 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) er
 	op := "api.getDataOutputTimeseries"
 	params := getDatacubeParams(r)
 	regionID := getRegionID(r)
+	transform := getTransform(r)
 	var timeseries []*wm.TimeseriesValue
 	var err error
 	if regionID == "" {
 		timeseries, err = a.dataOutput.GetOutputTimeseries(params)
 	} else {
 		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
+		if transform != "" {
+			timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID})
+			if err != nil {
+				return &wm.Error{Op: op, Err: err}
+			}
+		}
 	}
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
@@ -123,9 +130,16 @@ func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) erro
 	op := "api.getDataOutputRegional"
 	params := getDatacubeParams(r)
 	timestamp := getTimestamp(r)
+	transform := getTransform(r)
 	data, err := a.dataOutput.GetRegionAggregation(params, timestamp)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
+	}
+	if transform != "" {
+		data, err = a.dataOutput.TransformRegionAggregation(data, timestamp, wm.TransformConfig{Transform: transform})
+		if err != nil {
+			return &wm.Error{Op: op, Err: err}
+		}
 	}
 	render.Render(w, r, &modelOutputRegionalData{data})
 	return nil
@@ -207,9 +221,16 @@ func (a *api) getDataOutputQualifierRegional(w http.ResponseWriter, r *http.Requ
 	params := getDatacubeParams(r)
 	timestamp := getTimestamp(r)
 	qualifier := getQualifierName(r)
+	transform := getTransform(r)
 	data, err := a.dataOutput.GetQualifierRegional(params, timestamp, qualifier)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
+	}
+	if transform != "" {
+		data, err = a.dataOutput.TransformQualifierRegional(data, timestamp, wm.TransformConfig{Transform: transform})
+		if err != nil {
+			return &wm.Error{Op: op, Err: err}
+		}
 	}
 	render.JSON(w, r, data)
 	return nil

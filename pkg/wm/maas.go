@@ -200,9 +200,8 @@ type DatacubeConceptMapping struct {
 }
 
 type TransformConfig struct {
-	Transform  string `json:"transform"`
-	RegionID   string `json:"region_id"`
-	Resolution string `json:"resolution"`
+	Transform string `json:"transform"`
+	RegionID  string `json:"region_id"`
 }
 
 // MaaS defines the methods that the MaaS database implementation needs to
@@ -274,6 +273,9 @@ type DataOutput interface {
 
 	// TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 	TransformRegionAggregation(data *ModelOutputRegionalAdmins, timestamp string, config TransformConfig) (*ModelOutputRegionalAdmins, error)
+
+	// TransformQualifierRegional returns transformed qualifier regional data for ALL admin regions at ONE timestamp
+	TransformQualifierRegional(data *ModelOutputRegionalQualifiers, timestamp string, config TransformConfig) (*ModelOutputRegionalQualifiers, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
