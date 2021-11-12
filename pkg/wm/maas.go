@@ -19,16 +19,16 @@ type DatacubeParams struct {
 
 // HierarchyParams represent parameters needed to fetch a region hierarchy
 type HierarchyParams struct {
-	DataID          string `json:"data_id"`
-	RunID           string `json:"run_id"`
-	Feature          string `json:"feature"`
+	DataID  string `json:"data_id"`
+	RunID   string `json:"run_id"`
+	Feature string `json:"feature"`
 }
 
 // RegionListParams represent parameters needed to fetch region lists representing the hierarchy
 type RegionListParams struct {
-	DataID          string `json:"data_id"`
-	RunIDs          []string `json:"run_ids"`
-	Feature         string `json:"feature"`
+	DataID  string   `json:"data_id"`
+	RunIDs  []string `json:"run_ids"`
+	Feature string   `json:"feature"`
 }
 
 // OldModelOutputTimeseries represent the old time series model output data
@@ -199,6 +199,12 @@ type DatacubeConceptMapping struct {
 	Score float64 `json:"score"`
 }
 
+type TransformConfig struct {
+	Transform  string `json:"transform"`
+	RegionID   string `json:"region_id"`
+	Resolution string `json:"resolution"`
+}
+
 // MaaS defines the methods that the MaaS database implementation needs to
 // satisfy.
 type MaaS interface {
@@ -262,6 +268,12 @@ type DataOutput interface {
 
 	// GetQualifierRegional returns datacube output data broken down by qualifiers for ONE timestamp
 	GetQualifierRegional(params DatacubeParams, timestamp string, qualifier string) (*ModelOutputRegionalQualifiers, error)
+
+	// TransformOutputTimeseriesByRegion returns transformed timeseries data
+	TransformOutputTimeseriesByRegion(timeseries []*TimeseriesValue, config TransformConfig) ([]*TimeseriesValue, error)
+
+	// TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
+	TransformRegionAggregation(data *ModelOutputRegionalAdmins, timestamp string, config TransformConfig) (*ModelOutputRegionalAdmins, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
