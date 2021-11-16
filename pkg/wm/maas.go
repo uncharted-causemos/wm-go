@@ -199,9 +199,16 @@ type DatacubeConceptMapping struct {
 	Score float64 `json:"score"`
 }
 
+type Transform string
+
+const (
+	TransformPerCapita     Transform = "percapita"
+	TransformNormalisation Transform = "normalization"
+)
+
 type TransformConfig struct {
-	Transform string `json:"transform"`
-	RegionID  string `json:"region_id"`
+	Transform Transform `json:"transform"`
+	RegionID  string    `json:"region_id"`
 }
 
 // MaaS defines the methods that the MaaS database implementation needs to

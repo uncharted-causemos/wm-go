@@ -9,43 +9,65 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
+var populationRegionalLookupCache map[int]map[string]float64 = make(map[int]map[string]float64)
+
+func getPopulationDataAvailableYears() []int {
+	return []int{2020}
+}
+
+func getPopulationDatacubeParams() wm.DatacubeParams {
+	return wm.DatacubeParams{
+		DataID:          "430d621b-c4cd-4cb2-8d21-1c590522602c",
+		RunID:           "indicator",
+		Feature:         "Population Count",
+		Resolution:      "year",
+		TemporalAggFunc: "sum",
+		SpatialAggFunc:  "sum",
+	}
+}
+
 // TransformOutputTimeseriesByRegion returns transformed timeseries data
 func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesValue, config wm.TransformConfig) ([]*wm.TimeseriesValue, error) {
-	op := "Storage.TransformOutputTimeseriesByRegion"
-	if config.Transform == "percapita" {
+	// op := "Storage.TransformOutputTimeseriesByRegion"
+	switch config.Transform {
+	case wm.TransformPerCapita:
 		return s.transformPerCapitaTimeseries(timeseries, config)
+	default:
+		return timeseries, nil
 	}
-	return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
 }
 
 // TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalAdmins, error) {
 	op := "Storage.TransformRegionAggregation"
-	if config.Transform == "percapita" {
+
+	switch config.Transform {
+	case wm.TransformPerCapita:
 		return s.transformPerCapitaRegionAggregation(data, timestamp)
+	case wm.TransformNormalisation:
+		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
+	default:
+		return data, nil
 	}
-	return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
 }
 
 // TransformQualifierRegional returns transformed qualifier regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformQualifierRegional(data *wm.ModelOutputRegionalQualifiers, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalQualifiers, error) {
 	op := "Storage.TransformQualifierRegional"
-	if config.Transform == "percapita" {
+
+	switch config.Transform {
+	case wm.TransformPerCapita:
 		return s.transformPerCapitaQualifierRegional(data, timestamp)
+	case wm.TransformNormalisation:
+		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
+	default:
+		return data, nil
 	}
-	return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
 }
 
 func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue, config wm.TransformConfig) ([]*wm.TimeseriesValue, error) {
 	op := "Storage.transformPerCapitaTimeseries"
-	populationTimeseries, err := s.GetOutputTimeseriesByRegion(wm.DatacubeParams{
-		DataID:          "8a17ba05-b1f5-4fc6-8ce5-bc1642caeffb",
-		RunID:           "indicator",
-		Feature:         "fatalities",
-		Resolution:      "year",
-		TemporalAggFunc: "sum",
-		SpatialAggFunc:  "sum",
-	}, config.RegionID)
+	populationTimeseries, err := s.GetOutputTimeseriesByRegion(getPopulationDatacubeParams(), config.RegionID)
 	if err != nil {
 		if wm.ErrorCode(err) == wm.ENOTFOUND {
 			// if population data is not found, raise an internal server error
@@ -177,18 +199,13 @@ func (s *Storage) getRegionalPopulation(timestamp string) (map[string]float64, e
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 
-	// TODO: restore population lookup data for specific year from memory
+	// Check in memory cache for the data and return it if exists
+	if data, ok := populationRegionalLookupCache[year]; ok {
+		return data, nil
+	}
+
 	pTimestamp := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC).UnixMilli()
-
-	regionalPopulation, err := s.GetRegionAggregation(wm.DatacubeParams{
-		DataID:          "8a17ba05-b1f5-4fc6-8ce5-bc1642caeffb",
-		RunID:           "indicator",
-		Feature:         "fatalities",
-		Resolution:      "year",
-		TemporalAggFunc: "sum",
-		SpatialAggFunc:  "sum",
-	}, fmt.Sprintf("%d", pTimestamp))
-
+	regionalPopulation, err := s.GetRegionAggregation(getPopulationDatacubeParams(), fmt.Sprintf("%d", pTimestamp))
 	if err != nil {
 		if wm.ErrorCode(err) == wm.ENOTFOUND {
 			// if population data is not found, raise an internal server error
@@ -213,20 +230,20 @@ func (s *Storage) getRegionalPopulation(timestamp string) (map[string]float64, e
 		regionPopLookup[v.ID] = v.Value
 	}
 
-	// TODO: cache population lookup data by year into memory
+	// cache population lookup data by year into memory
+	populationRegionalLookupCache[year] = regionPopLookup
 	return regionPopLookup, nil
 }
 
 func getAvailablePopulationDataYear(timestamp string) (int, error) {
 	op := "getAvailablePopulationDataYear"
-	availableYears := [5]int{2000, 2005, 2010, 2015, 2020}
 
 	ts, err := strconv.Atoi(timestamp)
 	if err != nil {
 		return 0, &wm.Error{Op: op, Err: err}
 	}
 	year := time.UnixMilli(int64(ts)).UTC().Year()
-
+	availableYears := getPopulationDataAvailableYears()
 	// get available year for the population data
 	pYear := availableYears[len(availableYears)-1]
 	for i, y := range availableYears {
