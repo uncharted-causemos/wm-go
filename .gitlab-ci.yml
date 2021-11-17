@@ -14,7 +14,7 @@ stages:
   only:
     - main
     - merge_requests
-  image: docker-hub.uncharted.software/golang:1.13
+  image: docker-hub.uncharted.software/golang:1.17
   variables:
     GOPROXY: direct
   cache:
