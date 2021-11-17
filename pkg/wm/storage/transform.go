@@ -44,7 +44,7 @@ func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins,
 	switch config.Transform {
 	case wm.TransformPerCapita:
 		return s.transformPerCapitaRegionAggregation(data, timestamp)
-	case wm.TransformNormalisation:
+	case wm.TransformNormalization:
 		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
 	default:
 		return data, nil
@@ -58,7 +58,7 @@ func (s *Storage) TransformQualifierRegional(data *wm.ModelOutputRegionalQualifi
 	switch config.Transform {
 	case wm.TransformPerCapita:
 		return s.transformPerCapitaQualifierRegional(data, timestamp)
-	case wm.TransformNormalisation:
+	case wm.TransformNormalization:
 		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
 	default:
 		return data, nil

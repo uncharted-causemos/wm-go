@@ -199,13 +199,16 @@ type DatacubeConceptMapping struct {
 	Score float64 `json:"score"`
 }
 
+// Transform is type for available transforms
 type Transform string
 
+// Available transforms
 const (
 	TransformPerCapita     Transform = "percapita"
-	TransformNormalisation Transform = "normalization"
+	TransformNormalization Transform = "normalization"
 )
 
+// TransformConfig defines transform configuration
 type TransformConfig struct {
 	Transform Transform `json:"transform"`
 	RegionID  string    `json:"region_id"`
