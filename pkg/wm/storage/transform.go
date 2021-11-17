@@ -81,19 +81,19 @@ func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue,
 	for _, v := range timeseries {
 		year := time.UnixMilli(v.Timestamp).UTC().Year()
 		var population float64
-		// find population of matching or last available year
+		// find the population of matching or last available year
 		for i, s := range populationTimeseries {
 			py := time.UnixMilli(s.Timestamp).UTC().Year()
 			if year == py {
-				// found matching year
+				// found the matching year
 				population = populationTimeseries[i].Value
 				break
 			} else if year < py {
-				// could not found maching year. use previous available year
+				// could not find the matching year. use the last available year
 				population = populationTimeseries[int(math.Max(0, float64(i-1)))].Value
 				break
 			} else if i == len(populationTimeseries)-1 && py < year {
-				// if given year is greater than available population data year, use last year's value
+				// if given year is greater than available population data year, use the last available year's value
 				population = populationTimeseries[len(populationTimeseries)-1].Value
 			}
 		}
@@ -191,6 +191,7 @@ func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegion
 	return result, nil
 }
 
+// getRegionalPopulation returns a lookup table that maps region id to population of the region for the year that matches with given timestamp
 func (s *Storage) getRegionalPopulation(timestamp string) (map[string]float64, error) {
 	op := "Storage.getRegionalPopulation"
 
@@ -235,6 +236,7 @@ func (s *Storage) getRegionalPopulation(timestamp string) (map[string]float64, e
 	return regionPopLookup, nil
 }
 
+// getAvailablePopulationDataYear returns matching or last available year of the population data for given timstamp
 func getAvailablePopulationDataYear(timestamp string) (int, error) {
 	op := "getAvailablePopulationDataYear"
 
