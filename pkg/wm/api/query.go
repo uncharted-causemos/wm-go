@@ -41,6 +41,11 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
+func getTransform(r *http.Request) wm.Transform {
+	transform := r.URL.Query().Get("transform")
+	return wm.Transform(transform)
+}
+
 func getRegionID(r *http.Request) string {
 	return r.URL.Query().Get("region_id")
 }
