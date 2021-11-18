@@ -163,59 +163,14 @@ func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.Timeserie
 
 // GetOutputTimeseriesByRegion returns timeseries data for a specific region
 func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID string) ([]*wm.TimeseriesValue, error) {
-	op := "Storage.GetOutputTimeseriesByRegion"
+	//op := "Storage.GetOutputTimeseriesByRegion"
 	// Deconstruct Region ID to get admin region levels
 	regions := strings.Split(regionID, "__")
 	regionLevel := getRegionLevels()[len(regions)-1]
 	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel, regionID)
 
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
-	}
-
-	// Read and parse csv
-	series := make([]*wm.TimeseriesValue, 0)
-	r := csv.NewReader(bytes.NewReader(buf))
-	isHeader := true
-	valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
-	if params.SpatialAggFunc == "count" {
-		// when counting data points spatially, temporal aggregation function doesn't matter
-		valueCol = "s_count"
-	}
-	valueColIndex := -1
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, &wm.Error{Op: op, Err: err}
-		}
-		// Parse header and find the index of the target value column
-		if isHeader {
-			valueColIndex = index(record, valueCol)
-			if valueColIndex == -1 {
-				return nil, &wm.Error{Code: wm.EINVALID, Op: op, Message: fmt.Sprintf("Invalid agg functions. Spatial: %s, Temporal: %s", params.SpatialAggFunc, params.TemporalAggFunc)}
-			}
-			isHeader = false
-		} else {
-			timestamp, err := strconv.ParseInt(record[0], 10, 64)
-			if err != nil {
-				return nil, &wm.Error{Op: op, Err: err}
-			}
-			value, err := strconv.ParseFloat(record[valueColIndex], 64)
-			if err != nil {
-				return nil, &wm.Error{Op: op, Err: err}
-			}
-			series = append(series, &wm.TimeseriesValue{
-				Timestamp: timestamp,
-				Value:     value,
-			})
-		}
-	}
-	return series, nil
+	return getRegionalTimeseries(s, key, params)
 }
 
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
@@ -414,6 +369,30 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 	return filteredValues, nil
 }
 
+// GetQualifierTimeseriesByRegion returns datacube output timeseries broken down by qualifiers for a specific region
+func (s *Storage) GetQualifierTimeseriesByRegion(params wm.DatacubeParams, qualifier string, qualifierOptions []string, regionID string) ([]*wm.ModelOutputQualifierTimeseries, error) {
+	op := "Storage.GetQualifierTimeseriesByRegion"
+	// Deconstruct Region ID to get admin region levels
+	regions := strings.Split(regionID, "__")
+	regionLevel := getRegionLevels()[len(regions)-1]
+
+	outputTimeseries := make([]*wm.ModelOutputQualifierTimeseries, 0)
+	for _, qOpt := range qualifierOptions {
+		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/qualifiers/%s/%s/%s.csv",
+			params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel,
+			qualifier, qOpt, regionID)
+
+		series, err := getRegionalTimeseries(s, key, params)
+		if err != nil && wm.ErrorCode(err) != wm.ENOTFOUND {
+			return nil, &wm.Error{Op: op, Err: err}
+		}
+		outputTimeseries = append(outputTimeseries, &wm.ModelOutputQualifierTimeseries{
+			Name: qOpt, Timeseries: series})
+	}
+
+	return outputTimeseries, nil
+}
+
 // GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
 func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, qualifiers []string) ([]*wm.ModelOutputQualifierBreakdown, error) {
 	op := "Storage.GetQualifierData"
@@ -560,6 +539,57 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 	return &regionalData, nil
+}
+
+
+func getRegionalTimeseries(s *Storage, key string, params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
+	op := "getRegionalTimeseries"
+	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	if err != nil {
+		return nil, err
+	}
+
+	// Read and parse csv
+	series := make([]*wm.TimeseriesValue, 0)
+	r := csv.NewReader(bytes.NewReader(buf))
+	isHeader := true
+	valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+	if params.SpatialAggFunc == "count" {
+		// when counting data points spatially, temporal aggregation function doesn't matter
+		valueCol = "s_count"
+	}
+	valueColIndex := -1
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, &wm.Error{Op: op, Err: err}
+		}
+		// Parse header and find the index of the target value column
+		if isHeader {
+			valueColIndex = index(record, valueCol)
+			if valueColIndex == -1 {
+				return nil, &wm.Error{Code: wm.EINVALID, Op: op, Message: fmt.Sprintf("Invalid agg functions. Spatial: %s, Temporal: %s", params.SpatialAggFunc, params.TemporalAggFunc)}
+			}
+			isHeader = false
+		} else {
+			timestamp, err := strconv.ParseInt(record[0], 10, 64)
+			if err != nil {
+				return nil, &wm.Error{Op: op, Err: err}
+			}
+			value, err := strconv.ParseFloat(record[valueColIndex], 64)
+			if err != nil {
+				return nil, &wm.Error{Op: op, Err: err}
+			}
+			series = append(series, &wm.TimeseriesValue{
+				Timestamp: timestamp,
+				Value:     value,
+			})
+		}
+	}
+	return series, nil
 }
 
 func getFileFromS3(s *Storage, bucket string, key *string) ([]byte, error) {

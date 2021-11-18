@@ -272,6 +272,9 @@ type DataOutput interface {
 	// GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
 	GetQualifierTimeseries(params DatacubeParams, qualifier string, qualifierOptions []string) ([]*ModelOutputQualifierTimeseries, error)
 
+	// GetQualifierTimeseriesByRegion returns datacube output timeseries broken down by qualifiers for a specific region
+	GetQualifierTimeseriesByRegion(params DatacubeParams, qualifier string, qualifierOptions []string, regionID string) ([]*ModelOutputQualifierTimeseries, error)
+
 	// GetQualifierData returns datacube output data broken down by qualifiers for ONE timestamp
 	GetQualifierData(params DatacubeParams, timestamp string, qualifiers []string) ([]*ModelOutputQualifierBreakdown, error)
 
@@ -283,6 +286,9 @@ type DataOutput interface {
 
 	// TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 	TransformRegionAggregation(data *ModelOutputRegionalAdmins, timestamp string, config TransformConfig) (*ModelOutputRegionalAdmins, error)
+
+	// TransformOutputQualifierTimeseriesByRegion returns transformed qualifier timeseries data
+	TransformOutputQualifierTimeseriesByRegion(data []*ModelOutputQualifierTimeseries, config TransformConfig) ([]*ModelOutputQualifierTimeseries, error)
 
 	// TransformQualifierRegional returns transformed qualifier regional data for ALL admin regions at ONE timestamp
 	TransformQualifierRegional(data *ModelOutputRegionalQualifiers, timestamp string, config TransformConfig) (*ModelOutputRegionalQualifiers, error)

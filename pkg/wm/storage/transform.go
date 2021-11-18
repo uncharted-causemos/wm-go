@@ -37,6 +37,25 @@ func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesV
 	}
 }
 
+// TransformOutputQualifierTimeseriesByRegion returns transformed qualifier timeseries data
+func (s *Storage) TransformOutputQualifierTimeseriesByRegion(data []*wm.ModelOutputQualifierTimeseries, config wm.TransformConfig) ([]*wm.ModelOutputQualifierTimeseries, error) {
+	// op := "Storage.TransformOutputQualifierTimeseriesByRegion"
+	var result []*wm.ModelOutputQualifierTimeseries
+	for _, qSeries := range data {
+		if qSeries.Timeseries == nil {
+			result = append(result, qSeries)
+			continue
+		}
+		series, err := s.TransformOutputTimeseriesByRegion(qSeries.Timeseries, config)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &wm.ModelOutputQualifierTimeseries{
+			Name: qSeries.Name, Timeseries: series})
+	}
+	return result, nil
+}
+
 // TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalAdmins, error) {
 	op := "Storage.TransformRegionAggregation"
