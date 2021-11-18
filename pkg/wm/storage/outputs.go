@@ -383,8 +383,12 @@ func (s *Storage) GetQualifierTimeseriesByRegion(params wm.DatacubeParams, quali
 			qualifier, qOpt, regionID)
 
 		series, err := getRegionalTimeseries(s, key, params)
-		if err != nil && wm.ErrorCode(err) != wm.ENOTFOUND {
-			return nil, &wm.Error{Op: op, Err: err}
+		if err != nil {
+			if wm.ErrorCode(err) != wm.ENOTFOUND {
+				return nil, &wm.Error{Op: op, Err: err}
+			}
+			// If there was no data for this combination, return []
+			series = []*wm.TimeseriesValue{}
 		}
 		outputTimeseries = append(outputTimeseries, &wm.ModelOutputQualifierTimeseries{
 			Name: qOpt, Timeseries: series})

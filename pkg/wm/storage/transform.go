@@ -42,10 +42,6 @@ func (s *Storage) TransformOutputQualifierTimeseriesByRegion(data []*wm.ModelOut
 	// op := "Storage.TransformOutputQualifierTimeseriesByRegion"
 	var result []*wm.ModelOutputQualifierTimeseries
 	for _, qSeries := range data {
-		if qSeries.Timeseries == nil {
-			result = append(result, qSeries)
-			continue
-		}
 		series, err := s.TransformOutputTimeseriesByRegion(qSeries.Timeseries, config)
 		if err != nil {
 			return nil, err
@@ -96,7 +92,7 @@ func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue,
 	}
 
 	// Calculate Per capita with given timeseries and population data
-	var result []*wm.TimeseriesValue
+	result := make([]*wm.TimeseriesValue, 0)
 	for _, v := range timeseries {
 		year := time.UnixMilli(v.Timestamp).UTC().Year()
 		var population float64
