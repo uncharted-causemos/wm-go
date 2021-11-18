@@ -40,7 +40,7 @@ func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesV
 // TransformOutputQualifierTimeseriesByRegion returns transformed qualifier timeseries data
 func (s *Storage) TransformOutputQualifierTimeseriesByRegion(data []*wm.ModelOutputQualifierTimeseries, config wm.TransformConfig) ([]*wm.ModelOutputQualifierTimeseries, error) {
 	// op := "Storage.TransformOutputQualifierTimeseriesByRegion"
-	var result []*wm.ModelOutputQualifierTimeseries
+	result := make([]*wm.ModelOutputQualifierTimeseries, 0)
 	for _, qSeries := range data {
 		series, err := s.TransformOutputTimeseriesByRegion(qSeries.Timeseries, config)
 		if err != nil {
