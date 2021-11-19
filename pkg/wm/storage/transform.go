@@ -261,7 +261,7 @@ func getAvailablePopulationDataYear(timestamp string) (int, error) {
 }
 
 func (s *Storage) normalizeRegionAggregation(data *wm.ModelOutputRegionalAdmins) (*wm.ModelOutputRegionalAdmins, error) {
-	// op := "Storage.transformPerCapitaRegionAggregation"
+	// op := "Storage.normalizeRegionAggregation"
 
 	result := &wm.ModelOutputRegionalAdmins{
 		Country: []wm.ModelOutputAdminData{},
@@ -270,15 +270,31 @@ func (s *Storage) normalizeRegionAggregation(data *wm.ModelOutputRegionalAdmins)
 		Admin3:  []wm.ModelOutputAdminData{},
 	}
 
-	normalize := func(val, min, max float64) float64 {
-		return (val - min) / (max - min)
-	}
-	// Calculate per capita value
 	resultAdminDataList := [][]wm.ModelOutputAdminData{result.Country, result.Admin1, result.Admin2, result.Admin3}
 	for _, d := range [][]wm.ModelOutputAdminData{data.Country, data.Admin1, data.Admin2, data.Admin3} {
 		min, max := getMinMax(d)
 		for i, v := range d {
 			resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputAdminData{ID: v.ID, Value: normalize(v.Value, min, max)})
+		}
+	}
+	return result, nil
+}
+
+func (s *Storage) normalizeQualifierRegional(data *wm.ModelOutputRegionalQualifiers) (*wm.ModelOutputRegionalQualifiers, error) {
+	// op := "Storage.normalizeQualifierRegional"
+
+	result := &wm.ModelOutputRegionalQualifiers{
+		Country: []wm.ModelOutputRegionQualifierBreakdown{},
+		Admin1:  []wm.ModelOutputRegionQualifierBreakdown{},
+		Admin2:  []wm.ModelOutputRegionQualifierBreakdown{},
+		Admin3:  []wm.ModelOutputRegionQualifierBreakdown{},
+	}
+
+	resultAdminDataList := [][]wm.ModelOutputRegionQualifierBreakdown{result.Country, result.Admin1, result.Admin2, result.Admin3}
+	for _, d := range [][]wm.ModelOutputRegionQualifierBreakdown{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		minMax := getMinMaxQualifierBreakdown(d)
+		for i, v := range d {
+			resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: normalizeValues(v.Values, minMax)})
 		}
 	}
 	return result, nil
@@ -311,13 +327,30 @@ func getMinMaxQualifierBreakdown(data []wm.ModelOutputRegionQualifierBreakdown) 
 	for _, d := range data {
 		for key, val := range d.Values {
 			if r, ok := result[key]; !ok {
-				result[key] = struct{min float64; max float64} {min: val, max: val}
+				result[key] = struct {
+					min float64
+					max float64
+				}{min: val, max: val}
 			} else {
 				r.max = math.Max(r.max, val)
 				r.min = math.Max(r.min, val)
 			}
 		}
 	}
+	return result
 }
 
-if p, ok := pLookup[v.ID]; ok && p != 0 {
+func normalize(val, min, max float64) float64 {
+	return (val - min) / (max - min)
+}
+
+func normalizeValues(vals map[string]float64, minMax map[string]struct {
+	min float64
+	max float64
+}) map[string]float64 {
+	result := make(map[string]float64)
+	for k, v := range vals {
+		result[k] = normalize(v, minMax[k].min, minMax[k].max)
+	}
+	return result
+}
