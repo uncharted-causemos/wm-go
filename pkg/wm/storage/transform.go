@@ -39,13 +39,13 @@ func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesV
 
 // TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalAdmins, error) {
-	op := "Storage.TransformRegionAggregation"
+	// op := "Storage.TransformRegionAggregation"
 
 	switch config.Transform {
 	case wm.TransformPerCapita:
 		return s.transformPerCapitaRegionAggregation(data, timestamp)
 	case wm.TransformNormalization:
-		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
+		return s.normalizeRegionAggregation(data)
 	default:
 		return data, nil
 	}
@@ -259,3 +259,65 @@ func getAvailablePopulationDataYear(timestamp string) (int, error) {
 	}
 	return pYear, nil
 }
+
+func (s *Storage) normalizeRegionAggregation(data *wm.ModelOutputRegionalAdmins) (*wm.ModelOutputRegionalAdmins, error) {
+	// op := "Storage.transformPerCapitaRegionAggregation"
+
+	result := &wm.ModelOutputRegionalAdmins{
+		Country: []wm.ModelOutputAdminData{},
+		Admin1:  []wm.ModelOutputAdminData{},
+		Admin2:  []wm.ModelOutputAdminData{},
+		Admin3:  []wm.ModelOutputAdminData{},
+	}
+
+	normalize := func(val, min, max float64) float64 {
+		return (val - min) / (max - min)
+	}
+	// Calculate per capita value
+	resultAdminDataList := [][]wm.ModelOutputAdminData{result.Country, result.Admin1, result.Admin2, result.Admin3}
+	for _, d := range [][]wm.ModelOutputAdminData{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		min, max := getMinMax(d)
+		for i, v := range d {
+			resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputAdminData{ID: v.ID, Value: normalize(v.Value, min, max)})
+		}
+	}
+	return result, nil
+}
+
+func getMinMax(adminData []wm.ModelOutputAdminData) (float64, float64) {
+	if len(adminData) == 0 {
+		return 0, 0
+	}
+	min := adminData[0].Value
+	max := min
+	for _, v := range adminData {
+		max = math.Max(max, v.Value)
+		min = math.Min(min, v.Value)
+	}
+	return min, max
+}
+
+func getMinMaxQualifierBreakdown(data []wm.ModelOutputRegionQualifierBreakdown) map[string]struct {
+	min float64
+	max float64
+} {
+	result := make(map[string]struct {
+		min float64
+		max float64
+	})
+	if len(data) == 0 {
+		return result
+	}
+	for _, d := range data {
+		for key, val := range d.Values {
+			if r, ok := result[key]; !ok {
+				result[key] = struct{min float64; max float64} {min: val, max: val}
+			} else {
+				r.max = math.Max(r.max, val)
+				r.min = math.Max(r.min, val)
+			}
+		}
+	}
+}
+
+if p, ok := pLookup[v.ID]; ok && p != 0 {
