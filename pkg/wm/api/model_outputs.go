@@ -185,9 +185,25 @@ func (a *api) getDataOutputRegionLists(w http.ResponseWriter, r *http.Request) e
 func (a *api) getDataOutputQualifierTimeseries(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getDataOutputQualifierTimeseries"
 	params := getDatacubeParams(r)
+	regionID := getRegionID(r)
 	qualifier := getQualifierName(r)
 	qualifierOptions := getQualifierOptions(r)
-	data, err := a.dataOutput.GetQualifierTimeseries(params, qualifier, qualifierOptions)
+	transform := getTransform(r)
+
+	var data []*wm.ModelOutputQualifierTimeseries
+	var err error
+	if regionID == "" {
+		data, err = a.dataOutput.GetQualifierTimeseries(params, qualifier, qualifierOptions)
+	} else {
+		data, err = a.dataOutput.GetQualifierTimeseriesByRegion(params, qualifier, qualifierOptions, regionID)
+		if transform != "" {
+			data, err = a.dataOutput.TransformOutputQualifierTimeseriesByRegion(data, wm.TransformConfig{Transform: transform, RegionID: regionID})
+			if err != nil {
+				return &wm.Error{Op: op, Err: err}
+			}
+		}
+	}
+
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}

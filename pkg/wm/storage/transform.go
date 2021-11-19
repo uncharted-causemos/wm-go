@@ -37,6 +37,21 @@ func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesV
 	}
 }
 
+// TransformOutputQualifierTimeseriesByRegion returns transformed qualifier timeseries data
+func (s *Storage) TransformOutputQualifierTimeseriesByRegion(data []*wm.ModelOutputQualifierTimeseries, config wm.TransformConfig) ([]*wm.ModelOutputQualifierTimeseries, error) {
+	// op := "Storage.TransformOutputQualifierTimeseriesByRegion"
+	result := make([]*wm.ModelOutputQualifierTimeseries, 0)
+	for _, qSeries := range data {
+		series, err := s.TransformOutputTimeseriesByRegion(qSeries.Timeseries, config)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, &wm.ModelOutputQualifierTimeseries{
+			Name: qSeries.Name, Timeseries: series})
+	}
+	return result, nil
+}
+
 // TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalAdmins, error) {
 	op := "Storage.TransformRegionAggregation"
@@ -77,7 +92,7 @@ func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue,
 	}
 
 	// Calculate Per capita with given timeseries and population data
-	var result []*wm.TimeseriesValue
+	result := make([]*wm.TimeseriesValue, 0)
 	for _, v := range timeseries {
 		year := time.UnixMilli(v.Timestamp).UTC().Year()
 		var population float64
