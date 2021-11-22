@@ -251,3 +251,14 @@ func (a *api) getDataOutputQualifierRegional(w http.ResponseWriter, r *http.Requ
 	render.JSON(w, r, data)
 	return nil
 }
+
+func (a *api) getDataOutputPipelineResults(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDataOutputPipelineResults"
+	params := getPipelineResultParams(r)
+	data, err := a.dataOutput.GetPipelineResults(params)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	render.JSON(w, r, data)
+	return nil
+}

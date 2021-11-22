@@ -277,6 +277,26 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 	return &regionalData, nil
 }
 
+// GetPipelineResults returns the pipeline results file
+func (s *Storage) GetPipelineResults(params wm.PipelineResultsParams) (*wm.PipelineResultsOutput, error) {
+	op := "Storage.GetPipelineResults"
+	key := fmt.Sprintf("%s/%s/results/results.json", params.DataID, params.RunID)
+	bucket := maasModelOutputBucket
+	if params.RunID == "indicator" {
+		bucket = maasIndicatorOutputBucket
+	}
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	var output wm.PipelineResultsOutput
+	err = json.Unmarshal(buf, &output)
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	return &output, nil
+}
+
 // GetRawData returns datacube output or indicator raw data
 func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawDataPoint, error) {
 	op := "Storage.GetRawData"
