@@ -144,35 +144,20 @@ func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegion
 		return newValues
 	}
 
+	resultAdminDataList := [4][]wm.ModelOutputRegionQualifierBreakdown{}
+	for i, d := range [][]wm.ModelOutputRegionQualifierBreakdown{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		for _, v := range d {
+			if p, ok := pLookup[v.ID]; ok && p != 0 {
+				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
+			}
+		}
+	}
 	result := &wm.ModelOutputRegionalQualifiers{
-		Country: []wm.ModelOutputRegionQualifierBreakdown{},
-		Admin1:  []wm.ModelOutputRegionQualifierBreakdown{},
-		Admin2:  []wm.ModelOutputRegionQualifierBreakdown{},
-		Admin3:  []wm.ModelOutputRegionQualifierBreakdown{},
+		Country: resultAdminDataList[0],
+		Admin1:  resultAdminDataList[1],
+		Admin2:  resultAdminDataList[2],
+		Admin3:  resultAdminDataList[3],
 	}
-
-	// Calculate per capita value
-	for _, v := range data.Country {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Country = append(result.Country, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-	for _, v := range data.Admin1 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin1 = append(result.Admin1, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-	for _, v := range data.Admin2 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin2 = append(result.Admin2, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-	for _, v := range data.Admin3 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin3 = append(result.Admin3, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-
 	return result, nil
 }
 
@@ -203,17 +188,10 @@ func (s *Storage) getRegionalPopulation(timestamp string) (map[string]float64, e
 	// Store population by region id
 	regionPopLookup := make(map[string]float64)
 
-	for _, v := range regionalPopulation.Country {
-		regionPopLookup[v.ID] = v.Value
-	}
-	for _, v := range regionalPopulation.Admin1 {
-		regionPopLookup[v.ID] = v.Value
-	}
-	for _, v := range regionalPopulation.Admin2 {
-		regionPopLookup[v.ID] = v.Value
-	}
-	for _, v := range regionalPopulation.Admin3 {
-		regionPopLookup[v.ID] = v.Value
+	for _, d := range [][]wm.ModelOutputAdminData{regionalPopulation.Country, regionalPopulation.Admin1, regionalPopulation.Admin2, regionalPopulation.Admin3} {
+		for _, v := range d {
+			regionPopLookup[v.ID] = v.Value
+		}
 	}
 
 	// cache population lookup data by year into memory
