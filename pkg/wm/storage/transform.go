@@ -54,13 +54,13 @@ func (s *Storage) TransformOutputQualifierTimeseriesByRegion(data []*wm.ModelOut
 
 // TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalAdmins, error) {
-	op := "Storage.TransformRegionAggregation"
+	// op := "Storage.TransformRegionAggregation"
 
 	switch config.Transform {
 	case wm.TransformPerCapita:
 		return s.transformPerCapitaRegionAggregation(data, timestamp)
 	case wm.TransformNormalization:
-		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
+		return s.normalizeRegionAggregation(data)
 	default:
 		return data, nil
 	}
@@ -68,13 +68,13 @@ func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins,
 
 // TransformQualifierRegional returns transformed qualifier regional data for ALL admin regions at ONE timestamp
 func (s *Storage) TransformQualifierRegional(data *wm.ModelOutputRegionalQualifiers, timestamp string, config wm.TransformConfig) (*wm.ModelOutputRegionalQualifiers, error) {
-	op := "Storage.TransformQualifierRegional"
+	// op := "Storage.TransformQualifierRegional"
 
 	switch config.Transform {
 	case wm.TransformPerCapita:
 		return s.transformPerCapitaQualifierRegional(data, timestamp)
 	case wm.TransformNormalization:
-		return nil, &wm.Error{Op: op, Err: fmt.Errorf("Not yet implemented")}
+		return s.normalizeQualifierRegional(data)
 	default:
 		return data, nil
 	}
@@ -126,35 +126,20 @@ func (s *Storage) transformPerCapitaRegionAggregation(data *wm.ModelOutputRegion
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 
+	resultAdminDataList := [4][]wm.ModelOutputAdminData{}
+	for i, d := range [][]wm.ModelOutputAdminData{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		for _, v := range d {
+			if p, ok := pLookup[v.ID]; ok && p != 0 {
+				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputAdminData{ID: v.ID, Value: v.Value / p})
+			}
+		}
+	}
 	result := &wm.ModelOutputRegionalAdmins{
-		Country: []wm.ModelOutputAdminData{},
-		Admin1:  []wm.ModelOutputAdminData{},
-		Admin2:  []wm.ModelOutputAdminData{},
-		Admin3:  []wm.ModelOutputAdminData{},
+		Country: resultAdminDataList[0],
+		Admin1:  resultAdminDataList[1],
+		Admin2:  resultAdminDataList[2],
+		Admin3:  resultAdminDataList[3],
 	}
-
-	// Calculate per capita value
-	for _, v := range data.Country {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Country = append(result.Country, wm.ModelOutputAdminData{ID: v.ID, Value: v.Value / p})
-		}
-	}
-	for _, v := range data.Admin1 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin1 = append(result.Admin1, wm.ModelOutputAdminData{ID: v.ID, Value: v.Value / p})
-		}
-	}
-	for _, v := range data.Admin2 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin2 = append(result.Admin2, wm.ModelOutputAdminData{ID: v.ID, Value: v.Value / p})
-		}
-	}
-	for _, v := range data.Admin3 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin3 = append(result.Admin3, wm.ModelOutputAdminData{ID: v.ID, Value: v.Value / p})
-		}
-	}
-
 	return result, nil
 }
 
@@ -174,35 +159,20 @@ func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegion
 		return newValues
 	}
 
+	resultAdminDataList := [4][]wm.ModelOutputRegionQualifierBreakdown{}
+	for i, d := range [][]wm.ModelOutputRegionQualifierBreakdown{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		for _, v := range d {
+			if p, ok := pLookup[v.ID]; ok && p != 0 {
+				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
+			}
+		}
+	}
 	result := &wm.ModelOutputRegionalQualifiers{
-		Country: []wm.ModelOutputRegionQualifierBreakdown{},
-		Admin1:  []wm.ModelOutputRegionQualifierBreakdown{},
-		Admin2:  []wm.ModelOutputRegionQualifierBreakdown{},
-		Admin3:  []wm.ModelOutputRegionQualifierBreakdown{},
+		Country: resultAdminDataList[0],
+		Admin1:  resultAdminDataList[1],
+		Admin2:  resultAdminDataList[2],
+		Admin3:  resultAdminDataList[3],
 	}
-
-	// Calculate per capita value
-	for _, v := range data.Country {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Country = append(result.Country, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-	for _, v := range data.Admin1 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin1 = append(result.Admin1, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-	for _, v := range data.Admin2 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin2 = append(result.Admin2, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-	for _, v := range data.Admin3 {
-		if p, ok := pLookup[v.ID]; ok && p != 0 {
-			result.Admin3 = append(result.Admin3, wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
-		}
-	}
-
 	return result, nil
 }
 
@@ -233,17 +203,10 @@ func (s *Storage) getRegionalPopulation(timestamp string) (map[string]float64, e
 	// Store population by region id
 	regionPopLookup := make(map[string]float64)
 
-	for _, v := range regionalPopulation.Country {
-		regionPopLookup[v.ID] = v.Value
-	}
-	for _, v := range regionalPopulation.Admin1 {
-		regionPopLookup[v.ID] = v.Value
-	}
-	for _, v := range regionalPopulation.Admin2 {
-		regionPopLookup[v.ID] = v.Value
-	}
-	for _, v := range regionalPopulation.Admin3 {
-		regionPopLookup[v.ID] = v.Value
+	for _, d := range [][]wm.ModelOutputAdminData{regionalPopulation.Country, regionalPopulation.Admin1, regionalPopulation.Admin2, regionalPopulation.Admin3} {
+		for _, v := range d {
+			regionPopLookup[v.ID] = v.Value
+		}
 	}
 
 	// cache population lookup data by year into memory
@@ -273,4 +236,102 @@ func getAvailablePopulationDataYear(timestamp string) (int, error) {
 		}
 	}
 	return pYear, nil
+}
+
+func (s *Storage) normalizeRegionAggregation(data *wm.ModelOutputRegionalAdmins) (*wm.ModelOutputRegionalAdmins, error) {
+	// op := "Storage.normalizeRegionAggregation"
+
+	resultAdminDataList := [4][]wm.ModelOutputAdminData{}
+	for i, d := range [][]wm.ModelOutputAdminData{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		min, max := getMinMax(d)
+		for _, v := range d {
+			resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputAdminData{ID: v.ID, Value: normalize(v.Value, min, max)})
+		}
+	}
+	result := &wm.ModelOutputRegionalAdmins{
+		Country: resultAdminDataList[0],
+		Admin1:  resultAdminDataList[1],
+		Admin2:  resultAdminDataList[2],
+		Admin3:  resultAdminDataList[3],
+	}
+	return result, nil
+}
+
+func (s *Storage) normalizeQualifierRegional(data *wm.ModelOutputRegionalQualifiers) (*wm.ModelOutputRegionalQualifiers, error) {
+	// op := "Storage.normalizeQualifierRegional"
+
+	resultAdminDataList := [4][]wm.ModelOutputRegionQualifierBreakdown{}
+	for i, d := range [][]wm.ModelOutputRegionQualifierBreakdown{data.Country, data.Admin1, data.Admin2, data.Admin3} {
+		minMax := getMinMaxQualifierBreakdown(d)
+		for _, v := range d {
+			resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: normalizeValues(v.Values, minMax)})
+		}
+	}
+	result := &wm.ModelOutputRegionalQualifiers{
+		Country: resultAdminDataList[0],
+		Admin1:  resultAdminDataList[1],
+		Admin2:  resultAdminDataList[2],
+		Admin3:  resultAdminDataList[3],
+	}
+	return result, nil
+}
+
+func getMinMax(adminData []wm.ModelOutputAdminData) (float64, float64) {
+	if len(adminData) == 0 {
+		return 0, 0
+	}
+	min := adminData[0].Value
+	max := min
+	for _, v := range adminData {
+		max = math.Max(max, v.Value)
+		min = math.Min(min, v.Value)
+	}
+	return min, max
+}
+
+func getMinMaxQualifierBreakdown(data []wm.ModelOutputRegionQualifierBreakdown) map[string]struct {
+	min float64
+	max float64
+} {
+	result := make(map[string]struct {
+		min float64
+		max float64
+	})
+	if len(data) == 0 {
+		return result
+	}
+	for _, d := range data {
+		for key, val := range d.Values {
+			min := result[key].min
+			max := result[key].max
+			if _, ok := result[key]; !ok {
+				min, max = val, val
+			}
+			result[key] = struct {
+				min float64
+				max float64
+			}{min: math.Min(min, val), max: math.Max(max, val)}
+		}
+	}
+	return result
+}
+
+func normalize(val, min, max float64) float64 {
+	if min == 0 && max == 0 {
+		return 0
+	} else if min == max {
+		return 1
+	}
+	return (val - min) / (max - min)
+}
+
+func normalizeValues(vals map[string]float64, minMax map[string]struct {
+	min float64
+	max float64
+}) map[string]float64 {
+	result := make(map[string]float64)
+	for k, v := range vals {
+		result[k] = normalize(v, minMax[k].min, minMax[k].max)
+	}
+	return result
 }
