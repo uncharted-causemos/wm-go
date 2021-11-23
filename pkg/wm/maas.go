@@ -31,6 +31,12 @@ type RegionListParams struct {
 	Feature string   `json:"feature"`
 }
 
+// PipelineResultsParams represent parameters needed to fetch pipeline results
+type PipelineResultsParams struct {
+	DataID string `json:"data_id"`
+	RunID  string `json:"run_id"`
+}
+
 // OldModelOutputTimeseries represent the old time series model output data
 type OldModelOutputTimeseries struct {
 	Timeseries []TimeseriesValue `json:"timeseries"`
@@ -106,6 +112,12 @@ type RegionListOutput struct {
 	Admin1  []string `json:"admin1"`
 	Admin2  []string `json:"admin2"`
 	Admin3  []string `json:"admin3"`
+}
+
+// PipelineResultsOutput represents the pipeline results file
+type PipelineResultsOutput struct {
+	OutputAggValues  []interface{}  `json:"output_agg_values,omitempty"`
+	DataInfo         interface{}    `json:"data_info"`
 }
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
@@ -268,6 +280,9 @@ type DataOutput interface {
 
 	// GetHierarchyLists returns region hierarchies in list form
 	GetHierarchyLists(params RegionListParams) (*RegionListOutput, error)
+
+	// GetPipelineResults returns the pipeline results file
+	GetPipelineResults(params PipelineResultsParams) (*PipelineResultsOutput, error)
 
 	// GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
 	GetQualifierTimeseries(params DatacubeParams, qualifier string, qualifierOptions []string) ([]*ModelOutputQualifierTimeseries, error)

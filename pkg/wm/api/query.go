@@ -94,6 +94,13 @@ func getRegionListsParams(r *http.Request) wm.RegionListParams {
 	return params
 }
 
+func getPipelineResultParams(r *http.Request) wm.PipelineResultsParams {
+	var params wm.PipelineResultsParams
+	params.DataID = r.URL.Query().Get("data_id")
+	params.RunID = r.URL.Query().Get("run_id")
+	return params
+}
+
 func getUnits(r *http.Request) ([]string, bool) {
 	units, ok := r.URL.Query()["unit"]
 	return units, ok
