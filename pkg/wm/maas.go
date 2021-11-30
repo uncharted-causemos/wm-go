@@ -1,12 +1,5 @@
 package wm
 
-// ModelRun represent a model run
-type ModelRun struct {
-	ID         string              `json:"id"`
-	Model      string              `json:"model"`
-	Parameters []ModelRunParameter `json:"parameters"`
-}
-
 // DatacubeParams represent common parameters for requesting model run data
 type DatacubeParams struct {
 	DataID          string `json:"data_id"`
@@ -17,13 +10,6 @@ type DatacubeParams struct {
 	SpatialAggFunc  string `json:"spatial_agg"`
 }
 
-// HierarchyParams represent parameters needed to fetch a region hierarchy
-type HierarchyParams struct {
-	DataID  string `json:"data_id"`
-	RunID   string `json:"run_id"`
-	Feature string `json:"feature"`
-}
-
 // RegionListParams represent parameters needed to fetch region lists representing the hierarchy
 type RegionListParams struct {
 	DataID  string   `json:"data_id"`
@@ -31,15 +17,17 @@ type RegionListParams struct {
 	Feature string   `json:"feature"`
 }
 
+// QualifierInfoParams represent common parameters needed to fetch summary info about qualifiers
+type QualifierInfoParams struct {
+	DataID  string `json:"data_id"`
+	RunID   string `json:"run_id"`
+	Feature string `json:"feature"`
+}
+
 // PipelineResultsParams represent parameters needed to fetch pipeline results
 type PipelineResultsParams struct {
 	DataID string `json:"data_id"`
 	RunID  string `json:"run_id"`
-}
-
-// OldModelOutputTimeseries represent the old time series model output data
-type OldModelOutputTimeseries struct {
-	Timeseries []TimeseriesValue `json:"timeseries"`
 }
 
 // TimeseriesValue represent a timeseries data point
@@ -82,9 +70,6 @@ type ModelOutputQualifierValue struct {
 	Value *float64 `json:"value"` //nil represents missing value
 }
 
-// ModelOutputHierarchy is a hierarchy where each region maps to a map of more specific regions.
-type ModelOutputHierarchy map[string]interface{}
-
 // ModelOutputStat represent min and max stat of the model output data
 type ModelOutputStat struct {
 	Min float64 `json:"min"`
@@ -114,6 +99,16 @@ type RegionListOutput struct {
 	Admin3  []string `json:"admin3"`
 }
 
+// QualifierCountsOutput provides the number of qualifier values per qualifier
+// as well as the thresholds used when computing
+type QualifierCountsOutput struct {
+	Thresholds  map[string]int32  `json:"thresholds"`
+	Counts      map[string]int32  `json:"counts"`
+}
+
+// QualifierListsOutput provides a mapping of qualifiers to a list of all its values
+type QualifierListsOutput map[string][]string
+
 // PipelineResultsOutput represents the pipeline results file
 type PipelineResultsOutput struct {
 	OutputAggValues  []interface{}  `json:"output_agg_values,omitempty"`
@@ -142,74 +137,6 @@ type ModelOutputAdminData struct {
 	Value float64 `json:"value"`
 }
 
-// ModelRunParameter represent a model run parameter value
-type ModelRunParameter struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
-// ModelParameter represent a model parameter metadata
-type ModelParameter struct {
-	Choices     []interface{} `json:"choices,omitempty"`
-	Default     interface{}   `json:"default"`
-	Description string        `json:"description"`
-	Maximum     interface{}   `json:"maximum,omitempty"`
-	Minimum     interface{}   `json:"minimum,omitempty"`
-	Name        string        `json:"name"`
-	Type        string        `json:"type"`
-}
-
-// IndicatorDataPoint represent a data point for an indicator datacube
-type IndicatorDataPoint struct {
-	Admin1    string  `json:"admin1"`
-	Admin2    string  `json:"admin2"`
-	Country   string  `json:"country"`
-	Dataset   string  `json:"dataset"`
-	Unit      string  `json:"value_unit"`
-	Mean      float64 `json:"mean"`
-	Sum       float64 `json:"sum"`
-	Timestamp float64 `json:"timestamp"`
-	Variable  string  `json:"variable"`
-	Value     float64 `json:"value"`
-}
-
-// Datacube represent a datacube object
-type Datacube struct {
-	ID                     string                   `json:"id"`
-	Type                   string                   `json:"type"`
-	Model                  string                   `json:"model"`
-	ModelID                string                   `json:"model_id"`
-	Category               []string                 `json:"category"`
-	ModelDescription       string                   `json:"model_description"`
-	Label                  string                   `json:"label"`
-	Maintainer             string                   `json:"maintainer"`
-	Source                 string                   `json:"source"`
-	OutputName             string                   `json:"output_name"`
-	OutputDescription      string                   `json:"output_description"`
-	OutputUnits            string                   `json:"output_units"`
-	OutputUnitsDescription string                   `json:"output_units_description"`
-	Parameters             []string                 `json:"parameters"`
-	ParameterDescriptions  []string                 `json:"parameter_descriptions"`
-	Concepts               []DatacubeConceptMapping `json:"concepts"`
-	Country                []string                 `json:"country"`
-	Admin1                 []string                 `json:"admin1"`
-	Admin2                 []string                 `json:"admin2"`
-	Period                 []DateRange              `json:"period"`
-	SearchScore            float64                  `json:"_search_score,omitempty"`
-	Variable               string                   `json:"variable,omitempty"`
-}
-
-// DateRange represent a date range
-type DateRange struct {
-	Gte string `json:"gte"`
-	Lte string `json:"lte"`
-}
-
-// DatacubeConceptMapping represent a related concept mapped to corresponding datacube
-type DatacubeConceptMapping struct {
-	Name  string  `json:"name"`
-	Score float64 `json:"score"`
-}
 
 // Transform is type for available transforms
 type Transform string
@@ -224,32 +151,6 @@ const (
 type TransformConfig struct {
 	Transform Transform `json:"transform"`
 	RegionID  string    `json:"region_id"`
-}
-
-// MaaS defines the methods that the MaaS database implementation needs to
-// satisfy.
-type MaaS interface {
-
-	// GetModelRuns returns all model runs for the given model
-	GetModelRuns(model string) ([]*ModelRun, error)
-
-	// GetModelParameters returns available parameters for the model
-	GetModelParameters(model string) ([]*ModelParameter, error)
-
-	// GetIndicatorData returns the indicator time series
-	GetIndicatorData(indicatorName string, modelName string, unit []string) ([]*IndicatorDataPoint, error)
-
-	// SearchDatacubes search and returns datacubes
-	SearchDatacubes(filters []*Filter) ([]*Datacube, error)
-
-	// CountDatacubes returns datacubes count
-	CountDatacubes(filters []*Filter) (uint64, error)
-
-	// GetConcepts returns a list of concepts
-	GetConcepts() ([]string, error)
-
-	// GetOutputStats returns model output stats
-	GetOutputStats(runID string, feature string) (*ModelOutputStat, error)
 }
 
 // DataOutput defines the methods that output database implementation needs to satisfy
@@ -275,11 +176,14 @@ type DataOutput interface {
 	// GetRawData returns datacube raw data
 	GetRawData(params DatacubeParams) ([]*ModelOutputRawDataPoint, error)
 
-	// GetRegionHierarchy returns region hierarchy output
-	GetRegionHierarchy(params HierarchyParams) (*ModelOutputHierarchy, error)
+	// GetRegionLists returns region hierarchies in list form
+	GetRegionLists(params RegionListParams) (*RegionListOutput, error)
 
-	// GetHierarchyLists returns region hierarchies in list form
-	GetHierarchyLists(params RegionListParams) (*RegionListOutput, error)
+	// GetQualifierCounts returns region hierarchy output
+	GetQualifierCounts(params QualifierInfoParams) (*QualifierCountsOutput, error)
+
+	// GetQualifierLists returns region hierarchy output
+	GetQualifierLists(params QualifierInfoParams, qualifiers []string) (*QualifierListsOutput, error)
 
 	// GetPipelineResults returns the pipeline results file
 	GetPipelineResults(params PipelineResultsParams) (*PipelineResultsOutput, error)

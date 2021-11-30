@@ -9,8 +9,8 @@ import (
 
 const outputBucket = "tiles-v3"
 const vectorTileBucket = "vector-tiles"
-const maasModelOutputBucket = "models"
-const maasIndicatorOutputBucket = "indicators"
+const maasModelOutputBucket = "new-models"
+const maasIndicatorOutputBucket = "new-indicators"
 
 // Storage wraps the client and serves as the basis of the wm.MaaSData interface.
 type Storage struct {

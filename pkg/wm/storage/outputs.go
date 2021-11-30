@@ -144,61 +144,83 @@ func (s *Storage) GetOutputStats(params wm.DatacubeParams, timestamp string) ([]
 
 // GetOutputTimeseries returns datacube output timeseries
 func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
-	op := "Storage.GetOutputTimeseries"
-	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/s_%s_t_%s.json",
-		params.DataID, params.RunID, params.Resolution, params.Feature, params.SpatialAggFunc, params.TemporalAggFunc)
+	// op := "Storage.GetOutputTimeseries"
+	key := fmt.Sprintf("%s/%s/%s/%s/timeseries/global/global.csv",
+		params.DataID, params.RunID, params.Resolution, params.Feature)
 
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
-	}
-
-	var series []*wm.TimeseriesValue
-	err = json.Unmarshal(buf, &series)
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
-	}
-	return series, nil
+	return getTimeseriesFromCsv(s, key, params)
 }
 
 // GetOutputTimeseriesByRegion returns timeseries data for a specific region
 func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID string) ([]*wm.TimeseriesValue, error) {
-	//op := "Storage.GetOutputTimeseriesByRegion"
+	// op := "Storage.GetOutputTimeseriesByRegion"
 	// Deconstruct Region ID to get admin region levels
 	regions := strings.Split(regionID, "__")
 	regionLevel := getRegionLevels()[len(regions)-1]
-	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/%s.csv",
+	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/default/%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel, regionID)
 
-	return getRegionalTimeseries(s, key, params)
+	return getTimeseriesFromCsv(s, key, params)
 }
 
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
 	op := "Storage.GetRegionAggregation"
 
-	data := make(map[string][]interface{})
+	data := make(map[string][]wm.ModelOutputAdminData)
 	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
-		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/s_%s_t_%s.json",
-			params.DataID, params.RunID, params.Resolution, params.Feature, level,
-			timestamp, params.SpatialAggFunc, params.TemporalAggFunc)
+		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/default/default.csv",
+			params.DataID, params.RunID, params.Resolution, params.Feature, level, timestamp)
 
 		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 
 		if err != nil {
 			if wm.ErrorCode(err) == wm.ENOTFOUND {
-				data[level] = make([]interface{}, 0)
+				data[level] = make([]wm.ModelOutputAdminData, 0)
 				continue
 			} else {
 				return nil, &wm.Error{Op: op, Err: err}
 			}
 		}
 
-		var points []interface{}
-		err = json.Unmarshal(buf, &points)
-		if err != nil {
-			return nil, &wm.Error{Op: op, Err: err}
+		var points []wm.ModelOutputAdminData
+		// Read and parse csv
+		r := csv.NewReader(bytes.NewReader(buf))
+		isHeader := true
+		valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+		if params.SpatialAggFunc == "count" {
+			// when counting data points spatially, temporal aggregation function doesn't matter
+			valueCol = "s_count"
 		}
+		valueColIndex := -1
+		for {
+			record, err := r.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return nil, &wm.Error{Op: op, Err: err}
+			}
+			// Parse header and find the index of the target value column
+			if isHeader {
+				valueColIndex = index(record, valueCol)
+				if valueColIndex == -1 {
+					return nil, &wm.Error{Code: wm.EINVALID, Op: op, Message: fmt.Sprintf("Invalid agg functions. Spatial: %s, Temporal: %s", params.SpatialAggFunc, params.TemporalAggFunc)}
+				}
+				isHeader = false
+			} else {
+				regionID := record[0]
+				value, err := strconv.ParseFloat(record[valueColIndex], 64)
+				if err != nil {
+					return nil, &wm.Error{Op: op, Err: err}
+				}
+				points = append(points, wm.ModelOutputAdminData{
+					ID:     regionID,
+					Value:  value,
+				})
+			}
+		}
+
 		data[level] = points
 	}
 
@@ -210,30 +232,9 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 	return &regionalData, nil
 }
 
-// GetRegionHierarchy returns region hierarchy output
-func (s *Storage) GetRegionHierarchy(params wm.HierarchyParams) (*wm.ModelOutputHierarchy, error) {
-	op := "Storage.GetRegionHierarchy"
-	key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/hierarchy.json",
-		params.DataID, params.RunID, params.Feature)
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
-	buf, err := getFileFromS3(s, bucket, aws.String(key))
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
-	}
-	var output wm.ModelOutputHierarchy
-	err = json.Unmarshal(buf, &output)
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
-	}
-	return &output, nil
-}
-
-// GetHierarchyLists returns region hierarchies in list form
-func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
-	op := "Storage.GetHierarchyLists"
+// GetRegionLists returns region hierarchies in list form
+func (s *Storage) GetRegionLists(params wm.RegionListParams) (*wm.RegionListOutput, error) {
+	op := "Storage.GetRegionLists"
 	var regionalData wm.RegionListOutput
 	// allOutputMap is meant to be a map from strings ie. 'country' to a set (map[string]bool is used as a set)
 	allOutputMap := make(map[string]map[string]bool)
@@ -242,7 +243,7 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 	}
 	// Populate sets in allOutputMap map values with regions
 	for _, runID := range params.RunIDs {
-		key := fmt.Sprintf("%s/%s/raw/%s/hierarchy/region_lists.json", params.DataID, runID, params.Feature)
+		key := fmt.Sprintf("%s/%s/raw/%s/info/region_lists.json", params.DataID, runID, params.Feature)
 		bucket := getBucket(runID)
 		buf, err := getFileFromS3(s, bucket, aws.String(key))
 		if err != nil {
@@ -275,6 +276,65 @@ func (s *Storage) GetHierarchyLists(params wm.RegionListParams) (*wm.RegionListO
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 	return &regionalData, nil
+}
+
+// GetQualifierCounts returns the number of qualifier values per qualifier
+func (s *Storage) GetQualifierCounts(params wm.QualifierInfoParams) (*wm.QualifierCountsOutput, error) {
+	op := "Storage.GetQualifierCounts"
+	key := fmt.Sprintf("%s/%s/raw/%s/info/qualifier_counts.json",
+		params.DataID, params.RunID, params.Feature)
+	bucket := maasModelOutputBucket
+	if params.RunID == "indicator" {
+		bucket = maasIndicatorOutputBucket
+	}
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	var output wm.QualifierCountsOutput
+	err = json.Unmarshal(buf, &output)
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	return &output, nil
+}
+
+// GetQualifierLists returns the number of qualifier values per qualifier
+func (s *Storage) GetQualifierLists(params wm.QualifierInfoParams, qualifiers []string) (*wm.QualifierListsOutput, error) {
+	op := "Storage.GetQualifierLists"
+	bucket := maasModelOutputBucket
+	if params.RunID == "indicator" {
+		bucket = maasIndicatorOutputBucket
+	}
+
+	outputLists := make(map[string][]string)
+	for _, qualifier := range qualifiers {
+		key := fmt.Sprintf("%s/%s/raw/%s/info/qualifiers/%s.json",
+			params.DataID, params.RunID, params.Feature, qualifier)
+
+		buf, err := getFileFromS3(s, bucket, aws.String(key))
+		if err != nil {
+			if wm.ErrorCode(err) != wm.ENOTFOUND {
+				return nil, &wm.Error{Op: op, Err: err}
+			}
+			// If there was no data, return []
+			outputLists[qualifier] = []string{}
+			continue
+		}
+		var output []string
+		err = json.Unmarshal(buf, &output)
+		if err != nil {
+			return nil, &wm.Error{Op: op, Err: err}
+		}
+		outputLists[qualifier] = output
+	}
+
+	var qualifierLists wm.QualifierListsOutput
+	err := mapstructure.Decode(outputLists, &qualifierLists)
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	return &qualifierLists, nil
 }
 
 // GetPipelineResults returns the pipeline results file
@@ -402,7 +462,7 @@ func (s *Storage) GetQualifierTimeseriesByRegion(params wm.DatacubeParams, quali
 			params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel,
 			qualifier, qOpt, regionID)
 
-		series, err := getRegionalTimeseries(s, key, params)
+		series, err := getTimeseriesFromCsv(s, key, params)
 		if err != nil {
 			if wm.ErrorCode(err) != wm.ENOTFOUND {
 				return nil, &wm.Error{Op: op, Err: err}
@@ -566,8 +626,8 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 }
 
 
-func getRegionalTimeseries(s *Storage, key string, params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
-	op := "getRegionalTimeseries"
+func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
+	op := "getTimeseriesFromCsv"
 	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
 	if err != nil {
 		return nil, err

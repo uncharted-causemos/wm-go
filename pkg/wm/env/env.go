@@ -14,8 +14,6 @@ type Specification struct {
 	Addr string `default:":4200"`
 	Mode string `default:"dev"`
 
-	ElasticURL string `required:"true" envconfig:"ELASTIC_URL"`
-
 	AwsS3Id     string `required:"true" envconfig:"AWS_S3_ID"`
 	AwsS3Secret string `required:"true" envconfig:"AWS_S3_SECRET"`
 	AwsS3Token  string `required:"true" envconfig:"AWS_S3_TOKEN"`

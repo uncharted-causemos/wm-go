@@ -21,18 +21,6 @@ func getFacetNames(r *http.Request) ([]string, error) {
 	return facetNames, nil
 }
 
-func getSearch(r *http.Request) string {
-	return r.URL.Query().Get("search")
-}
-
-func getIndicator(r *http.Request) string {
-	return r.URL.Query().Get("indicator")
-}
-
-func getModel(r *http.Request) string {
-	return r.URL.Query().Get("model")
-}
-
 func getFeature(r *http.Request) string {
 	return r.URL.Query().Get("feature")
 }
@@ -78,18 +66,18 @@ func getDatacubeParams(r *http.Request) wm.DatacubeParams {
 	return params
 }
 
-func getHierarchyParams(r *http.Request) wm.HierarchyParams {
-	var params wm.HierarchyParams
-	params.DataID = r.URL.Query().Get("data_id")
-	params.RunID = r.URL.Query().Get("run_id")
-	params.Feature = getFeature(r)
-	return params
-}
-
 func getRegionListsParams(r *http.Request) wm.RegionListParams {
 	var params wm.RegionListParams
 	params.DataID = r.URL.Query().Get("data_id")
 	params.RunIDs = r.URL.Query()["run_ids[]"]
+	params.Feature = getFeature(r)
+	return params
+}
+
+func getQualifierInfoParams(r *http.Request) wm.QualifierInfoParams {
+	var params wm.QualifierInfoParams
+	params.DataID = r.URL.Query().Get("data_id")
+	params.RunID = r.URL.Query().Get("run_id")
 	params.Feature = getFeature(r)
 	return params
 }
@@ -99,11 +87,6 @@ func getPipelineResultParams(r *http.Request) wm.PipelineResultsParams {
 	params.DataID = r.URL.Query().Get("data_id")
 	params.RunID = r.URL.Query().Get("run_id")
 	return params
-}
-
-func getUnits(r *http.Request) ([]string, bool) {
-	units, ok := r.URL.Query()["unit"]
-	return units, ok
 }
 
 func getFilters(r *http.Request, context wm.FilterContext) ([]*wm.Filter, error) {
