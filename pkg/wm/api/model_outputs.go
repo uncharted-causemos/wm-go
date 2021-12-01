@@ -160,10 +160,10 @@ func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func (a *api) getDataOutputHierarchy(w http.ResponseWriter, r *http.Request) error {
-	op := "api.getDataOutputHierarchy"
-	params := getHierarchyParams(r)
-	data, err := a.dataOutput.GetRegionHierarchy(params)
+func (a *api) getDataOutputRegionLists(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDataOutputRegionLists"
+	params := getRegionListsParams(r)
+	data, err := a.dataOutput.GetRegionLists(params)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}
@@ -171,10 +171,22 @@ func (a *api) getDataOutputHierarchy(w http.ResponseWriter, r *http.Request) err
 	return nil
 }
 
-func (a *api) getDataOutputRegionLists(w http.ResponseWriter, r *http.Request) error {
-	op := "api.getDataOutputRegionLists"
-	params := getRegionListsParams(r)
-	data, err := a.dataOutput.GetHierarchyLists(params)
+func (a *api) getDataOutputQualifierCounts(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDataOutputQualifierCounts"
+	params := getQualifierInfoParams(r)
+	data, err := a.dataOutput.GetQualifierCounts(params)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	render.JSON(w, r, &data)
+	return nil
+}
+
+func (a *api) getDataOutputQualifierLists(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDataOutputQualifierLists"
+	params := getQualifierInfoParams(r)
+	qualifiers := getQualifierNames(r)
+	data, err := a.dataOutput.GetQualifierLists(params, qualifiers)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}

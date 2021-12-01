@@ -7,7 +7,6 @@ import (
 
 // Config defines the parameters needed to instantiate the API router.
 type Config struct {
-	MaaS       wm.MaaS
 	DataOutput wm.DataOutput
 	VectorTile wm.VectorTile
 	Logger     *zap.SugaredLogger
@@ -17,9 +16,6 @@ type Config struct {
 // parameters.
 func (cfg *Config) init() error {
 	op := "Config.init"
-	if cfg.MaaS == nil {
-		return &wm.Error{Op: op, Message: "MaaS cannot be nil"}
-	}
 	if cfg.Logger == nil {
 		return &wm.Error{Op: op, Message: "Logger cannot be nil"}
 	}

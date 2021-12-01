@@ -22,7 +22,6 @@ const (
 )
 
 type api struct {
-	maas       wm.MaaS
 	dataOutput wm.DataOutput
 	vectorTile wm.VectorTile
 	logger     *zap.SugaredLogger
@@ -36,7 +35,6 @@ func New(cfg *Config) (chi.Router, error) {
 	}
 
 	a := api{
-		maas:       cfg.MaaS,
 		dataOutput: cfg.DataOutput,
 		vectorTile: cfg.VectorTile,
 		logger:     cfg.Logger,
@@ -47,15 +45,10 @@ func New(cfg *Config) (chi.Router, error) {
 	r.Route("/maas", func(r chi.Router) {
 		r.Use(render.SetContentType(render.ContentTypeJSON))
 
-		r.Get("/models/{"+paramModelID+"}/runs", a.wh(a.getModelRuns))
-		r.Get("/models/{"+paramModelID+"}/parameters", a.wh(a.getModelParameters))
-		r.Get("/datacubes", a.wh(a.getDatacubes))
-		r.Get("/datacubes/count", a.wh(a.countDatacubes))
-		r.Get("/indicator-data", a.wh(a.getIndicatorData))
-		r.Get("/concepts", a.wh(a.getConcepts))
-		//New endpoints for data in Minio
-		r.Get("/output/hierarchy", a.wh(a.getDataOutputHierarchy))
-		r.Get("/output/hierarchy-lists", a.wh(a.getDataOutputRegionLists))
+		//Endpoints for data stored in Minio
+		r.Get("/output/region-lists", a.wh(a.getDataOutputRegionLists))
+		r.Get("/output/qualifier-counts", a.wh(a.getDataOutputQualifierCounts))
+		r.Get("/output/qualifier-lists", a.wh(a.getDataOutputQualifierLists))
 		r.Get("/output/timeseries", a.wh(a.getDataOutputTimeseries))
 		r.Get("/output/stats", a.wh(a.getDataOutputStats))
 		r.Get("/output/regional-data", a.wh(a.getDataOutputRegional))
