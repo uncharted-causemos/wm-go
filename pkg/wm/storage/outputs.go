@@ -183,7 +183,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 			}
 		}
 
-		var points []wm.ModelOutputAdminData
+		points := make([]wm.ModelOutputAdminData, 0)
 		// Read and parse csv
 		r := csv.NewReader(bytes.NewReader(buf))
 		isHeader := true
@@ -212,7 +212,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 				regionID := record[0]
 				value, err := strconv.ParseFloat(record[valueColIndex], 64)
 				if err != nil {
-					return nil, &wm.Error{Op: op, Err: err}
+					continue
 				}
 				points = append(points, wm.ModelOutputAdminData{
 					ID:     regionID,
@@ -665,7 +665,7 @@ func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*
 			}
 			value, err := strconv.ParseFloat(record[valueColIndex], 64)
 			if err != nil {
-				return nil, &wm.Error{Op: op, Err: err}
+				continue
 			}
 			series = append(series, &wm.TimeseriesValue{
 				Timestamp: timestamp,
