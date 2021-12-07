@@ -488,11 +488,11 @@ func (s *Storage) GetQualifierTimeseriesByRegion(params wm.DatacubeParams, quali
 			qualifier, qOpt, regionID)
 
 		chanMap[qOpt] = resultChan{result: make(chan []*wm.TimeseriesValue), err: make(chan error)}
-		go func(s *Storage, key string, params wm.DatacubeParams, qo string) {
+		go func(qo string) {
 			series, err := getTimeseriesFromCsv(s, key, params)
 			chanMap[qo].result <- series
 			chanMap[qo].err <- err
-		}(s, key, params, qOpt)
+		}(qOpt)
 	}
 	for _, qOpt := range qualifierOptions {
 		series := <-chanMap[qOpt].result
