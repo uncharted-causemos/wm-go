@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -27,6 +28,36 @@ func getFeature(r *http.Request) string {
 
 func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
+}
+
+type Timestamps struct {
+	Timestamps    []string `json:"timestamps"`
+	AllTimestamps []string `json:"all_timestamps"`
+}
+
+func getTimestamps(r *http.Request) (Timestamps, error) {
+	var tss Timestamps
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return Timestamps{}, err
+	}
+
+	err = json.Unmarshal(body, &tss)
+	if err != nil {
+		return Timestamps{}, err
+	}
+
+	return tss, nil
+}
+
+func getAggForSelect(r *http.Request) string {
+	return r.URL.Query().Get("aggForSelect")
+}
+
+func getAggForAll(r *http.Request) string {
+	return r.URL.Query().Get("aggForAll")
 }
 
 func getTransform(r *http.Request) wm.Transform {
