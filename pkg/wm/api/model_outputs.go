@@ -176,16 +176,15 @@ func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform
 			return nil, err
 		}
 		return timeseries, nil
-	} else {
-		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
+	}
+	timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
+	if err != nil {
+		return nil, err
+	}
+	if transform != "" {
+		timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID})
 		if err != nil {
 			return nil, err
-		}
-		if transform != "" {
-			timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID})
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 
