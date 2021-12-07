@@ -25,6 +25,15 @@ func (msr *modelRegionalOutputStatsResponse) Render(w http.ResponseWriter, r *ht
 	return nil
 }
 
+type modelOutputRegionalTimeseries struct {
+	*wm.ModelOutputRegionalTimeSeries
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputRegionalTimeseries) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type modelOutputTimeseriesValue struct {
 	*wm.TimeseriesValue
 }
@@ -97,6 +106,46 @@ func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (a *api) getBulkDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getBulkDataOutputTimeseries"
+	regionIDs, err := getRegionIDsFromBody(r)
+	params := getDatacubeParams(r)
+	transform := getTransform(r)
+	var regionalTimeSeries []*wm.ModelOutputRegionalTimeSeries
+
+	if len(regionIDs) == 0 {
+		data, err := a.dataOutput.GetOutputTimeseries(params)
+		if err != nil {
+			return &wm.Error{Op: op, Err: err}
+		}
+		regionalTimeSeries = []*wm.ModelOutputRegionalTimeSeries{
+			{RegionID: "", Timeseries: data},
+		}
+	} else {
+		regionalTimeSeries = make([]*wm.ModelOutputRegionalTimeSeries, len(regionIDs))
+		for i := 0; i < len(regionIDs); i++ {
+			regionalTS, err := a.getTimeSeries(regionIDs[i], params, transform)
+			if err != nil {
+				return &wm.Error{Op: op, Err: err}
+			}
+			regionalTimeSeries[i] = &wm.ModelOutputRegionalTimeSeries{
+				RegionID:   regionIDs[i],
+				Timeseries: regionalTS,
+			}
+		}
+	}
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+
+	list := []render.Renderer{}
+	for _, timeseries := range regionalTimeSeries {
+		list = append(list, &modelOutputRegionalTimeseries{timeseries})
+	}
+	render.RenderList(w, r, list)
+	return nil
+}
+
 func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getDataOutputTimeseries"
 	params := getDatacubeParams(r)
@@ -104,17 +153,8 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) er
 	transform := getTransform(r)
 	var timeseries []*wm.TimeseriesValue
 	var err error
-	if regionID == "" {
-		timeseries, err = a.dataOutput.GetOutputTimeseries(params)
-	} else {
-		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
-		if transform != "" {
-			timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID})
-			if err != nil {
-				return &wm.Error{Op: op, Err: err}
-			}
-		}
-	}
+
+	timeseries, err = a.getTimeSeries(regionID, params, transform)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}
@@ -124,6 +164,32 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) er
 	}
 	render.RenderList(w, r, list)
 	return nil
+}
+
+func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform wm.Transform) ([]*wm.TimeseriesValue, error) {
+	var timeseries []*wm.TimeseriesValue
+	var err error
+
+	if regionID == "" {
+		timeseries, err = a.dataOutput.GetOutputTimeseries(params)
+		if err != nil {
+			return nil, err
+		}
+		return timeseries, nil
+	} else {
+		timeseries, err = a.dataOutput.GetOutputTimeseriesByRegion(params, regionID)
+		if err != nil {
+			return nil, err
+		}
+		if transform != "" {
+			timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID})
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return timeseries, nil
 }
 
 func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) error {

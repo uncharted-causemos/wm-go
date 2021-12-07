@@ -52,6 +52,12 @@ type ModelOutputQualifierTimeseries struct {
 	Timeseries []*TimeseriesValue `json:"timeseries"`
 }
 
+// ModelOutputRegionalTimeSeries holds regional time series values
+type ModelOutputRegionalTimeSeries struct {
+	RegionID   string             `json:"region_id"`
+	Timeseries []*TimeseriesValue `json:"timeseries"`
+}
+
 // ModelOutputRegionQualifierBreakdown represent a list of qualifier breakdown values for a specific region
 type ModelOutputRegionQualifierBreakdown struct {
 	ID     string             `json:"id"`
@@ -102,8 +108,8 @@ type RegionListOutput struct {
 // QualifierCountsOutput provides the number of qualifier values per qualifier
 // as well as the thresholds used when computing
 type QualifierCountsOutput struct {
-	Thresholds  map[string]int32  `json:"thresholds"`
-	Counts      map[string]int32  `json:"counts"`
+	Thresholds map[string]int32 `json:"thresholds"`
+	Counts     map[string]int32 `json:"counts"`
 }
 
 // QualifierListsOutput provides a mapping of qualifiers to a list of all its values
@@ -111,8 +117,8 @@ type QualifierListsOutput map[string][]string
 
 // PipelineResultsOutput represents the pipeline results file
 type PipelineResultsOutput struct {
-	OutputAggValues  []interface{}  `json:"output_agg_values,omitempty"`
-	DataInfo         interface{}    `json:"data_info"`
+	OutputAggValues []interface{} `json:"output_agg_values,omitempty"`
+	DataInfo        interface{}   `json:"data_info"`
 }
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
@@ -136,7 +142,6 @@ type ModelOutputAdminData struct {
 	ID    string  `json:"id"`
 	Value float64 `json:"value"`
 }
-
 
 // Transform is type for available transforms
 type Transform string
