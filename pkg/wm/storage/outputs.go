@@ -17,6 +17,11 @@ import (
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
+type s3ResultChan struct {
+	result chan []byte
+	err    chan error
+}
+
 func getRegionLevels() []string {
 	return []string{"country", "admin1", "admin2", "admin3"}
 }
@@ -168,12 +173,17 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 	op := "Storage.GetRegionAggregation"
 
 	data := make(map[string][]wm.ModelOutputAdminData)
-	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
+	resultChannels := make(map[string]s3ResultChan)
+
+	for _, level := range getRegionLevels() {
 		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/default/default.csv",
 			params.DataID, params.RunID, params.Resolution, params.Feature, level, timestamp)
-
-		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
-
+		rc := getFileFromS3Async(s, getBucket(params.RunID), aws.String(key))
+		resultChannels[level] = rc
+	}
+	for _, level := range getRegionLevels() {
+		buf := <-resultChannels[level].result
+		err := <-resultChannels[level].err
 		if err != nil {
 			if wm.ErrorCode(err) == wm.ENOTFOUND {
 				data[level] = make([]wm.ModelOutputAdminData, 0)
@@ -215,8 +225,8 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 					return nil, &wm.Error{Op: op, Err: err}
 				}
 				points = append(points, wm.ModelOutputAdminData{
-					ID:     regionID,
-					Value:  value,
+					ID:    regionID,
+					Value: value,
 				})
 			}
 		}
@@ -241,11 +251,16 @@ func (s *Storage) GetRegionLists(params wm.RegionListParams) (*wm.RegionListOutp
 	for _, region := range getRegionLevels() {
 		allOutputMap[region] = make(map[string]bool)
 	}
-	// Populate sets in allOutputMap map values with regions
+	resultChannels := make(map[string]s3ResultChan)
 	for _, runID := range params.RunIDs {
 		key := fmt.Sprintf("%s/%s/raw/%s/info/region_lists.json", params.DataID, runID, params.Feature)
-		bucket := getBucket(runID)
-		buf, err := getFileFromS3(s, bucket, aws.String(key))
+		rc := getFileFromS3Async(s, getBucket(runID), aws.String(key))
+		resultChannels[runID] = rc
+	}
+	// Populate sets in allOutputMap map values with regions
+	for _, runID := range params.RunIDs {
+		buf := <-resultChannels[runID].result
+		err := <-resultChannels[runID].err
 		if err != nil {
 			return nil, &wm.Error{Op: op, Err: err}
 		}
@@ -307,12 +322,17 @@ func (s *Storage) GetQualifierLists(params wm.QualifierInfoParams, qualifiers []
 		bucket = maasIndicatorOutputBucket
 	}
 
+	resultChannels := make(map[string]s3ResultChan)
 	outputLists := make(map[string][]string)
 	for _, qualifier := range qualifiers {
 		key := fmt.Sprintf("%s/%s/raw/%s/info/qualifiers/%s.json",
 			params.DataID, params.RunID, params.Feature, qualifier)
-
-		buf, err := getFileFromS3(s, bucket, aws.String(key))
+		rc := getFileFromS3Async(s, bucket, aws.String(key))
+		resultChannels[qualifier] = rc
+	}
+	for _, qualifier := range qualifiers {
+		buf := <-resultChannels[qualifier].result
+		err := <-resultChannels[qualifier].err
 		if err != nil {
 			if wm.ErrorCode(err) != wm.ENOTFOUND {
 				return nil, &wm.Error{Op: op, Err: err}
@@ -456,13 +476,27 @@ func (s *Storage) GetQualifierTimeseriesByRegion(params wm.DatacubeParams, quali
 	regions := strings.Split(regionID, "__")
 	regionLevel := getRegionLevels()[len(regions)-1]
 
+	type resultChan struct {
+		result chan []*wm.TimeseriesValue
+		err    chan error
+	}
 	outputTimeseries := make([]*wm.ModelOutputQualifierTimeseries, 0)
+	chanMap := make(map[string]resultChan)
 	for _, qOpt := range qualifierOptions {
 		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/timeseries/qualifiers/%s/%s/%s.csv",
 			params.DataID, params.RunID, params.Resolution, params.Feature, regionLevel,
 			qualifier, qOpt, regionID)
 
-		series, err := getTimeseriesFromCsv(s, key, params)
+		chanMap[qOpt] = resultChan{result: make(chan []*wm.TimeseriesValue), err: make(chan error)}
+		go func(s *Storage, key string, params wm.DatacubeParams, qo string) {
+			series, err := getTimeseriesFromCsv(s, key, params)
+			chanMap[qo].result <- series
+			chanMap[qo].err <- err
+		}(s, key, params, qOpt)
+	}
+	for _, qOpt := range qualifierOptions {
+		series := <-chanMap[qOpt].result
+		err := <-chanMap[qOpt].err
 		if err != nil {
 			if wm.ErrorCode(err) != wm.ENOTFOUND {
 				return nil, &wm.Error{Op: op, Err: err}
@@ -482,7 +516,8 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 	op := "Storage.GetQualifierData"
 	allQualifiers := make([]*wm.ModelOutputQualifierBreakdown, len(qualifiers))
 
-	for qualifierIndex, qualifier := range qualifiers {
+	resultChannels := make(map[string]s3ResultChan)
+	for _, qualifier := range qualifiers {
 		key := fmt.Sprintf("%s/%s/%s/%s/timeseries/qualifiers/%s/s_%s_t_%s.csv",
 			params.DataID, params.RunID, params.Resolution, params.Feature, qualifier,
 			params.SpatialAggFunc, params.TemporalAggFunc)
@@ -491,8 +526,12 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 		// timestamp,Battles,Protests,Riots,Strategic developments,Violence against civilians
 		// 852076800000,1583.0,0.0,0.0,0.0,313.0
 		// 854755200000,187.0,3.0,0.0,0.0,40.0
-
-		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+		rc := getFileFromS3Async(s, getBucket(params.RunID), aws.String(key))
+		resultChannels[qualifier] = rc
+	}
+	for qualifierIndex, qualifier := range qualifiers {
+		buf := <-resultChannels[qualifier].result
+		err := <-resultChannels[qualifier].err
 		if err != nil {
 			allQualifiers[qualifierIndex] = nil
 			continue
@@ -546,8 +585,8 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 	op := "Storage.GetQualifierRegional"
 
 	data := make(map[string][]*wm.ModelOutputRegionQualifierBreakdown)
-	for _, level := range []string{"country", "admin1", "admin2", "admin3"} {
-
+	resultChannels := make(map[string]s3ResultChan)
+	for _, level := range getRegionLevels() {
 		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/qualifiers/%s.csv",
 			params.DataID, params.RunID, params.Resolution, params.Feature, level, timestamp, qualifier)
 		// Want to return all values from one column grouped by region
@@ -556,9 +595,12 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 		// Central African Republic__Bangui,Protests,0.0,0.0,0.0,0.0
 		// Central African Republic__Bangui,Violence against civilians,0.0,0.0,0.0,0.0
 		// Central African Republic__Ouham,Violence against civilians,10.0,10.0,10.0,10.0
-
-		buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
-
+		rc := getFileFromS3Async(s, getBucket(params.RunID), aws.String(key))
+		resultChannels[level] = rc
+	}
+	for _, level := range getRegionLevels() {
+		buf := <-resultChannels[level].result
+		err := <-resultChannels[level].err
 		if err != nil {
 			if wm.ErrorCode(err) == wm.ENOTFOUND {
 				data[level] = []*wm.ModelOutputRegionQualifierBreakdown{}
@@ -625,7 +667,6 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 	return &regionalData, nil
 }
 
-
 func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
 	op := "getTimeseriesFromCsv"
 	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
@@ -674,6 +715,21 @@ func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*
 		}
 	}
 	return series, nil
+}
+
+// getFileFromS3Async returns a struct include result buf and error channels
+func getFileFromS3Async(s *Storage, bucket string, key *string) s3ResultChan {
+	rc := make(chan []byte)
+	ec := make(chan error)
+	go func() {
+		r, err := getFileFromS3(s, bucket, key)
+		rc <- r
+		ec <- err
+	}()
+	return s3ResultChan{
+		result: rc,
+		err:    ec,
+	}
 }
 
 func getFileFromS3(s *Storage, bucket string, key *string) ([]byte, error) {
