@@ -131,6 +131,7 @@ func (a *api) getBulkDataOutputTimeseries(w http.ResponseWriter, r *http.Request
 						RegionID:   regionIDs[i],
 						Timeseries: []*wm.TimeseriesValue{},
 					}
+					continue
 				}
 				return &wm.Error{Op: op, Err: err}
 			}
