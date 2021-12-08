@@ -119,7 +119,6 @@ type QualifierListsOutput map[string][]string
 type PipelineResultsOutput struct {
 	OutputAggValues []interface{} `json:"output_agg_values,omitempty"`
 	DataInfo        interface{}   `json:"data_info"`
-<<<<<<< HEAD
 }
 
 // Timestamps holds input for bulk-regional-data
@@ -139,8 +138,6 @@ type ModelOutputBulkAggregateRegionalAdmins struct {
 type ModelOutputBulkRegionalAdmins struct {
 	Timestamp                 string `json:"timestamp"`
 	ModelOutputRegionalAdmins `json:"data"`
-=======
->>>>>>> main
 }
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels
