@@ -126,6 +126,12 @@ func (a *api) getBulkDataOutputTimeseries(w http.ResponseWriter, r *http.Request
 		for i := 0; i < len(regionIDs); i++ {
 			regionalTS, err := a.getTimeSeries(regionIDs[i], params, transform)
 			if err != nil {
+				if wm.ErrorCode(err) == wm.ENOTFOUND {
+					regionalTimeSeries[i] = &wm.ModelOutputRegionalTimeSeries{
+						RegionID:   regionIDs[i],
+						Timeseries: []*wm.TimeseriesValue{},
+					}
+				}
 				return &wm.Error{Op: op, Err: err}
 			}
 			regionalTimeSeries[i] = &wm.ModelOutputRegionalTimeSeries{
