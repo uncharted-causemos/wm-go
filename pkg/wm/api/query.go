@@ -30,23 +30,18 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
-type Timestamps struct {
-	Timestamps    []string `json:"timestamps"`
-	AllTimestamps []string `json:"all_timestamps"`
-}
-
-func getTimestamps(r *http.Request) (Timestamps, error) {
-	var tss Timestamps
+func getTimestamps(r *http.Request) (wm.Timestamps, error) {
+	var tss wm.Timestamps
 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
 	if err != nil {
-		return Timestamps{}, err
+		return wm.Timestamps{}, err
 	}
 
 	err = json.Unmarshal(body, &tss)
 	if err != nil {
-		return Timestamps{}, err
+		return wm.Timestamps{}, err
 	}
 
 	return tss, nil

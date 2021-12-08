@@ -226,7 +226,7 @@ func sumAggregation(regionProperty []wm.ModelOutputAdminData, aggDict map[string
 		val, ok := aggDict[property.ID]
 		if ok {
 			val[0] += property.Value
-			val[1] += 1
+			val[1]++
 		} else {
 			aggDict[property.ID] = &[2]float64{property.Value, 1}
 		}
