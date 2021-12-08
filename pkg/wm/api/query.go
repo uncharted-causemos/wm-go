@@ -35,6 +35,10 @@ func getTransform(r *http.Request) wm.Transform {
 	return wm.Transform(transform)
 }
 
+func getAgg(r *http.Request) string {
+	return r.URL.Query().Get("agg")
+}
+
 func getRegionID(r *http.Request) string {
 	return r.URL.Query().Get("region_id")
 }

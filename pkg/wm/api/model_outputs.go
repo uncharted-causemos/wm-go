@@ -106,6 +106,16 @@ func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (a *api) getAggregateDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getAggregateDataOutputTimeseries"
+	regionIDs, err := getRegionIDsFromBody(r)
+	params := getDatacubeParams(r)
+	transform := getTransform(r)
+	agg := getAgg(r)
+
+	return nil
+}
+
 func (a *api) getBulkDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getBulkDataOutputTimeseries"
 	regionIDs, err := getRegionIDsFromBody(r)
