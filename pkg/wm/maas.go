@@ -52,6 +52,12 @@ type ModelOutputQualifierTimeseries struct {
 	Timeseries []*TimeseriesValue `json:"timeseries"`
 }
 
+// ModelOutputRegionalTimeSeries holds regional time series values
+type ModelOutputRegionalTimeSeries struct {
+	RegionID   string             `json:"region_id"`
+	Timeseries []*TimeseriesValue `json:"timeseries"`
+}
+
 // ModelOutputRegionQualifierBreakdown represent a list of qualifier breakdown values for a specific region
 type ModelOutputRegionQualifierBreakdown struct {
 	ID     string             `json:"id"`
@@ -113,6 +119,7 @@ type QualifierListsOutput map[string][]string
 type PipelineResultsOutput struct {
 	OutputAggValues []interface{} `json:"output_agg_values,omitempty"`
 	DataInfo        interface{}   `json:"data_info"`
+<<<<<<< HEAD
 }
 
 // Timestamps holds input for bulk-regional-data
@@ -132,6 +139,8 @@ type ModelOutputBulkAggregateRegionalAdmins struct {
 type ModelOutputBulkRegionalAdmins struct {
 	Timestamp                 string `json:"timestamp"`
 	ModelOutputRegionalAdmins `json:"data"`
+=======
+>>>>>>> main
 }
 
 // ModelOutputRegionalAdmins represent regional data for all admin levels

@@ -50,6 +50,7 @@ func New(cfg *Config) (chi.Router, error) {
 		r.Get("/output/qualifier-counts", a.wh(a.getDataOutputQualifierCounts))
 		r.Get("/output/qualifier-lists", a.wh(a.getDataOutputQualifierLists))
 		r.Get("/output/timeseries", a.wh(a.getDataOutputTimeseries))
+		r.Post("/output/bulk-timeseries", a.wh(a.getBulkDataOutputTimeseries))
 		r.Get("/output/stats", a.wh(a.getDataOutputStats))
 		r.Get("/output/regional-data", a.wh(a.getDataOutputRegional))
 		r.Post("/output/bulk-regional-data", a.wh(a.getBulkDataOutputRegional))
