@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
@@ -36,6 +37,27 @@ func getTransform(r *http.Request) wm.Transform {
 
 func getRegionID(r *http.Request) string {
 	return r.URL.Query().Get("region_id")
+}
+
+type regionIDs struct {
+	RegionIDs []string `json:"region_ids"`
+}
+
+func getRegionIDsFromBody(r *http.Request) ([]string, error) {
+	var RegionIDs regionIDs
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(body, &RegionIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	return RegionIDs.RegionIDs, nil
 }
 
 func getQualifierName(r *http.Request) string {
