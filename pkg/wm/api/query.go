@@ -30,7 +30,7 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
-func getTimestamps(r *http.Request) (wm.Timestamps, error) {
+func getTimestampsFromBody(r *http.Request) (wm.Timestamps, error) {
 	var tss wm.Timestamps
 
 	body, err := ioutil.ReadAll(r.Body)

@@ -209,7 +209,7 @@ func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform
 
 func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getBulkDataOutputRegional"
-	timestamps, err := getTimestamps(r)
+	timestamps, err := getTimestampsFromBody(r)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}
@@ -224,20 +224,31 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 
 	for i, timestamp := range timestamps.Timestamps {
 		data, err := a.getRegionAggregation(params, timestamp, transform)
-		bulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
-			Timestamp:                 timestamp,
-			ModelOutputRegionalAdmins: *data,
-		}
 		if err != nil {
+			if wm.ErrorCode(err) == wm.ENOTFOUND {
+				bulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+					Timestamp: timestamp,
+					ModelOutputRegionalAdmins: &wm.ModelOutputRegionalAdmins{
+						Country: []wm.ModelOutputAdminData{},
+						Admin1:  []wm.ModelOutputAdminData{},
+						Admin2:  []wm.ModelOutputAdminData{},
+						Admin3:  []wm.ModelOutputAdminData{},
+					},
+				}
+			}
 			return &wm.Error{Op: op, Err: err}
 		}
+		bulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+			Timestamp:                 timestamp,
+			ModelOutputRegionalAdmins: data,
+		}
 	}
-	bulkData.ModelOutputBulkRegionalAdmins = bulkRegionalData
+	bulkData.ModelOutputBulkRegionalAdmins = &bulkRegionalData
 	if len(timestamps.AllTimestamps) != 0 {
 		// avoid looking through subset of timestamps an unnecessary amount of times
 		subsetTimeStamps := map[string]wm.ModelOutputBulkRegionalAdmins{}
-		for _, timestamp := range bulkRegionalData {
-			subsetTimeStamps[timestamp.Timestamp] = timestamp
+		for _, regionalData := range bulkRegionalData {
+			subsetTimeStamps[regionalData.Timestamp] = regionalData
 		}
 		// hold only data that wouldn't already be in bulkRegionalData
 		totalBulkRegionalData = make([]wm.ModelOutputBulkRegionalAdmins, len(timestamps.AllTimestamps))
@@ -245,12 +256,23 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 			val, ok := subsetTimeStamps[timestamp]
 			if !ok {
 				data, err := a.getRegionAggregation(params, timestamp, transform)
+				if err != nil {
+					if wm.ErrorCode(err) == wm.ENOTFOUND {
+						totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+							Timestamp: timestamp,
+							ModelOutputRegionalAdmins: &wm.ModelOutputRegionalAdmins{
+								Country: []wm.ModelOutputAdminData{},
+								Admin1:  []wm.ModelOutputAdminData{},
+								Admin2:  []wm.ModelOutputAdminData{},
+								Admin3:  []wm.ModelOutputAdminData{},
+							},
+						}
+					}
+					return &wm.Error{Op: op, Err: err}
+				}
 				totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
 					Timestamp:                 timestamp,
-					ModelOutputRegionalAdmins: *data,
-				}
-				if err != nil {
-					return &wm.Error{Op: op, Err: err}
+					ModelOutputRegionalAdmins: data,
 				}
 			} else {
 				// copy it over to apply whatever aggregation we will need to
@@ -263,18 +285,18 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if aggForSelect == "mean" {
-		bulkData.SelectAgg = calculateMeanAggregationForBulkRegionalData(bulkRegionalData)
+		bulkData.SelectAgg = getMeanForBulkRegionalData(bulkRegionalData)
 	}
 
 	if aggForAll == "mean" && len(timestamps.AllTimestamps) != 0 {
-		bulkData.AllAgg = calculateMeanAggregationForBulkRegionalData(totalBulkRegionalData)
+		bulkData.AllAgg = getMeanForBulkRegionalData(totalBulkRegionalData)
 	}
 
 	render.Render(w, r, &modelOutputBulkRegionalData{&bulkData})
 	return nil
 }
 
-func calculateMeanAggregationForBulkRegionalData(bulkRegionalData []wm.ModelOutputBulkRegionalAdmins) wm.ModelOutputRegionalAdmins {
+func getMeanForBulkRegionalData(bulkRegionalData []wm.ModelOutputBulkRegionalAdmins) *wm.ModelOutputRegionalAdmins {
 	aggData := wm.ModelOutputRegionalAdmins{}
 	countryAgg := map[string]*[2]float64{}
 	admin1Agg := map[string]*[2]float64{}
@@ -290,7 +312,7 @@ func calculateMeanAggregationForBulkRegionalData(bulkRegionalData []wm.ModelOutp
 	aggData.Admin1 = applyMeanAggregation(admin1Agg)
 	aggData.Admin2 = applyMeanAggregation(admin2Agg)
 	aggData.Admin3 = applyMeanAggregation(admin3Agg)
-	return aggData
+	return &aggData
 }
 
 func sumAggregation(regionProperty []wm.ModelOutputAdminData, aggDict map[string]*[2]float64) {
