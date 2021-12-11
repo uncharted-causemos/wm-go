@@ -235,6 +235,7 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 						Admin3:  []wm.ModelOutputAdminData{},
 					},
 				}
+				continue
 			}
 			return &wm.Error{Op: op, Err: err}
 		}
@@ -267,6 +268,7 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 								Admin3:  []wm.ModelOutputAdminData{},
 							},
 						}
+						continue
 					}
 					return &wm.Error{Op: op, Err: err}
 				}
