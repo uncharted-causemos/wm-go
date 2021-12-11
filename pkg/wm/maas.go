@@ -121,6 +121,25 @@ type PipelineResultsOutput struct {
 	DataInfo        interface{}   `json:"data_info"`
 }
 
+// Timestamps holds input for bulk-regional-data
+type Timestamps struct {
+	Timestamps    []string `json:"timestamps"`
+	AllTimestamps []string `json:"all_timestamps"`
+}
+
+// ModelOutputBulkAggregateRegionalAdmins holds all bulk and aggregate regional data
+type ModelOutputBulkAggregateRegionalAdmins struct {
+	ModelOutputBulkRegionalAdmins *[]ModelOutputBulkRegionalAdmins `json:"regional_data"`
+	SelectAgg                     *ModelOutputRegionalAdmins       `json:"select_agg"`
+	AllAgg                        *ModelOutputRegionalAdmins       `json:"all_agg"`
+}
+
+// ModelOutputBulkRegionalAdmins associates a timestamp for regional data
+type ModelOutputBulkRegionalAdmins struct {
+	Timestamp                  string `json:"timestamp"`
+	*ModelOutputRegionalAdmins `json:"data"`
+}
+
 // ModelOutputRegionalAdmins represent regional data for all admin levels
 type ModelOutputRegionalAdmins struct {
 	Country []ModelOutputAdminData `json:"country"`
