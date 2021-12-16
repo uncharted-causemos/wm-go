@@ -43,6 +43,15 @@ func (msr *modelOutputTimeseriesValue) Render(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
+type modelOutputBulkRegionalData struct {
+	*wm.ModelOutputBulkAggregateRegionalAdmins
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputBulkRegionalData) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type modelOutputRegionalData struct {
 	*wm.ModelOutputRegionalAdmins
 }
@@ -254,23 +263,163 @@ func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform
 	return timeseries, nil
 }
 
+func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getBulkDataOutputRegional"
+	timestamps, err := getTimestampsFromBody(r)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	params := getDatacubeParams(r)
+	transform := getTransform(r)
+	aggForSelect := getAggForSelect(r)
+	aggForAll := getAggForAll(r)
+	bulkData := wm.ModelOutputBulkAggregateRegionalAdmins{}
+
+	bulkRegionalData := make([]wm.ModelOutputBulkRegionalAdmins, len(timestamps.Timestamps))
+	var totalBulkRegionalData []wm.ModelOutputBulkRegionalAdmins
+
+	for i, timestamp := range timestamps.Timestamps {
+		data, err := a.getRegionAggregation(params, timestamp, transform)
+		if err != nil {
+			if wm.ErrorCode(err) == wm.ENOTFOUND {
+				bulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+					Timestamp: timestamp,
+					ModelOutputRegionalAdmins: &wm.ModelOutputRegionalAdmins{
+						Country: []wm.ModelOutputAdminData{},
+						Admin1:  []wm.ModelOutputAdminData{},
+						Admin2:  []wm.ModelOutputAdminData{},
+						Admin3:  []wm.ModelOutputAdminData{},
+					},
+				}
+				continue
+			}
+			return &wm.Error{Op: op, Err: err}
+		}
+		bulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+			Timestamp:                 timestamp,
+			ModelOutputRegionalAdmins: data,
+		}
+	}
+	bulkData.ModelOutputBulkRegionalAdmins = &bulkRegionalData
+	if len(timestamps.AllTimestamps) != 0 {
+		// avoid looking through subset of timestamps an unnecessary amount of times
+		subsetTimeStamps := map[string]wm.ModelOutputBulkRegionalAdmins{}
+		for _, regionalData := range bulkRegionalData {
+			subsetTimeStamps[regionalData.Timestamp] = regionalData
+		}
+		// hold only data that wouldn't already be in bulkRegionalData
+		totalBulkRegionalData = make([]wm.ModelOutputBulkRegionalAdmins, len(timestamps.AllTimestamps))
+		for i, timestamp := range timestamps.AllTimestamps {
+			val, ok := subsetTimeStamps[timestamp]
+			if !ok {
+				data, err := a.getRegionAggregation(params, timestamp, transform)
+				if err != nil {
+					if wm.ErrorCode(err) == wm.ENOTFOUND {
+						totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+							Timestamp: timestamp,
+							ModelOutputRegionalAdmins: &wm.ModelOutputRegionalAdmins{
+								Country: []wm.ModelOutputAdminData{},
+								Admin1:  []wm.ModelOutputAdminData{},
+								Admin2:  []wm.ModelOutputAdminData{},
+								Admin3:  []wm.ModelOutputAdminData{},
+							},
+						}
+						continue
+					}
+					return &wm.Error{Op: op, Err: err}
+				}
+				totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+					Timestamp:                 timestamp,
+					ModelOutputRegionalAdmins: data,
+				}
+			} else {
+				// copy it over to apply whatever aggregation we will need to
+				totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+					Timestamp:                 val.Timestamp,
+					ModelOutputRegionalAdmins: val.ModelOutputRegionalAdmins,
+				}
+			}
+		}
+	}
+
+	if aggForSelect == "mean" {
+		bulkData.SelectAgg = getMeanForBulkRegionalData(bulkRegionalData)
+	}
+
+	if aggForAll == "mean" && len(timestamps.AllTimestamps) != 0 {
+		bulkData.AllAgg = getMeanForBulkRegionalData(totalBulkRegionalData)
+	}
+
+	render.Render(w, r, &modelOutputBulkRegionalData{&bulkData})
+	return nil
+}
+
+func getMeanForBulkRegionalData(bulkRegionalData []wm.ModelOutputBulkRegionalAdmins) *wm.ModelOutputRegionalAdmins {
+	aggData := wm.ModelOutputRegionalAdmins{}
+	countryAgg := map[string]*[2]float64{}
+	admin1Agg := map[string]*[2]float64{}
+	admin2Agg := map[string]*[2]float64{}
+	admin3Agg := map[string]*[2]float64{}
+	for _, regionalData := range bulkRegionalData {
+		sumAggregation(regionalData.Country, countryAgg)
+		sumAggregation(regionalData.Admin1, admin1Agg)
+		sumAggregation(regionalData.Admin2, admin2Agg)
+		sumAggregation(regionalData.Admin3, admin3Agg)
+	}
+	aggData.Country = applyMeanAggregation(countryAgg)
+	aggData.Admin1 = applyMeanAggregation(admin1Agg)
+	aggData.Admin2 = applyMeanAggregation(admin2Agg)
+	aggData.Admin3 = applyMeanAggregation(admin3Agg)
+	return &aggData
+}
+
+func sumAggregation(regionProperty []wm.ModelOutputAdminData, aggDict map[string]*[2]float64) {
+	for _, property := range regionProperty {
+		val, ok := aggDict[property.ID]
+		if ok {
+			val[0] += property.Value
+			val[1]++
+		} else {
+			aggDict[property.ID] = &[2]float64{property.Value, 1}
+		}
+	}
+}
+
+func applyMeanAggregation(countryAgg map[string]*[2]float64) []wm.ModelOutputAdminData {
+	aggregations := make([]wm.ModelOutputAdminData, len(countryAgg))
+	i := 0
+	for key, val := range countryAgg {
+		aggregations[i] = wm.ModelOutputAdminData{ID: key, Value: val[0] / val[1]}
+		i++
+	}
+	return aggregations
+}
+
 func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getDataOutputRegional"
 	params := getDatacubeParams(r)
 	timestamp := getTimestamp(r)
 	transform := getTransform(r)
-	data, err := a.dataOutput.GetRegionAggregation(params, timestamp)
+	data, err := a.getRegionAggregation(params, timestamp, transform)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
+	}
+	render.Render(w, r, &modelOutputRegionalData{data})
+	return nil
+}
+
+func (a *api) getRegionAggregation(params wm.DatacubeParams, timestamp string, transform wm.Transform) (*wm.ModelOutputRegionalAdmins, error) {
+	data, err := a.dataOutput.GetRegionAggregation(params, timestamp)
+	if err != nil {
+		return nil, err
 	}
 	if transform != "" {
 		data, err = a.dataOutput.TransformRegionAggregation(data, timestamp, wm.TransformConfig{Transform: transform})
 		if err != nil {
-			return &wm.Error{Op: op, Err: err}
+			return nil, err
 		}
 	}
-	render.Render(w, r, &modelOutputRegionalData{data})
-	return nil
+	return data, nil
 }
 
 func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) error {

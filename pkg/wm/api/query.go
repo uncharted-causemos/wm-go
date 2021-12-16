@@ -30,6 +30,31 @@ func getTimestamp(r *http.Request) string {
 	return r.URL.Query().Get("timestamp")
 }
 
+func getTimestampsFromBody(r *http.Request) (wm.Timestamps, error) {
+	var tss wm.Timestamps
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return wm.Timestamps{}, err
+	}
+
+	err = json.Unmarshal(body, &tss)
+	if err != nil {
+		return wm.Timestamps{}, err
+	}
+
+	return tss, nil
+}
+
+func getAggForSelect(r *http.Request) string {
+	return r.URL.Query().Get("aggForSelect")
+}
+
+func getAggForAll(r *http.Request) string {
+	return r.URL.Query().Get("aggForAll")
+}
+
 func getTransform(r *http.Request) wm.Transform {
 	transform := r.URL.Query().Get("transform")
 	return wm.Transform(transform)
