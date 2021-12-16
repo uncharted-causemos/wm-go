@@ -114,16 +114,16 @@ func (a *api) getAggregateDataOutputTimeseries(w http.ResponseWriter, r *http.Re
 		return &wm.Error{Op: op, Err: err}
 	}
 
-	var aggTimeSeries []wm.TimeseriesValue
+	var aggTimeSeries []*wm.TimeseriesValue
 	if agg == "mean" {
 		timeToValue := map[int64]*[2]float64{}
 		sumAggregationForTimeseries(regionalTimeSeries, timeToValue)
-		aggTimeSeries = applyMeanAggregation(timeToValue)
+		aggTimeSeries = applyMeanForTimeseries(timeToValue)
 	}
 
 	list := []render.Renderer{}
 	for _, timeseries := range aggTimeSeries {
-		list = append(list, &modelOutputTimeseriesValue{&timeseries})
+		list = append(list, &modelOutputTimeseriesValue{timeseries})
 	}
 	render.RenderList(w, r, list)
 	return nil
@@ -143,11 +143,11 @@ func sumAggregationForTimeseries(regionalTimeSeries []*wm.ModelOutputRegionalTim
 	}
 }
 
-func applyMeanAggregation(countryAgg map[int64]*[2]float64) []wm.TimeseriesValue {
-	aggregations := make([]wm.TimeseriesValue, len(countryAgg))
+func applyMeanForTimeseries(countryAgg map[int64]*[2]float64) []*wm.TimeseriesValue {
+	aggregations := make([]*wm.TimeseriesValue, len(countryAgg))
 	i := 0
 	for key, val := range countryAgg {
-		aggregations[i] = wm.TimeseriesValue{Timestamp: key, Value: val[0] / val[1]}
+		aggregations[i] = &wm.TimeseriesValue{Timestamp: key, Value: val[0] / val[1]}
 		i++
 	}
 	return aggregations
