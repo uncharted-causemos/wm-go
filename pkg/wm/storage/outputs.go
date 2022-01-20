@@ -380,7 +380,7 @@ func (s *Storage) GetPipelineResults(params wm.PipelineResultsParams) (*wm.Pipel
 // GetRawData returns datacube output or indicator raw data
 func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawDataPoint, error) {
 	op := "Storage.GetRawData"
-	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.json",
+	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.csv",
 		params.DataID, params.RunID, params.Feature)
 
 	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
@@ -388,12 +388,94 @@ func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawData
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 
-	var series []*wm.ModelOutputRawDataPoint
-	err = json.Unmarshal(buf, &series)
-	if err != nil {
-		return nil, &wm.Error{Op: op, Err: err}
+	data := make([]*wm.ModelOutputRawDataPoint, 0)
+	requiredColSet := map[string]bool{"timestamp": true, "country": true, "admin1": true, "admin2": true, "admin3": true, "lat": true, "lng": true, "value": true}
+	requiredColsIndexMap := make(map[string]int)
+	qualifierColsIndexMap := make(map[string]int)
+
+	// Parse raw csv data
+	r := csv.NewReader(bytes.NewReader(buf))
+	isHeader := true
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, &wm.Error{Op: op, Err: err}
+		}
+		// Parse header and find the index of each column
+		if isHeader {
+			for i, v := range record {
+				if requiredColSet[v] {
+					requiredColsIndexMap[v] = i
+				} else {
+					qualifierColsIndexMap[v] = i
+				}
+			}
+			isHeader = false
+		} else {
+			dataPoint := &wm.ModelOutputRawDataPoint{}
+			if index, ok := requiredColsIndexMap["timestamp"]; ok {
+				timstamp, err := strconv.ParseInt(record[index], 10, 64)
+				if err != nil {
+					return nil, &wm.Error{Op: op, Err: err}
+				}
+				dataPoint.Timestamp = timstamp
+			}
+			if index, ok := requiredColsIndexMap["country"]; ok {
+				dataPoint.Country = record[index]
+			}
+			if index, ok := requiredColsIndexMap["admin1"]; ok {
+				dataPoint.Admin1 = record[index]
+			}
+			if index, ok := requiredColsIndexMap["admin2"]; ok {
+				dataPoint.Admin2 = record[index]
+			}
+			if index, ok := requiredColsIndexMap["admin3"]; ok {
+				dataPoint.Admin3 = record[index]
+			}
+			if index, ok := requiredColsIndexMap["lat"]; ok {
+				v := record[index]
+				if v != "" {
+					lat, err := strconv.ParseFloat(v, 64)
+					if err != nil {
+						return nil, &wm.Error{Op: op, Err: err}
+					}
+					dataPoint.Lat = &lat
+				}
+			}
+			if index, ok := requiredColsIndexMap["lng"]; ok {
+				v := record[index]
+				if v != "" {
+					lng, err := strconv.ParseFloat(v, 64)
+					if err != nil {
+						return nil, &wm.Error{Op: op, Err: err}
+					}
+					dataPoint.Lng = &lng
+				}
+			}
+			if index, ok := requiredColsIndexMap["value"]; ok {
+				v := record[index]
+				if v != "" {
+					value, err := strconv.ParseFloat(v, 64)
+					if err != nil {
+						return nil, &wm.Error{Op: op, Err: err}
+					}
+					dataPoint.Value = &value
+				}
+			}
+			// Add extra columns
+			qualifiers := make(map[string]string)
+			for col, index := range qualifierColsIndexMap {
+				qualifiers[col] = record[index]
+			}
+			dataPoint.Qualifiers = qualifiers
+
+			data = append(data, dataPoint)
+		}
 	}
-	return series, nil
+	return data, nil
 }
 
 // GetQualifierTimeseries returns datacube output timeseries broken down by qualifiers
