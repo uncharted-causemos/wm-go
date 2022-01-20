@@ -68,7 +68,8 @@ func (m *modelOutputRawDataPoint) Render(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func NewModelOutputRawDataPoint(d *wm.ModelOutputRawDataPoint) *modelOutputRawDataPoint {
+// newModelOutputRawDataPoint creates and return a modelOutputRaDataPoint
+func newModelOutputRawDataPoint(d *wm.ModelOutputRawDataPoint) *modelOutputRawDataPoint {
 	data := modelOutputRawDataPoint{}
 	data["timestamp"] = d.Timestamp
 	data["country"] = d.Country
@@ -446,7 +447,7 @@ func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) error {
 	}
 	list := []render.Renderer{}
 	for _, point := range data {
-		list = append(list, NewModelOutputRawDataPoint(point))
+		list = append(list, newModelOutputRawDataPoint(point))
 	}
 	render.RenderList(w, r, list)
 	return nil
