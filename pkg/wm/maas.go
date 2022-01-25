@@ -38,12 +38,15 @@ type TimeseriesValue struct {
 
 // ModelOutputRawDataPoint represent a raw data point
 type ModelOutputRawDataPoint struct {
-	Timestamp int64   `json:"timestamp"`
-	Country   string  `json:"country"`
-	Admin1    string  `json:"admin1"`
-	Admin2    string  `json:"admin2"`
-	Admin3    string  `json:"admin3"`
-	Value     float64 `json:"value"`
+	Timestamp  int64             `json:"timestamp"`
+	Country    string            `json:"country"`
+	Admin1     string            `json:"admin1"`
+	Admin2     string            `json:"admin2"`
+	Admin3     string            `json:"admin3"`
+	Lat        *float64          `json:"lat"`
+	Lng        *float64          `json:"lng"`
+	Value      *float64          `json:"value"`
+	Qualifiers map[string]string `json:"qualifiers"`
 }
 
 // ModelOutputQualifierTimeseries represent a timeseries for one qualifier value

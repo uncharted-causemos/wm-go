@@ -61,13 +61,29 @@ func (msr *modelOutputRegionalData) Render(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-type modelOutputRawDataPoint struct {
-	*wm.ModelOutputRawDataPoint
-}
+type modelOutputRawDataPoint map[string]interface{}
 
 // Render allows to satisfy the render.Renderer interface.
-func (msr *modelOutputRawDataPoint) Render(w http.ResponseWriter, r *http.Request) error {
+func (m *modelOutputRawDataPoint) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+// newModelOutputRawDataPoint creates and return a modelOutputRaDataPoint
+func newModelOutputRawDataPoint(d *wm.ModelOutputRawDataPoint) *modelOutputRawDataPoint {
+	data := modelOutputRawDataPoint{}
+	data["timestamp"] = d.Timestamp
+	data["country"] = d.Country
+	data["admin1"] = d.Admin1
+	data["admin2"] = d.Admin2
+	data["admin3"] = d.Admin3
+	data["lat"] = d.Lat
+	data["lng"] = d.Lng
+	data["value"] = d.Value
+	// Add qualifiers
+	for k, v := range d.Qualifiers {
+		data[k] = v
+	}
+	return &data
 }
 
 type modelOutputQualifierTimeseriesResponse struct {
@@ -431,7 +447,7 @@ func (a *api) getDataOutputRaw(w http.ResponseWriter, r *http.Request) error {
 	}
 	list := []render.Renderer{}
 	for _, point := range data {
-		list = append(list, &modelOutputRawDataPoint{point})
+		list = append(list, newModelOutputRawDataPoint(point))
 	}
 	render.RenderList(w, r, list)
 	return nil
