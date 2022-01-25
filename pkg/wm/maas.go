@@ -171,13 +171,16 @@ type Transform string
 // Available transforms
 const (
 	TransformPerCapita     Transform = "percapita"
+	TransformPerCapita1K   Transform = "percapita1k"
+	TransformPerCapita1M   Transform = "percapita1m"
 	TransformNormalization Transform = "normalization"
 )
 
 // TransformConfig defines transform configuration
 type TransformConfig struct {
-	Transform Transform `json:"transform"`
-	RegionID  string    `json:"region_id"`
+	Transform   Transform `json:"transform"`
+	RegionID    string    `json:"region_id"`
+	ScaleFactor float64   `json:"scale_factor"`
 }
 
 // DataOutput defines the methods that output database implementation needs to satisfy

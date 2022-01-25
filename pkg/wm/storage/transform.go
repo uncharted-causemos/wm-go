@@ -31,6 +31,13 @@ func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesV
 	// op := "Storage.TransformOutputTimeseriesByRegion"
 	switch config.Transform {
 	case wm.TransformPerCapita:
+		config.ScaleFactor = 1
+		return s.transformPerCapitaTimeseries(timeseries, config)
+	case wm.TransformPerCapita1K:
+		config.ScaleFactor = 1_000
+		return s.transformPerCapitaTimeseries(timeseries, config)
+	case wm.TransformPerCapita1M:
+		config.ScaleFactor = 1_000_000
 		return s.transformPerCapitaTimeseries(timeseries, config)
 	default:
 		return timeseries, nil
@@ -58,7 +65,14 @@ func (s *Storage) TransformRegionAggregation(data *wm.ModelOutputRegionalAdmins,
 
 	switch config.Transform {
 	case wm.TransformPerCapita:
-		return s.transformPerCapitaRegionAggregation(data, timestamp)
+		config.ScaleFactor = 1
+		return s.transformPerCapitaRegionAggregation(data, timestamp, config.ScaleFactor)
+	case wm.TransformPerCapita1K:
+		config.ScaleFactor = 1_000
+		return s.transformPerCapitaRegionAggregation(data, timestamp, config.ScaleFactor)
+	case wm.TransformPerCapita1M:
+		config.ScaleFactor = 1_000_000
+		return s.transformPerCapitaRegionAggregation(data, timestamp, config.ScaleFactor)
 	case wm.TransformNormalization:
 		return s.normalizeRegionAggregation(data)
 	default:
@@ -72,7 +86,14 @@ func (s *Storage) TransformQualifierRegional(data *wm.ModelOutputRegionalQualifi
 
 	switch config.Transform {
 	case wm.TransformPerCapita:
-		return s.transformPerCapitaQualifierRegional(data, timestamp)
+		config.ScaleFactor = 1
+		return s.transformPerCapitaQualifierRegional(data, timestamp, config.ScaleFactor)
+	case wm.TransformPerCapita1K:
+		config.ScaleFactor = 1_000
+		return s.transformPerCapitaQualifierRegional(data, timestamp, config.ScaleFactor)
+	case wm.TransformPerCapita1M:
+		config.ScaleFactor = 1_000_000
+		return s.transformPerCapitaQualifierRegional(data, timestamp, config.ScaleFactor)
 	case wm.TransformNormalization:
 		return s.normalizeQualifierRegional(data)
 	default:
@@ -89,6 +110,11 @@ func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue,
 			return nil, &wm.Error{Code: wm.EINTERNAL, Op: op, Err: err}
 		}
 		return nil, &wm.Error{Op: op, Err: err}
+	}
+
+	var scaleFactor float64 = 1
+	if math.Abs(config.ScaleFactor) > 0 {
+		scaleFactor = config.ScaleFactor
 	}
 
 	// Calculate Per capita with given timeseries and population data
@@ -112,13 +138,13 @@ func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue,
 				population = populationTimeseries[len(populationTimeseries)-1].Value
 			}
 		}
-		valuePercapita := v.Value / population
+		valuePercapita := (v.Value / population) * scaleFactor
 		result = append(result, &wm.TimeseriesValue{Timestamp: v.Timestamp, Value: valuePercapita})
 	}
 	return result, nil
 }
 
-func (s *Storage) transformPerCapitaRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
+func (s *Storage) transformPerCapitaRegionAggregation(data *wm.ModelOutputRegionalAdmins, timestamp string, scaleFactor float64) (*wm.ModelOutputRegionalAdmins, error) {
 	op := "Storage.transformPerCapitaRegionAggregation"
 
 	pLookup, err := s.getRegionalPopulation(timestamp)
@@ -126,11 +152,15 @@ func (s *Storage) transformPerCapitaRegionAggregation(data *wm.ModelOutputRegion
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 
+	if scaleFactor == 0 {
+		scaleFactor = 1
+	}
+
 	resultAdminDataList := [4][]wm.ModelOutputAdminData{}
 	for i, d := range [][]wm.ModelOutputAdminData{data.Country, data.Admin1, data.Admin2, data.Admin3} {
 		for _, v := range d {
 			if p, ok := pLookup[v.ID]; ok && p != 0 {
-				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputAdminData{ID: v.ID, Value: v.Value / p})
+				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputAdminData{ID: v.ID, Value: (v.Value / p) * scaleFactor})
 			}
 		}
 	}
@@ -143,7 +173,7 @@ func (s *Storage) transformPerCapitaRegionAggregation(data *wm.ModelOutputRegion
 	return result, nil
 }
 
-func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegionalQualifiers, timestamp string) (*wm.ModelOutputRegionalQualifiers, error) {
+func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegionalQualifiers, timestamp string, scaleFactor float64) (*wm.ModelOutputRegionalQualifiers, error) {
 	op := "Storage.transformPerCapitaQualifierRegional"
 
 	pLookup, err := s.getRegionalPopulation(timestamp)
@@ -151,10 +181,14 @@ func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegion
 		return nil, &wm.Error{Op: op, Err: err}
 	}
 
-	calcPerCapita := func(values map[string]float64, population float64) map[string]float64 {
+	if scaleFactor == 0 {
+		scaleFactor = 1
+	}
+
+	calcPerCapita := func(values map[string]float64, population float64, scaleFactor float64) map[string]float64 {
 		newValues := make(map[string]float64)
 		for k, v := range values {
-			newValues[k] = v / population
+			newValues[k] = (v / population) * scaleFactor
 		}
 		return newValues
 	}
@@ -163,7 +197,7 @@ func (s *Storage) transformPerCapitaQualifierRegional(data *wm.ModelOutputRegion
 	for i, d := range [][]wm.ModelOutputRegionQualifierBreakdown{data.Country, data.Admin1, data.Admin2, data.Admin3} {
 		for _, v := range d {
 			if p, ok := pLookup[v.ID]; ok && p != 0 {
-				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p)})
+				resultAdminDataList[i] = append(resultAdminDataList[i], wm.ModelOutputRegionQualifierBreakdown{ID: v.ID, Values: calcPerCapita(v.Values, p, scaleFactor)})
 			}
 		}
 	}
