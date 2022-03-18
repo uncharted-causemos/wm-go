@@ -68,12 +68,12 @@ func getRegionID(r *http.Request) string {
 	return r.URL.Query().Get("region_id")
 }
 
-type regionIDs struct {
+type regionIDsBody struct {
 	RegionIDs []string `json:"region_ids"`
 }
 
 func getRegionIDsFromBody(r *http.Request) ([]string, error) {
-	var RegionIDs regionIDs
+	var regionIDs regionIDsBody
 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -81,12 +81,33 @@ func getRegionIDsFromBody(r *http.Request) ([]string, error) {
 		return nil, err
 	}
 
-	err = json.Unmarshal(body, &RegionIDs)
+	err = json.Unmarshal(body, &regionIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	return RegionIDs.RegionIDs, nil
+	return regionIDs.RegionIDs, nil
+}
+
+type timeseriesParamsBody struct {
+	TimeseriesParams []*wm.FullTimeseriesParams `json:"timeseries_params"`
+}
+
+func getTimeseriesParamsFromBody(r *http.Request) ([]*wm.FullTimeseriesParams, error) {
+	var params timeseriesParamsBody
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(body, &params)
+	if err != nil {
+		return nil, err
+	}
+
+	return params.TimeseriesParams, nil
 }
 
 func getQualifierName(r *http.Request) string {

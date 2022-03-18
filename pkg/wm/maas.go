@@ -10,6 +10,14 @@ type DatacubeParams struct {
 	SpatialAggFunc  string `json:"spatial_agg"`
 }
 
+// FullTimeseriesParams represent all parameters for fetching a timeseries
+type FullTimeseriesParams struct {
+	DatacubeParams
+	RegionID  string    `json:"region_id"`
+	Transform Transform `json:"transform"`
+	Key       string    `json:"key"`
+}
+
 // RegionListParams represent parameters needed to fetch region lists representing the hierarchy
 type RegionListParams struct {
 	DataID  string   `json:"data_id"`
@@ -52,6 +60,12 @@ type ModelOutputRawDataPoint struct {
 // ModelOutputQualifierTimeseries represent a timeseries for one qualifier value
 type ModelOutputQualifierTimeseries struct {
 	Name       string             `json:"name"`
+	Timeseries []*TimeseriesValue `json:"timeseries"`
+}
+
+// ModelOutputKeyedTimeSeries holds time series values for a unique key
+type ModelOutputKeyedTimeSeries struct {
+	Key        string             `json:"key"`
 	Timeseries []*TimeseriesValue `json:"timeseries"`
 }
 

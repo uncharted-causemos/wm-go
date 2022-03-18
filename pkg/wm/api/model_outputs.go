@@ -34,6 +34,20 @@ func (msr *modelOutputRegionalTimeseries) Render(w http.ResponseWriter, r *http.
 	return nil
 }
 
+type modelOutputKeyedTimeseries struct {
+	*wm.ModelOutputKeyedTimeSeries
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputKeyedTimeseries) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+type timeseriesResultChan struct {
+	result chan []*wm.TimeseriesValue
+	err    chan error
+}
+
 type modelOutputTimeseriesValue struct {
 	*wm.TimeseriesValue
 }
@@ -50,6 +64,11 @@ type modelOutputBulkRegionalData struct {
 // Render allows to satisfy the render.Renderer interface.
 func (msr *modelOutputBulkRegionalData) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+type regionalDataResultChan struct {
+	result chan *wm.ModelOutputRegionalAdmins
+	err    chan error
 }
 
 type modelOutputRegionalData struct {
@@ -131,10 +150,37 @@ func (a *api) getDataOutputStats(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func getTimeseriesParamsForRegions(r *http.Request) ([]*wm.FullTimeseriesParams, error) {
+	regionIDs, err := getRegionIDsFromBody(r)
+	if err != nil {
+		return nil, err
+	}
+	params := getDatacubeParams(r)
+	transform := getTransform(r)
+
+	if len(regionIDs) == 0 {
+		regionIDs = append(regionIDs, "")
+	}
+	timeseriesParams := make([]*wm.FullTimeseriesParams, len(regionIDs))
+	for i := 0; i < len(regionIDs); i++ {
+		timeseriesParams[i] = &wm.FullTimeseriesParams{
+			DatacubeParams: params,
+			RegionID:       regionIDs[i],
+			Transform:      transform,
+			Key:            regionIDs[i],
+		}
+	}
+	return timeseriesParams, nil
+}
+
 func (a *api) getAggregateDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getAggregateDataOutputTimeseries"
 	agg := getAgg(r)
-	regionalTimeSeries, err := a.getBulkTimeseries(r)
+	timeseriesParams, err := getTimeseriesParamsForRegions(r)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	keyedTimeSeries, err := a.getBulkTimeseries(timeseriesParams)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}
@@ -142,7 +188,7 @@ func (a *api) getAggregateDataOutputTimeseries(w http.ResponseWriter, r *http.Re
 	var aggTimeSeries []*wm.TimeseriesValue
 	if agg == "mean" {
 		timeToValue := map[int64]*[2]float64{}
-		sumAggregationForTimeseries(regionalTimeSeries, timeToValue)
+		sumAggregationForTimeseries(keyedTimeSeries, timeToValue)
 		aggTimeSeries = applyMeanForTimeseries(timeToValue)
 	}
 
@@ -154,8 +200,8 @@ func (a *api) getAggregateDataOutputTimeseries(w http.ResponseWriter, r *http.Re
 	return nil
 }
 
-func sumAggregationForTimeseries(regionalTimeSeries []*wm.ModelOutputRegionalTimeSeries, aggDict map[int64]*[2]float64) {
-	for _, region := range regionalTimeSeries {
+func sumAggregationForTimeseries(keyedTimeSeries []*wm.ModelOutputKeyedTimeSeries, aggDict map[int64]*[2]float64) {
+	for _, region := range keyedTimeSeries {
 		for _, timeseries := range region.Timeseries {
 			val, ok := aggDict[timeseries.Timestamp]
 			if ok {
@@ -178,60 +224,79 @@ func applyMeanForTimeseries(countryAgg map[int64]*[2]float64) []*wm.TimeseriesVa
 	return aggregations
 }
 
-func (a *api) getBulkDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
-	op := "api.getBulkDataOutputTimeseries"
-	regionalTimeSeries, err := a.getBulkTimeseries(r)
+func (a *api) getBulkDataOutputRegionTimeseries(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getBulkDataOutputRegionTimeseries"
+
+	timeseriesParams, err := getTimeseriesParamsForRegions(r)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	keyedTimeSeries, err := a.getBulkTimeseries(timeseriesParams)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}
 
 	list := []render.Renderer{}
-	for _, timeseries := range regionalTimeSeries {
-		list = append(list, &modelOutputRegionalTimeseries{timeseries})
+	for _, timeseries := range keyedTimeSeries {
+		list = append(list, &modelOutputRegionalTimeseries{&wm.ModelOutputRegionalTimeSeries{
+			RegionID:   timeseries.Key,
+			Timeseries: timeseries.Timeseries,
+		}})
 	}
 	render.RenderList(w, r, list)
 	return nil
 }
 
-func (a *api) getBulkTimeseries(r *http.Request) ([]*wm.ModelOutputRegionalTimeSeries, error) {
-	regionIDs, err := getRegionIDsFromBody(r)
+func (a *api) getBulkDataOutputGenericTimeseries(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getBulkDataOutputGenericTimeseries"
+	timeseriesParams, err := getTimeseriesParamsFromBody(r)
 	if err != nil {
-		return nil, err
+		return &wm.Error{Op: op, Err: err}
 	}
-	params := getDatacubeParams(r)
-	transform := getTransform(r)
-	var regionalTimeSeries []*wm.ModelOutputRegionalTimeSeries
 
-	if len(regionIDs) == 0 {
-		data, err := a.dataOutput.GetOutputTimeseries(params)
+	keyedTimeSeries, err := a.getBulkTimeseries(timeseriesParams)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+
+	list := []render.Renderer{}
+	for _, timeseries := range keyedTimeSeries {
+		list = append(list, &modelOutputKeyedTimeseries{timeseries})
+	}
+	render.RenderList(w, r, list)
+	return nil
+}
+
+func (a *api) getBulkTimeseries(timeseriesParams []*wm.FullTimeseriesParams) ([]*wm.ModelOutputKeyedTimeSeries, error) {
+	keyedTimeSeries := make([]*wm.ModelOutputKeyedTimeSeries, len(timeseriesParams))
+	resultChannels := make(map[string]timeseriesResultChan)
+	for i := 0; i < len(keyedTimeSeries); i++ {
+		params := timeseriesParams[i]
+		rc := a.getTimeSeriesAsync(params.RegionID, params.DatacubeParams, params.Transform)
+		resultChannels[params.Key] = rc
+	}
+
+	for i := 0; i < len(keyedTimeSeries); i++ {
+		key := timeseriesParams[i].Key
+		timeseries := <-resultChannels[key].result
+		err := <-resultChannels[key].err
 		if err != nil {
+			if wm.ErrorCode(err) == wm.ENOTFOUND {
+				keyedTimeSeries[i] = &wm.ModelOutputKeyedTimeSeries{
+					Key:        key,
+					Timeseries: []*wm.TimeseriesValue{},
+				}
+				continue
+			}
 			return nil, err
 		}
-		regionalTimeSeries = []*wm.ModelOutputRegionalTimeSeries{
-			{RegionID: "", Timeseries: data},
-		}
-	} else {
-		regionalTimeSeries = make([]*wm.ModelOutputRegionalTimeSeries, len(regionIDs))
-		for i := 0; i < len(regionIDs); i++ {
-			regionalTS, err := a.getTimeSeries(regionIDs[i], params, transform)
-			if err != nil {
-				if wm.ErrorCode(err) == wm.ENOTFOUND {
-					regionalTimeSeries[i] = &wm.ModelOutputRegionalTimeSeries{
-						RegionID:   regionIDs[i],
-						Timeseries: []*wm.TimeseriesValue{},
-					}
-					continue
-				}
-				return nil, err
-			}
-			regionalTimeSeries[i] = &wm.ModelOutputRegionalTimeSeries{
-				RegionID:   regionIDs[i],
-				Timeseries: regionalTS,
-			}
+		keyedTimeSeries[i] = &wm.ModelOutputKeyedTimeSeries{
+			Key:        key,
+			Timeseries: timeseries,
 		}
 	}
 
-	return regionalTimeSeries, nil
+	return keyedTimeSeries, nil
 }
 
 func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) error {
@@ -252,6 +317,20 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) er
 	}
 	render.RenderList(w, r, list)
 	return nil
+}
+
+func (a *api) getTimeSeriesAsync(regionID string, params wm.DatacubeParams, transform wm.Transform) timeseriesResultChan {
+	rc := make(chan []*wm.TimeseriesValue)
+	ec := make(chan error)
+	go func() {
+		r, err := a.getTimeSeries(regionID, params, transform)
+		rc <- r
+		ec <- err
+	}()
+	return timeseriesResultChan{
+		result: rc,
+		err:    ec,
+	}
 }
 
 func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform wm.Transform) ([]*wm.TimeseriesValue, error) {
@@ -294,8 +373,26 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 	bulkRegionalData := make([]wm.ModelOutputBulkRegionalAdmins, len(timestamps.Timestamps))
 	var totalBulkRegionalData []wm.ModelOutputBulkRegionalAdmins
 
+	selectResultChannels := make(map[string]regionalDataResultChan)
+	restResultChannels := make(map[string]regionalDataResultChan)
+
+	for _, timestamp := range timestamps.Timestamps {
+		rc := a.getRegionAggregationAsync(params, timestamp, transform)
+		selectResultChannels[timestamp] = rc
+	}
+
+	// Only timestamps not in timestamps.Timestamps
+	for _, timestamp := range timestamps.AllTimestamps {
+		_, ok := selectResultChannels[timestamp]
+		if !ok {
+			rc := a.getRegionAggregationAsync(params, timestamp, transform)
+			restResultChannels[timestamp] = rc
+		}
+	}
+
 	for i, timestamp := range timestamps.Timestamps {
-		data, err := a.getRegionAggregation(params, timestamp, transform)
+		data := <-selectResultChannels[timestamp].result
+		err := <-selectResultChannels[timestamp].err
 		if err != nil {
 			if wm.ErrorCode(err) == wm.ENOTFOUND {
 				bulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
@@ -326,9 +423,11 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 		// hold only data that wouldn't already be in bulkRegionalData
 		totalBulkRegionalData = make([]wm.ModelOutputBulkRegionalAdmins, len(timestamps.AllTimestamps))
 		for i, timestamp := range timestamps.AllTimestamps {
-			val, ok := subsetTimeStamps[timestamp]
-			if !ok {
-				data, err := a.getRegionAggregation(params, timestamp, transform)
+			channels, inRest := restResultChannels[timestamp]
+			val, inSubset := subsetTimeStamps[timestamp]
+			if inRest {
+				data := <-channels.result
+				err := <-channels.err
 				if err != nil {
 					if wm.ErrorCode(err) == wm.ENOTFOUND {
 						totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
@@ -348,11 +447,22 @@ func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) 
 					Timestamp:                 timestamp,
 					ModelOutputRegionalAdmins: data,
 				}
-			} else {
+			} else if inSubset {
 				// copy it over to apply whatever aggregation we will need to
 				totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
 					Timestamp:                 val.Timestamp,
 					ModelOutputRegionalAdmins: val.ModelOutputRegionalAdmins,
+				}
+			} else {
+				// should never happen
+				totalBulkRegionalData[i] = wm.ModelOutputBulkRegionalAdmins{
+					Timestamp: timestamp,
+					ModelOutputRegionalAdmins: &wm.ModelOutputRegionalAdmins{
+						Country: []wm.ModelOutputAdminData{},
+						Admin1:  []wm.ModelOutputAdminData{},
+						Admin2:  []wm.ModelOutputAdminData{},
+						Admin3:  []wm.ModelOutputAdminData{},
+					},
 				}
 			}
 		}
@@ -422,6 +532,20 @@ func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) erro
 	}
 	render.Render(w, r, &modelOutputRegionalData{data})
 	return nil
+}
+
+func (a *api) getRegionAggregationAsync(params wm.DatacubeParams, timestamp string, transform wm.Transform) regionalDataResultChan {
+	rc := make(chan *wm.ModelOutputRegionalAdmins)
+	ec := make(chan error)
+	go func() {
+		r, err := a.getRegionAggregation(params, timestamp, transform)
+		rc <- r
+		ec <- err
+	}()
+	return regionalDataResultChan{
+		result: rc,
+		err:    ec,
+	}
 }
 
 func (a *api) getRegionAggregation(params wm.DatacubeParams, timestamp string, transform wm.Transform) (*wm.ModelOutputRegionalAdmins, error) {
