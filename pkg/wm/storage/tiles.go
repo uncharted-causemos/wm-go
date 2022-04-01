@@ -127,6 +127,9 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 		}
 
 		bucketName := maasModelOutputBucket
+		if spec.RunID == "indicator" {
+			bucketName = maasIndicatorOutputBucket
+		}
 		key := fmt.Sprintf("%s/%s/%s/%s/tiles/%d-%d-%d-%d.tile", spec.ModelID, spec.RunID, spec.Resolution, spec.Feature, spec.Timestamp, zoom, x, y)
 
 		if spec.Model != "" {
