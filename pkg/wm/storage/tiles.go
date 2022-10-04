@@ -126,10 +126,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			modelMaxPrecision = 99
 		}
 
-		bucketName := maasModelOutputBucket
-		if spec.RunID == "indicator" {
-			bucketName = maasIndicatorOutputBucket
-		}
+		bucketName := getBucket(s, spec.RunID)
 		key := fmt.Sprintf("%s/%s/%s/%s/tiles/%d-%d-%d-%d.tile", spec.ModelID, spec.RunID, spec.Resolution, spec.Feature, spec.Timestamp, zoom, x, y)
 
 		if spec.Model != "" {
@@ -142,7 +139,7 @@ func (s *Storage) getRunOutput(zoom, x, y uint32, spec wm.GridTileOutputSpec) (c
 			}
 			timemillis := startTime.Unix() * 1000
 			key = fmt.Sprintf("%s/%s/%s/%d-%d-%d-%d.tile", strings.ToLower(spec.Model), spec.RunID, spec.Feature, timemillis, zoom, x, y)
-			bucketName = outputBucket
+			bucketName = s.bucketInfo.TileOutputBucket
 		}
 
 		// Retrieve protobuf tile from S3

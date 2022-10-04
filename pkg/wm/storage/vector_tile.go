@@ -17,7 +17,7 @@ func (s *Storage) GetVectorTile(zoom, x, y uint32, tilesetName string) ([]byte, 
 
 	// Retrieve protobuf tile from S3
 	req, resp := s.client.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(vectorTileBucket),
+		Bucket: aws.String(s.bucketInfo.VectorTileBucket),
 		Key:    aws.String(key),
 	})
 	err := req.Send()

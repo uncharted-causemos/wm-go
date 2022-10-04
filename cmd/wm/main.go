@@ -72,7 +72,14 @@ func main() {
 		S3ForcePathStyle: aws.Bool(true),
 		Region:           aws.String(endpoints.UsEast1RegionID),
 		Endpoint:         aws.String(s.AwsS3URL), // LocalStack/Minio S3 Port
-	}, sugar)
+	},
+		&storage.BucketInfo{
+			TileOutputBucket: s.OutputBucket,
+			VectorTileBucket: s.VectorTileBucket,
+			ModelsBucket:     s.ModelOutputBucket,
+			IndicatorsBucket: s.IndicatorOutputBucket,
+		},
+		sugar)
 	if err != nil {
 		sugar.Fatal(err)
 	}
