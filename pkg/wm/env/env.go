@@ -18,6 +18,11 @@ type Specification struct {
 	AwsS3Secret string `required:"true" envconfig:"AWS_S3_SECRET"`
 	AwsS3Token  string `required:"true" envconfig:"AWS_S3_TOKEN"`
 	AwsS3URL    string `required:"true" envconfig:"AWS_S3_URL"`
+
+	OutputBucket          string `default:"tiles-v3" envconfig:"TILE_OUTPUT_BUCKET"`
+	VectorTileBucket      string `default:"vector-tiles" envconfig:"VECTORTILE_BUCKET"`
+	ModelOutputBucket     string `default:"new-models" envconfig:"MODELS_BUCKET"`
+	IndicatorOutputBucket string `default:"new-indicators" envconfig:"INDICATORS_BUCKET"`
 }
 
 // Load imports the environment variables and returns them in an Specification.

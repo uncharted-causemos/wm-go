@@ -27,10 +27,10 @@ func getRegionLevels() []string {
 }
 
 // Get the s3 bucket based on the output runID
-func getBucket(outputRunID string) string {
-	bucket := maasModelOutputBucket
+func getBucket(s *Storage, outputRunID string) string {
+	bucket := s.bucketInfo.ModelsBucket
 	if outputRunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
+		bucket = s.bucketInfo.IndicatorsBucket
 	}
 	return bucket
 }
@@ -70,7 +70,7 @@ func (s *Storage) getOutputStats(params wm.DatacubeParams, filename string) (*wm
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/%s.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, filename)
 
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
 	}
@@ -105,7 +105,7 @@ func (s *Storage) GetOutputStats(params wm.DatacubeParams, timestamp string) ([]
 	key := fmt.Sprintf("%s/%s/%s/%s/stats/grid/%s.csv",
 		params.DataID, params.RunID, params.Resolution, params.Feature, timestamp)
 
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
 	}
@@ -178,7 +178,7 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 	for _, level := range getRegionLevels() {
 		key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/default/default.csv",
 			params.DataID, params.RunID, params.Resolution, params.Feature, level, timestamp)
-		rc := getFileFromS3Async(s, getBucket(params.RunID), aws.String(key))
+		rc := getFileFromS3Async(s, getBucket(s, params.RunID), aws.String(key))
 		resultChannels[level] = rc
 	}
 	for _, level := range getRegionLevels() {
@@ -254,7 +254,7 @@ func (s *Storage) GetRegionLists(params wm.RegionListParams) (*wm.RegionListOutp
 	resultChannels := make(map[string]s3ResultChan)
 	for _, runID := range params.RunIDs {
 		key := fmt.Sprintf("%s/%s/raw/%s/info/region_lists.json", params.DataID, runID, params.Feature)
-		rc := getFileFromS3Async(s, getBucket(runID), aws.String(key))
+		rc := getFileFromS3Async(s, getBucket(s, runID), aws.String(key))
 		resultChannels[runID] = rc
 	}
 	// Populate sets in allOutputMap map values with regions
@@ -298,10 +298,7 @@ func (s *Storage) GetQualifierCounts(params wm.QualifierInfoParams) (*wm.Qualifi
 	op := "Storage.GetQualifierCounts"
 	key := fmt.Sprintf("%s/%s/raw/%s/info/qualifier_counts.json",
 		params.DataID, params.RunID, params.Feature)
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
+	bucket := getBucket(s, params.RunID)
 	buf, err := getFileFromS3(s, bucket, aws.String(key))
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
@@ -317,10 +314,7 @@ func (s *Storage) GetQualifierCounts(params wm.QualifierInfoParams) (*wm.Qualifi
 // GetQualifierLists returns the number of qualifier values per qualifier
 func (s *Storage) GetQualifierLists(params wm.QualifierInfoParams, qualifiers []string) (*wm.QualifierListsOutput, error) {
 	op := "Storage.GetQualifierLists"
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
+	bucket := getBucket(s, params.RunID)
 
 	resultChannels := make(map[string]s3ResultChan)
 	outputLists := make(map[string][]string)
@@ -361,10 +355,7 @@ func (s *Storage) GetQualifierLists(params wm.QualifierInfoParams, qualifiers []
 func (s *Storage) GetPipelineResults(params wm.PipelineResultsParams) (*wm.PipelineResultsOutput, error) {
 	op := "Storage.GetPipelineResults"
 	key := fmt.Sprintf("%s/%s/results/results.json", params.DataID, params.RunID)
-	bucket := maasModelOutputBucket
-	if params.RunID == "indicator" {
-		bucket = maasIndicatorOutputBucket
-	}
+	bucket := getBucket(s, params.RunID)
 	buf, err := getFileFromS3(s, bucket, aws.String(key))
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
@@ -383,7 +374,7 @@ func (s *Storage) GetRawData(params wm.DatacubeParams) ([]*wm.ModelOutputRawData
 	key := fmt.Sprintf("%s/%s/raw/%s/raw/raw.csv",
 		params.DataID, params.RunID, params.Feature)
 
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
 	}
@@ -490,7 +481,7 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 	// 852076800000,1583.0,0.0,0.0,0.0,313.0
 	// 854755200000,187.0,3.0,0.0,0.0,40.0
 
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
 	}
@@ -608,7 +599,7 @@ func (s *Storage) GetQualifierData(params wm.DatacubeParams, timestamp string, q
 		// timestamp,Battles,Protests,Riots,Strategic developments,Violence against civilians
 		// 852076800000,1583.0,0.0,0.0,0.0,313.0
 		// 854755200000,187.0,3.0,0.0,0.0,40.0
-		rc := getFileFromS3Async(s, getBucket(params.RunID), aws.String(key))
+		rc := getFileFromS3Async(s, getBucket(s, params.RunID), aws.String(key))
 		resultChannels[qualifier] = rc
 	}
 	for qualifierIndex, qualifier := range qualifiers {
@@ -677,7 +668,7 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 		// Central African Republic__Bangui,Protests,0.0,0.0,0.0,0.0
 		// Central African Republic__Bangui,Violence against civilians,0.0,0.0,0.0,0.0
 		// Central African Republic__Ouham,Violence against civilians,10.0,10.0,10.0,10.0
-		rc := getFileFromS3Async(s, getBucket(params.RunID), aws.String(key))
+		rc := getFileFromS3Async(s, getBucket(s, params.RunID), aws.String(key))
 		resultChannels[level] = rc
 	}
 	for _, level := range getRegionLevels() {
@@ -751,7 +742,7 @@ func (s *Storage) GetQualifierRegional(params wm.DatacubeParams, timestamp strin
 
 func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*wm.TimeseriesValue, error) {
 	op := "getTimeseriesFromCsv"
-	buf, err := getFileFromS3(s, getBucket(params.RunID), aws.String(key))
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
 	if err != nil {
 		return nil, err
 	}
