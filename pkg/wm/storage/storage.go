@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// BucketInfo
+// BucketInfo contains bucket name mapping information
 type BucketInfo struct {
 	TileOutputBucket string `json:"tileOutputBucket"`
 	VectorTileBucket string `json:"vectorTileBucket"`
