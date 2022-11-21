@@ -59,7 +59,7 @@ environment:
 
         "${CI_COMMIT_TAG}") export DOCKER_TAG="${CI_COMMIT_TAG}" ;;
 
-        main) export DOCKER_TAG="dev" ;;
+        main) export DOCKER_TAG="latest" ;;
 
         *) echo "Unknown build ref $CI_COMMIT_REF_NAME"; exit 1 ;;
 
