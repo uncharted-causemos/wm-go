@@ -115,14 +115,14 @@ func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, aggOpt wm.Agg
 		return series
 	}
 
-	lastRawTime := time.UnixMilli(rawLastTimestamp)
-	lastAggTime := time.UnixMilli(series[len(series)-1].Timestamp)
+	lastRawTime := time.UnixMilli(rawLastTimestamp).UTC()
+	lastAggTime := time.UnixMilli(series[len(series)-1].Timestamp).UTC()
 
 	isSameYear := lastAggTime.Year() == lastRawTime.Year()
 	isSameYearMonth := isSameYear && lastAggTime.Month() == lastRawTime.Month()
 
-	areDatesValid := (rawRes == wm.TemporalResolutionAnnual && isSameYear) ||
-		(rawRes == wm.TemporalResolutionMonthly && isSameYearMonth)
+	areDatesValid := (aggRes == wm.TemporalResolutionOptionYear && isSameYear) ||
+		(aggRes == wm.TemporalResolutionOptionMonth && isSameYearMonth)
 
 	if !areDatesValid {
 		return series
