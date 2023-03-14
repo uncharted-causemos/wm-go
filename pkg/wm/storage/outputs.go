@@ -156,6 +156,15 @@ func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.Timeserie
 	return getTimeseriesFromCsv(s, key, params)
 }
 
+// GetOutputSparkline returns a datacube output sparkline
+func (s *Storage) GetOutputSparkline(params wm.DatacubeParams) ([]float64, error) {
+	series, err := s.GetOutputTimeseries(params)
+	if err != nil {
+		return nil, err
+	}
+	return toSparkline(series)
+}
+
 // GetOutputTimeseriesByRegion returns timeseries data for a specific region
 func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID string) ([]*wm.TimeseriesValue, error) {
 	// op := "Storage.GetOutputTimeseriesByRegion"
@@ -533,6 +542,7 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 		if timeseries != nil {
 			for _, name := range qualifierOptions {
 				if timeseries.Name == name {
+					sortTimeseries(timeseries.Timeseries)
 					filteredValues = append(filteredValues, timeseries)
 					break
 				}
@@ -787,6 +797,7 @@ func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*
 			})
 		}
 	}
+	sortTimeseries(series)
 	return series, nil
 }
 

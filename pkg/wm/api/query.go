@@ -132,9 +132,9 @@ func getDatacubeParams(r *http.Request) wm.DatacubeParams {
 	params.DataID = r.URL.Query().Get("data_id")
 	params.RunID = r.URL.Query().Get("run_id")
 	params.Feature = getFeature(r)
-	params.Resolution = r.URL.Query().Get("resolution")
-	params.TemporalAggFunc = r.URL.Query().Get("temporal_agg")
-	params.SpatialAggFunc = r.URL.Query().Get("spatial_agg")
+	params.Resolution = wm.TemporalResolutionOption(r.URL.Query().Get("resolution"))
+	params.TemporalAggFunc = wm.AggregationOption(r.URL.Query().Get("temporal_agg"))
+	params.SpatialAggFunc = wm.AggregationOption(r.URL.Query().Get("spatial_agg"))
 	return params
 }
 
