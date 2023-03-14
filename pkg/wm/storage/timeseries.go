@@ -105,7 +105,7 @@ func computeCoverage(rawLastTimestamp int64, rawRes wm.TemporalResolution, aggRe
 // aggRes - Resolution of the aggregated data
 // aggOpt - Temporal aggregation function
 // rawLastTimestamp - Final date from the raw data
-func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, rawRes wm.TemporalResolution, aggRes wm.TemporalResolutionOption, aggOpt wm.AggregationOption, rawLastTimestamp int64) []*wm.TimeseriesValue {
+func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, aggOpt wm.AggregationOption, aggRes wm.TemporalResolutionOption, rawRes wm.TemporalResolution, rawLastTimestamp int64) []*wm.TimeseriesValue {
 	series := deepCloneTs(timeseries)
 
 	if aggOpt != wm.AggregationOptionSum {

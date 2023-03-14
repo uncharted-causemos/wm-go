@@ -368,10 +368,14 @@ func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform
 func (a *api) getDataOutputSparkline(w http.ResponseWriter, r *http.Request) error {
 	op := "api.getDataOutputSparkline"
 	params := getDatacubeParams(r)
-	var sparkline []float64
-	var err error
+	rawRes := getRawDataResolution(r)
+	rawLastTs, err := getRawDataLastTimestamp(r)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
 
-	sparkline, err = a.dataOutput.GetOutputSparkline(params)
+	var sparkline []float64
+	sparkline, err = a.dataOutput.GetOutputSparkline(params, wm.TemporalResolution(rawRes), rawLastTs)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}

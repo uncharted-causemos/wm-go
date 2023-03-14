@@ -157,10 +157,15 @@ func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.Timeserie
 }
 
 // GetOutputSparkline returns a datacube output sparkline
-func (s *Storage) GetOutputSparkline(params wm.DatacubeParams) ([]float64, error) {
+// If rawRes and rawLastTimestamp is provided, try correcting incomplete last value
+func (s *Storage) GetOutputSparkline(params wm.DatacubeParams, rawRes wm.TemporalResolution, rawLastTimestamp int64) ([]float64, error) {
+	op := "Storage.GetOutputSparkline"
 	series, err := s.GetOutputTimeseries(params)
 	if err != nil {
-		return nil, err
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	if rawRes != "" && rawLastTimestamp != 0 {
+		series = correctIncompleteTimeseries(series, params.TemporalAggFunc, params.Resolution, rawRes, rawLastTimestamp)
 	}
 	return toSparkline(series)
 }

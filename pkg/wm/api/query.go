@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -66,6 +67,22 @@ func getAgg(r *http.Request) string {
 
 func getRegionID(r *http.Request) string {
 	return r.URL.Query().Get("region_id")
+}
+
+func getRawDataResolution(r *http.Request) wm.TemporalResolution {
+	return wm.TemporalResolution(r.URL.Query().Get("raw_res"))
+}
+
+func getRawDataLastTimestamp(r *http.Request) (int64, error) {
+	val := r.URL.Query().Get("raw_last_ts")
+	if val == "" {
+		return 0, nil
+	}
+	ts, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, &wm.Error{Code: wm.EINVALID, Message: "Invalid 'raw_last_ts' parameter value"}
+	}
+	return int64(ts), nil
 }
 
 type regionIDsBody struct {
