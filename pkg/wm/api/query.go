@@ -73,7 +73,7 @@ func getRawDataResolution(r *http.Request) wm.TemporalResolution {
 	return wm.TemporalResolution(r.URL.Query().Get("raw_res"))
 }
 
-func getRawDataLastTimestamp(r *http.Request) (int64, error) {
+func getRawDataLatestTimestamp(r *http.Request) (int64, error) {
 	val := r.URL.Query().Get("raw_last_ts")
 	if val == "" {
 		return 0, nil

@@ -369,7 +369,7 @@ func (a *api) getDataOutputSparkline(w http.ResponseWriter, r *http.Request) err
 	op := "api.getDataOutputSparkline"
 	params := getDatacubeParams(r)
 	rawRes := getRawDataResolution(r)
-	rawLastTs, err := getRawDataLastTimestamp(r)
+	rawLastTs, err := getRawDataLatestTimestamp(r)
 	if err != nil {
 		return &wm.Error{Op: op, Err: err}
 	}

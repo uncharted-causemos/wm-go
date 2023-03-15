@@ -243,7 +243,7 @@ type DataOutput interface {
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
 
 	// GetOutputSparkline returns datacube output sparkline
-	GetOutputSparkline(params DatacubeParams, rawRes TemporalResolution, rawLastTimestamp int64) ([]float64, error)
+	GetOutputSparkline(params DatacubeParams, rawRes TemporalResolution, rawLatestTimestamp int64) ([]float64, error)
 
 	// GetOutputTimeseriesByRegion returns timeseries data for a specific region
 	GetOutputTimeseriesByRegion(params DatacubeParams, regionID string) ([]*TimeseriesValue, error)

@@ -40,7 +40,7 @@ func deepCloneTs(series []*wm.TimeseriesValue) []*wm.TimeseriesValue {
 // Note: computeCoverage and correctIncompleteTimeseries is ported from incomplete-data-detection.js from casuemos repo
 
 // computeCoverage computes the temporal coverage of the final aggregated data point using the final
-// raw data point rawLastTimestamp, raw and aggregated temporal resolutions, rawRes and aggRes.
+// raw data point rawLatestTimestamp, raw and aggregated temporal resolutions, rawRes and aggRes.
 //
 // The raw temporal resolution has to be finer than the aggregated resolution.
 // If the raw resolution is coarser or equal to the aggregated resolution, the coverage
@@ -58,8 +58,8 @@ func deepCloneTs(series []*wm.TimeseriesValue) []*wm.TimeseriesValue {
 // returns the percentage of the final month/year that was covered by the raw data.
 // Negative values indicate inconsistent raw data and aggregated data timestamps.
 // Since approximations are used, the value could be greater than 1.
-func computeCoverage(rawLastTimestamp int64, rawRes wm.TemporalResolution, aggRes wm.TemporalResolutionOption) float64 {
-	lastRawTime := time.UnixMilli(rawLastTimestamp)
+func computeCoverage(rawLatestTimestamp int64, rawRes wm.TemporalResolution, aggRes wm.TemporalResolutionOption) float64 {
+	lastRawTime := time.UnixMilli(rawLatestTimestamp)
 	if aggRes == wm.TemporalResolutionOptionYear {
 		month := float64(lastRawTime.Month())
 		dayOfYear := float64(lastRawTime.YearDay())
@@ -104,20 +104,20 @@ func computeCoverage(rawLastTimestamp int64, rawRes wm.TemporalResolution, aggRe
 // rawRes - Resolution of the raw data
 // aggRes - Resolution of the aggregated data
 // aggOpt - Temporal aggregation function
-// rawLastTimestamp - Final date from the raw data
-func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, aggOpt wm.AggregationOption, aggRes wm.TemporalResolutionOption, rawRes wm.TemporalResolution, rawLastTimestamp int64) []*wm.TimeseriesValue {
+// rawLatestTimestamp - Final date from the raw data
+func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, aggOpt wm.AggregationOption, aggRes wm.TemporalResolutionOption, rawRes wm.TemporalResolution, rawLatestTimestamp int64) []*wm.TimeseriesValue {
 	series := deepCloneTs(timeseries)
 
 	if aggOpt != wm.AggregationOptionSum {
 		// No change is required
 		return series
 	}
-	if len(series) == 0 || series[0].Timestamp > rawLastTimestamp {
+	if len(series) == 0 || series[0].Timestamp > rawLatestTimestamp {
 		// Data is out of scope
 		return series
 	}
 
-	lastRawTime := time.UnixMilli(rawLastTimestamp).UTC()
+	lastRawTime := time.UnixMilli(rawLatestTimestamp).UTC()
 	lastAggTime := time.UnixMilli(series[len(series)-1].Timestamp).UTC()
 
 	isSameYear := lastAggTime.Year() == lastRawTime.Year()
@@ -132,7 +132,7 @@ func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, aggOpt wm.Agg
 
 	// Dates are valid and the aggregation is sum.
 	// Run extrapolation if the temporal coverage of the final aggregated point is between tsRemoveBelow and tsNoChangeAbove
-	coverage := computeCoverage(rawLastTimestamp, rawRes, aggRes)
+	coverage := computeCoverage(rawLatestTimestamp, rawRes, aggRes)
 	if coverage < tsRemoveBelow {
 		return series[:len(series)-1]
 	}
