@@ -76,19 +76,20 @@ func computeCoverage(rawLatestTimestamp int64, rawRes wm.TemporalResolution, agg
 		case wm.TemporalResolutionDaily: // 365 days in a year
 			return dayOfYear / 365
 		}
-	}
-	dayOfMonth := float64(lastRawTime.Day())
-	switch rawRes {
-	case wm.TemporalResolutionOther:
-	case wm.TemporalResolutionAnnual:
-	case wm.TemporalResolutionMonthly:
-		return 1
-	case wm.TemporalResolutionDekad: // 3 dekad in a month
-		return dayOfMonth / 10 / 3
-	case wm.TemporalResolutionWeekly: // 4 weeks in a month
-		return dayOfMonth / 7 / 4
-	case wm.TemporalResolutionDaily: // 30 days in a month
-		return dayOfMonth / 30
+	} else {
+		dayOfMonth := float64(lastRawTime.Day())
+		switch rawRes {
+		case wm.TemporalResolutionOther:
+		case wm.TemporalResolutionAnnual:
+		case wm.TemporalResolutionMonthly:
+			return 1
+		case wm.TemporalResolutionDekad: // 3 dekad in a month
+			return dayOfMonth / 10 / 3
+		case wm.TemporalResolutionWeekly: // 4 weeks in a month
+			return dayOfMonth / 7 / 4
+		case wm.TemporalResolutionDaily: // 30 days in a month
+			return dayOfMonth / 30
+		}
 	}
 	return 1
 }
