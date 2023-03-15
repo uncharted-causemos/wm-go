@@ -74,13 +74,13 @@ func getRawDataResolution(r *http.Request) wm.TemporalResolution {
 }
 
 func getRawDataLatestTimestamp(r *http.Request) (int64, error) {
-	val := r.URL.Query().Get("raw_last_ts")
+	val := r.URL.Query().Get("raw_latest_ts")
 	if val == "" {
 		return 0, nil
 	}
 	ts, err := strconv.Atoi(val)
 	if err != nil {
-		return 0, &wm.Error{Code: wm.EINVALID, Message: "Invalid 'raw_last_ts' parameter value"}
+		return 0, &wm.Error{Code: wm.EINVALID, Message: "Invalid 'raw_latest_ts' parameter value"}
 	}
 	return int64(ts), nil
 }
