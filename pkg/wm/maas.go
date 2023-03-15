@@ -3,6 +3,7 @@ package wm
 // TemporalResolution defines the temporal resolution type
 type TemporalResolution string
 
+// Temporal resolution type
 const (
 	TemporalResolutionAnnual  TemporalResolution = "annual"
 	TemporalResolutionMonthly TemporalResolution = "monthly"
@@ -15,6 +16,7 @@ const (
 // AggregationOption defines the available aggregation options
 type AggregationOption string
 
+// Available aggregation options
 const (
 	AggregationOptionMean AggregationOption = "mean"
 	AggregationOptionSum  AggregationOption = "sum"
@@ -23,6 +25,7 @@ const (
 // TemporalResolutionOption defines the available temporal resolution options
 type TemporalResolutionOption string
 
+// Available temporal resolution options
 const (
 	TemporalResolutionOptionYear  TemporalResolutionOption = "year"
 	TemporalResolutionOptionMonth TemporalResolutionOption = "month"

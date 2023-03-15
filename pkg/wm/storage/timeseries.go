@@ -109,9 +109,11 @@ func correctIncompleteTimeseries(timeseries []*wm.TimeseriesValue, aggOpt wm.Agg
 	series := deepCloneTs(timeseries)
 
 	if aggOpt != wm.AggregationOptionSum {
+		// No change is required
 		return series
 	}
 	if len(series) == 0 || series[0].Timestamp > rawLastTimestamp {
+		// Data is out of scope
 		return series
 	}
 
