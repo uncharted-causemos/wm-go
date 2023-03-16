@@ -57,6 +57,13 @@ func (msr *modelOutputTimeseriesValue) Render(w http.ResponseWriter, r *http.Req
 	return nil
 }
 
+type modelOutputSparklineValue float64
+
+// Render allows to satisfy the render.Renderer interface.
+func (m modelOutputSparklineValue) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type modelOutputBulkRegionalData struct {
 	*wm.ModelOutputBulkAggregateRegionalAdmins
 }
@@ -356,6 +363,28 @@ func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform
 	}
 
 	return timeseries, nil
+}
+
+func (a *api) getDataOutputSparkline(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDataOutputSparkline"
+	params := getDatacubeParams(r)
+	rawRes := getRawDataResolution(r)
+	rawLastTs, err := getRawDataLatestTimestamp(r)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+
+	var sparkline []float64
+	sparkline, err = a.dataOutput.GetOutputSparkline(params, wm.TemporalResolution(rawRes), rawLastTs)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	list := []render.Renderer{}
+	for _, point := range sparkline {
+		list = append(list, modelOutputSparklineValue(point))
+	}
+	render.RenderList(w, r, list)
+	return nil
 }
 
 func (a *api) getBulkDataOutputRegional(w http.ResponseWriter, r *http.Request) error {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
@@ -66,6 +67,22 @@ func getAgg(r *http.Request) string {
 
 func getRegionID(r *http.Request) string {
 	return r.URL.Query().Get("region_id")
+}
+
+func getRawDataResolution(r *http.Request) wm.TemporalResolution {
+	return wm.TemporalResolution(r.URL.Query().Get("raw_res"))
+}
+
+func getRawDataLatestTimestamp(r *http.Request) (int64, error) {
+	val := r.URL.Query().Get("raw_latest_ts")
+	if val == "" {
+		return 0, nil
+	}
+	ts, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, &wm.Error{Code: wm.EINVALID, Message: "Invalid 'raw_latest_ts' parameter value"}
+	}
+	return int64(ts), nil
 }
 
 type regionIDsBody struct {
@@ -132,9 +149,9 @@ func getDatacubeParams(r *http.Request) wm.DatacubeParams {
 	params.DataID = r.URL.Query().Get("data_id")
 	params.RunID = r.URL.Query().Get("run_id")
 	params.Feature = getFeature(r)
-	params.Resolution = r.URL.Query().Get("resolution")
-	params.TemporalAggFunc = r.URL.Query().Get("temporal_agg")
-	params.SpatialAggFunc = r.URL.Query().Get("spatial_agg")
+	params.Resolution = wm.TemporalResolutionOption(r.URL.Query().Get("resolution"))
+	params.TemporalAggFunc = wm.AggregationOption(r.URL.Query().Get("temporal_agg"))
+	params.SpatialAggFunc = wm.AggregationOption(r.URL.Query().Get("spatial_agg"))
 	return params
 }
 

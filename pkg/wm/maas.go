@@ -1,13 +1,44 @@
 package wm
 
+// TemporalResolution defines the temporal resolution type
+type TemporalResolution string
+
+// Temporal resolution type
+const (
+	TemporalResolutionAnnual  TemporalResolution = "annual"
+	TemporalResolutionMonthly TemporalResolution = "monthly"
+	TemporalResolutionDekad   TemporalResolution = "dekad"
+	TemporalResolutionWeekly  TemporalResolution = "weekly"
+	TemporalResolutionDaily   TemporalResolution = "daily"
+	TemporalResolutionOther   TemporalResolution = "other"
+)
+
+// AggregationOption defines the available aggregation options
+type AggregationOption string
+
+// Available aggregation options
+const (
+	AggregationOptionMean AggregationOption = "mean"
+	AggregationOptionSum  AggregationOption = "sum"
+)
+
+// TemporalResolutionOption defines the available temporal resolution options
+type TemporalResolutionOption string
+
+// Available temporal resolution options
+const (
+	TemporalResolutionOptionYear  TemporalResolutionOption = "year"
+	TemporalResolutionOptionMonth TemporalResolutionOption = "month"
+)
+
 // DatacubeParams represent common parameters for requesting model run data
 type DatacubeParams struct {
-	DataID          string `json:"data_id"`
-	RunID           string `json:"run_id"`
-	Feature         string `json:"feature"`
-	Resolution      string `json:"resolution"`
-	TemporalAggFunc string `json:"temporal_agg"`
-	SpatialAggFunc  string `json:"spatial_agg"`
+	DataID          string                   `json:"data_id"`
+	RunID           string                   `json:"run_id"`
+	Feature         string                   `json:"feature"`
+	Resolution      TemporalResolutionOption `json:"resolution"`
+	TemporalAggFunc AggregationOption        `json:"temporal_agg"`
+	SpatialAggFunc  AggregationOption        `json:"spatial_agg"`
 }
 
 // FullTimeseriesParams represent all parameters for fetching a timeseries
@@ -210,6 +241,9 @@ type DataOutput interface {
 
 	// GetOutputTimeseries returns datacube output timeseries
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
+
+	// GetOutputSparkline returns datacube output sparkline
+	GetOutputSparkline(params DatacubeParams, rawRes TemporalResolution, rawLatestTimestamp int64) ([]float64, error)
 
 	// GetOutputTimeseriesByRegion returns timeseries data for a specific region
 	GetOutputTimeseriesByRegion(params DatacubeParams, regionID string) ([]*TimeseriesValue, error)

@@ -156,6 +156,20 @@ func (s *Storage) GetOutputTimeseries(params wm.DatacubeParams) ([]*wm.Timeserie
 	return getTimeseriesFromCsv(s, key, params)
 }
 
+// GetOutputSparkline returns a datacube output sparkline
+// If rawRes and rawLatestTimestamp is provided, try correcting incomplete last value
+func (s *Storage) GetOutputSparkline(params wm.DatacubeParams, rawRes wm.TemporalResolution, rawLatestTimestamp int64) ([]float64, error) {
+	op := "Storage.GetOutputSparkline"
+	series, err := s.GetOutputTimeseries(params)
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	if rawRes != "" && rawLatestTimestamp != 0 {
+		series = correctIncompleteTimeseries(series, params.TemporalAggFunc, params.Resolution, rawRes, rawLatestTimestamp)
+	}
+	return toSparkline(series)
+}
+
 // GetOutputTimeseriesByRegion returns timeseries data for a specific region
 func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID string) ([]*wm.TimeseriesValue, error) {
 	// op := "Storage.GetOutputTimeseriesByRegion"
@@ -533,6 +547,7 @@ func (s *Storage) GetQualifierTimeseries(params wm.DatacubeParams, qualifier str
 		if timeseries != nil {
 			for _, name := range qualifierOptions {
 				if timeseries.Name == name {
+					sortTimeseries(timeseries.Timeseries)
 					filteredValues = append(filteredValues, timeseries)
 					break
 				}
@@ -787,6 +802,7 @@ func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*
 			})
 		}
 	}
+	sortTimeseries(series)
 	return series, nil
 }
 
