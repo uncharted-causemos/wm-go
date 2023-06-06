@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
-	github.com/aws/aws-sdk-go v1.33.19
+	github.com/aws/aws-sdk-go v1.34.0
 	github.com/buger/jsonparser v0.0.0-20191204142016-1a29609e0929
 	github.com/davecgh/go-spew v1.1.1
 	github.com/elastic/go-elasticsearch/v7 v7.6.0
@@ -17,7 +17,6 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1
 	github.com/paulmach/orb v0.1.6
 	github.com/stretchr/testify v1.5.1
-	github.com/tidwall/gjson v1.6.0
 	go.uber.org/zap v1.14.0
 	google.golang.org/protobuf v1.25.0
 )
@@ -29,8 +28,6 @@ require (
 	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/tidwall/match v1.0.1 // indirect
-	github.com/tidwall/pretty v1.0.1 // indirect
 	go.uber.org/atomic v1.6.0 // indirect
 	go.uber.org/multierr v1.5.0 // indirect
 	golang.org/x/lint v0.0.0-20200302205851-738671d3881b // indirect
