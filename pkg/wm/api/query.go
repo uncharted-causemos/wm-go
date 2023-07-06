@@ -61,6 +61,11 @@ func getTransform(r *http.Request) wm.Transform {
 	return wm.Transform(transform)
 }
 
+func getAdminLevel(r *http.Request) wm.AdminLevel {
+	adminLevel := r.URL.Query().Get("admin_level")
+	return wm.AdminLevel(adminLevel)
+}
+
 func getAgg(r *http.Request) string {
 	return r.URL.Query().Get("agg")
 }

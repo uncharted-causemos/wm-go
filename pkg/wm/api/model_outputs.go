@@ -87,6 +87,15 @@ func (msr *modelOutputRegionalData) Render(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
+type modelOutputRegionalDataByAdminLevel struct {
+	*wm.ModelOutputRegional
+}
+
+// Render allows to satisfy the render.Renderer interface.
+func (msr *modelOutputRegionalDataByAdminLevel) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 type modelOutputRawDataPoint map[string]interface{}
 
 // Render allows to satisfy the render.Renderer interface.
@@ -356,7 +365,7 @@ func (a *api) getTimeSeries(regionID string, params wm.DatacubeParams, transform
 		return nil, err
 	}
 	if transform != "" {
-		timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID})
+		timeseries, err = a.dataOutput.TransformOutputTimeseriesByRegion(timeseries, wm.TransformConfig{Transform: transform, RegionID: regionID, DatacubeParams: &params})
 		if err != nil {
 			return nil, err
 		}
@@ -560,6 +569,28 @@ func (a *api) getDataOutputRegional(w http.ResponseWriter, r *http.Request) erro
 		return &wm.Error{Op: op, Err: err}
 	}
 	render.Render(w, r, &modelOutputRegionalData{data})
+	return nil
+}
+
+func (a *api) getRegionAggregationByAdminLevel(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getRegionAggregationByAdminLevel"
+	params := getDatacubeParams(r)
+	timestamp := getTimestamp(r)
+	transform := getTransform(r)
+	adminLevel := getAdminLevel(r)
+
+	data, err := a.dataOutput.GetRegionAggregationByAdminLevel(params, timestamp, adminLevel)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+	if transform != "" {
+		data, err = a.dataOutput.TransformRegionAggregationByAdminLevel(data, wm.TransformConfig{Transform: transform, DatacubeParams: &params})
+		if err != nil {
+			return &wm.Error{Op: op, Err: err}
+		}
+	}
+
+	render.Render(w, r, &modelOutputRegionalDataByAdminLevel{data})
 	return nil
 }
 
