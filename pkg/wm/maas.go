@@ -79,15 +79,17 @@ type PipelineResultsParams struct {
 	RunID  string `json:"run_id"`
 }
 
-type RegionalExtrema struct {
+// RegionalDataPointWithTimestamp represent a regional data point with time axis
+type RegionalDataPointWithTimestamp struct {
 	RegionID  string  `json:"region_id"`
 	Timestamp int64   `json:"timestamp"`
 	Value     float64 `json:"value"`
 }
 
-type RegionalStatsExtrema struct {
-	Min map[string][]RegionalExtrema `json:"min"`
-	Max map[string][]RegionalExtrema `json:"max"`
+// RegionalExtrema stores regional data points with minimum and maximum value across time and regions
+type RegionalExtrema struct {
+	Min map[string][]RegionalDataPointWithTimestamp `json:"min"`
+	Max map[string][]RegionalDataPointWithTimestamp `json:"max"`
 }
 
 // TimeseriesValue represent a timeseries data point

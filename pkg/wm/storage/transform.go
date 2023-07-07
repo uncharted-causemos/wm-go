@@ -377,7 +377,7 @@ func (s *Storage) getRegionalMinMaxFromS3(params *wm.DatacubeParams, adminLevel 
 		return 0, 0, &wm.Error{Op: op, Err: err}
 	}
 
-	var extrema wm.RegionalStatsExtrema
+	var extrema wm.RegionalExtrema
 	err = json.Unmarshal(buf, &extrema)
 	if err != nil {
 		return 0, 0, &wm.Error{Op: op, Err: err}
