@@ -125,7 +125,7 @@ func (s *Storage) normalizeRegionalTimeseries(timeseries []*wm.TimeseriesValue, 
 	// Get admin level from region id
 	adminLevels := []wm.AdminLevel{wm.AdminLevelCountry, wm.AdminLevel1, wm.AdminLevel2, wm.AdminLevel3}
 	regionId := config.RegionID
-	adminLevelNum := len(strings.Split(string(regionId), "__"))
+	adminLevelNum := len(strings.Split(string(regionId), "__")) - 1
 
 	// Fetch min max from precomputed extrema file and get min and max value across the region and timestamp
 	min, max, err := s.getRegionalMinMaxFromS3(params, adminLevels[adminLevelNum])
@@ -372,7 +372,6 @@ func (s *Storage) getRegionalMinMaxFromS3(params *wm.DatacubeParams, adminLevel 
 	op := "Storage.getRegionalMinMaxFromS3"
 	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/stats/default/extrema.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, adminLevel)
-
 	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
 	if err != nil {
 		return 0, 0, &wm.Error{Op: op, Err: err}
@@ -385,7 +384,7 @@ func (s *Storage) getRegionalMinMaxFromS3(params *wm.DatacubeParams, adminLevel 
 	}
 
 	aggFuncKey := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
-	min := extrema.Max[aggFuncKey][0].Value
+	min := extrema.Min[aggFuncKey][0].Value
 	max := extrema.Max[aggFuncKey][0].Value
 	return min, max, nil
 }

@@ -87,13 +87,20 @@ func (msr *modelOutputRegionalData) Render(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-type modelOutputRegionalDataByAdminLevel struct {
-	*wm.ModelOutputRegional
-}
+type modelOutputRegionalDataByAdminLevel wm.ModelOutputRegional
 
 // Render allows to satisfy the render.Renderer interface.
-func (msr *modelOutputRegionalDataByAdminLevel) Render(w http.ResponseWriter, r *http.Request) error {
+func (m *modelOutputRegionalDataByAdminLevel) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
+}
+
+// newModelOutputRegionalDataByAdminLevel creates new modelOutputRegionalDataByAdminLevel object
+func newModelOutputRegionalDataByAdminLevel(d *wm.ModelOutputRegional) *modelOutputRegionalDataByAdminLevel {
+	data := make(modelOutputRegionalDataByAdminLevel)
+	for k, v := range *d {
+		data[k] = v
+	}
+	return &data
 }
 
 type modelOutputRawDataPoint map[string]interface{}
@@ -590,7 +597,7 @@ func (a *api) getRegionAggregationByAdminLevel(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	render.Render(w, r, &modelOutputRegionalDataByAdminLevel{data})
+	render.Render(w, r, newModelOutputRegionalDataByAdminLevel(data))
 	return nil
 }
 
