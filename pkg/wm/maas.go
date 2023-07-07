@@ -34,6 +34,7 @@ const (
 // AdminLevel defines the admin levels
 type AdminLevel string
 
+// Available admin levels
 const (
 	AdminLevelCountry AdminLevel = "country"
 	AdminLevel1       AdminLevel = "admin1"

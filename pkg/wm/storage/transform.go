@@ -124,8 +124,8 @@ func (s *Storage) normalizeRegionalTimeseries(timeseries []*wm.TimeseriesValue, 
 
 	// Get admin level from region id
 	adminLevels := []wm.AdminLevel{wm.AdminLevelCountry, wm.AdminLevel1, wm.AdminLevel2, wm.AdminLevel3}
-	regionId := config.RegionID
-	adminLevelNum := len(strings.Split(string(regionId), "__")) - 1
+	regionID := config.RegionID
+	adminLevelNum := len(strings.Split(string(regionID), "__")) - 1
 
 	// Fetch min max from precomputed extrema file and get min and max value across the region and timestamp
 	min, max, err := s.getRegionalMinMaxFromS3(params, adminLevels[adminLevelNum])
