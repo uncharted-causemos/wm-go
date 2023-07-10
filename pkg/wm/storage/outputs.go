@@ -45,6 +45,26 @@ func index(vs []string, t string) int {
 	return -1
 }
 
+// GetOutputExtrema - gets min and max statistics
+func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.Extrema, error) {
+	op := "Storage.GetOutputExtrema"
+
+	key := fmt.Sprintf("%s/%s/%s/%s/regional/country/stats/default/extrema.json",
+		params.DataID, params.RunID, params.Resolution, params.Feature)
+	bucket := getBucket(s, params.RunID)
+	buf, err := getFileFromS3(s, bucket, aws.String(key))
+
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	var output wm.Extrema
+	err = json.Unmarshal(buf, &output)
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+	return &output, nil
+}
+
 // GetRegionalOutputStats returns regional output statistics
 func (s *Storage) GetRegionalOutputStats(params wm.DatacubeParams) (*wm.ModelRegionalOutputStat, error) {
 	op := "Storage.GetRegionalOutputStats"

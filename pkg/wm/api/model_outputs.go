@@ -326,6 +326,22 @@ func (a *api) getDataOutputTimeseries(w http.ResponseWriter, r *http.Request) er
 	return nil
 }
 
+func (a *api) getDataOutputExtrema(w http.ResponseWriter, r *http.Request) error {
+	op := "api.getDataOutputExtrema"
+	params := getDatacubeParams(r)
+
+	var extrema *wm.Extrema
+	var err error
+
+	extrema, err = a.dataOutput.GetOutputExtrema(params)
+	if err != nil {
+		return &wm.Error{Op: op, Err: err}
+	}
+
+	render.JSON(w, r, &extrema)
+	return nil
+}
+
 func (a *api) getTimeSeriesAsync(regionID string, params wm.DatacubeParams, transform wm.Transform) timeseriesResultChan {
 	rc := make(chan []*wm.TimeseriesValue)
 	ec := make(chan error)

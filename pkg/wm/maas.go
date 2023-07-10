@@ -75,6 +75,25 @@ type TimeseriesValue struct {
 	Value     float64 `json:"value"`
 }
 
+type ExtremaValue struct {
+	RegionId  string  `json:"region_id"`
+	Timestamp int64   `json:"timestamp"`
+	Value     float64 `json:"value"`
+	Unit      string  `json:"unit"`
+}
+
+type ExtremaValues struct {
+	SsumTsum   []ExtremaValue `json:"s_sum_t_sum"`
+	SmeanTsum  []ExtremaValue `json:"s_mean_t_sum"`
+	SsumTmean  []ExtremaValue `json:"s_sum_t_mean"`
+	SmeanTmean []ExtremaValue `json:"s_mean_t_mean"`
+}
+
+type Extrema struct {
+	Min ExtremaValues `json:"min"`
+	Max ExtremaValues `json:"max"`
+}
+
 // ModelOutputRawDataPoint represent a raw data point
 type ModelOutputRawDataPoint struct {
 	Timestamp  int64             `json:"timestamp"`
@@ -241,6 +260,9 @@ type DataOutput interface {
 
 	// GetOutputTimeseries returns datacube output timeseries
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
+
+	// GetOutputExtrema returns extrema json
+	GetOutputExtrema(params DatacubeParams) (*Extrema, error)
 
 	// GetOutputSparkline returns datacube output sparkline
 	GetOutputSparkline(params DatacubeParams, rawRes TemporalResolution, rawLatestTimestamp int64) ([]float64, error)
