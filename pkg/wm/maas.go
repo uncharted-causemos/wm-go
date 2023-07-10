@@ -75,13 +75,15 @@ type TimeseriesValue struct {
 	Value     float64 `json:"value"`
 }
 
+// ExtremaValue represents the extrema values
 type ExtremaValue struct {
-	RegionId  string  `json:"region_id"`
+	RegionID  string  `json:"region_id"`
 	Timestamp int64   `json:"timestamp"`
 	Value     float64 `json:"value"`
 	Unit      string  `json:"unit"`
 }
 
+// ExtremaValues represents a set of data values
 type ExtremaValues struct {
 	SsumTsum   []ExtremaValue `json:"s_sum_t_sum"`
 	SmeanTsum  []ExtremaValue `json:"s_mean_t_sum"`
@@ -89,6 +91,7 @@ type ExtremaValues struct {
 	SmeanTmean []ExtremaValue `json:"s_mean_t_mean"`
 }
 
+// Extrema represents the main body of the extrema values
 type Extrema struct {
 	Min ExtremaValues `json:"min"`
 	Max ExtremaValues `json:"max"`
