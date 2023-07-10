@@ -1,11 +1,14 @@
 package storage
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"gitlab.uncharted.software/WM/wm-go/pkg/wm"
 )
 
@@ -39,6 +42,8 @@ func (s *Storage) TransformOutputTimeseriesByRegion(timeseries []*wm.TimeseriesV
 	case wm.TransformPerCapita1M:
 		config.ScaleFactor = 1_000_000
 		return s.transformPerCapitaTimeseries(timeseries, config)
+	case wm.TransformNormalization:
+		return s.normalizeRegionalTimeseries(timeseries, config)
 	default:
 		return timeseries, nil
 	}
@@ -57,6 +62,17 @@ func (s *Storage) TransformOutputQualifierTimeseriesByRegion(data []*wm.ModelOut
 			Name: qSeries.Name, Timeseries: series})
 	}
 	return result, nil
+}
+
+// TransformRegionAggregationByAdminLevel returns transformed regional data for given admin level at ONE timestamp
+func (s *Storage) TransformRegionAggregationByAdminLevel(data *wm.ModelOutputRegional, config wm.TransformConfig) (*wm.ModelOutputRegional, error) {
+	// op := "Storage.TransformRegionAggregationByAdminLevel"
+	switch config.Transform {
+	case wm.TransformNormalization:
+		return s.normalizeRegionAggregationByAdminLevel(data, config)
+	default:
+		return data, nil
+	}
 }
 
 // TransformRegionAggregation returns transformed regional data for ALL admin regions at ONE timestamp
@@ -99,6 +115,30 @@ func (s *Storage) TransformQualifierRegional(data *wm.ModelOutputRegionalQualifi
 	default:
 		return data, nil
 	}
+}
+
+func (s *Storage) normalizeRegionalTimeseries(timeseries []*wm.TimeseriesValue, config wm.TransformConfig) ([]*wm.TimeseriesValue, error) {
+	op := "Storage.normalizeRegionalTimeseries"
+
+	params := config.DatacubeParams
+
+	// Get admin level from region id
+	adminLevels := []wm.AdminLevel{wm.AdminLevelCountry, wm.AdminLevel1, wm.AdminLevel2, wm.AdminLevel3}
+	regionID := config.RegionID
+	adminLevelNum := len(strings.Split(string(regionID), "__")) - 1
+
+	// Fetch min max from precomputed extrema file and get min and max value across the region and timestamp
+	min, max, err := s.getRegionalMinMaxFromS3(params, adminLevels[adminLevelNum])
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+
+	var result []*wm.TimeseriesValue
+	for _, v := range timeseries {
+		result = append(result, &wm.TimeseriesValue{Timestamp: v.Timestamp, Value: normalize(v.Value, min, max)})
+	}
+
+	return result, nil
 }
 
 func (s *Storage) transformPerCapitaTimeseries(timeseries []*wm.TimeseriesValue, config wm.TransformConfig) ([]*wm.TimeseriesValue, error) {
@@ -272,6 +312,23 @@ func getAvailablePopulationDataYear(timestamp string) (int, error) {
 	return pYear, nil
 }
 
+func (s *Storage) normalizeRegionAggregationByAdminLevel(data *wm.ModelOutputRegional, config wm.TransformConfig) (*wm.ModelOutputRegional, error) {
+	op := "Storage.normalizeRegionAggregationByAdminLevel"
+
+	result := make(wm.ModelOutputRegional)
+
+	for adminLevel := range *data {
+		min, max, err := s.getRegionalMinMaxFromS3(config.DatacubeParams, adminLevel)
+		if err != nil {
+			return nil, &wm.Error{Op: op, Err: err}
+		}
+		for _, d := range (*data)[adminLevel] {
+			result[adminLevel] = append(result[adminLevel], wm.ModelOutputAdminData{ID: d.ID, Value: normalize(d.Value, min, max)})
+		}
+	}
+	return &result, nil
+}
+
 func (s *Storage) normalizeRegionAggregation(data *wm.ModelOutputRegionalAdmins) (*wm.ModelOutputRegionalAdmins, error) {
 	// op := "Storage.normalizeRegionAggregation"
 
@@ -310,6 +367,29 @@ func (s *Storage) normalizeQualifierRegional(data *wm.ModelOutputRegionalQualifi
 	return result, nil
 }
 
+// getRegionalMinMaxFromS3 fetches regional min max values from precomputed extrema file from s3
+func (s *Storage) getRegionalMinMaxFromS3(params *wm.DatacubeParams, adminLevel wm.AdminLevel) (float64, float64, error) {
+	op := "Storage.getRegionalMinMaxFromS3"
+	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/stats/default/extrema.json",
+		params.DataID, params.RunID, params.Resolution, params.Feature, adminLevel)
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
+	if err != nil {
+		return 0, 0, &wm.Error{Op: op, Err: err}
+	}
+
+	var extrema wm.RegionalExtrema
+	err = json.Unmarshal(buf, &extrema)
+	if err != nil {
+		return 0, 0, &wm.Error{Op: op, Err: err}
+	}
+
+	aggFuncKey := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+	min := extrema.Min[aggFuncKey][0].Value
+	max := extrema.Max[aggFuncKey][0].Value
+	return min, max, nil
+}
+
+// getMinMax gets local min and max values from provided admin data
 func getMinMax(adminData []wm.ModelOutputAdminData) (float64, float64) {
 	if len(adminData) == 0 {
 		return 0, 0
