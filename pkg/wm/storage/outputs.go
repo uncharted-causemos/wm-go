@@ -202,6 +202,57 @@ func (s *Storage) GetOutputTimeseriesByRegion(params wm.DatacubeParams, regionID
 	return getTimeseriesFromCsv(s, key, params)
 }
 
+// GetRegionAggregationByAdminLevel returns regional data for given admin level at ONE timestamp
+func (s *Storage) GetRegionAggregationByAdminLevel(params wm.DatacubeParams, timestamp string, adminLevel wm.AdminLevel) (*wm.ModelOutputRegional, error) {
+	op := "Storage.GetRegionAggregationByAdminLevel"
+	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/aggs/%s/default/default.csv",
+		params.DataID, params.RunID, params.Resolution, params.Feature, adminLevel, timestamp)
+
+	buf, err := getFileFromS3(s, getBucket(s, params.RunID), aws.String(key))
+	if err != nil {
+		return nil, &wm.Error{Op: op, Err: err}
+	}
+
+	result := make(wm.ModelOutputRegional)
+	points := make([]wm.ModelOutputAdminData, 0)
+
+	// Read and parse csv
+	r := csv.NewReader(bytes.NewReader(buf))
+	isHeader := true
+	valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
+	valueColIndex := -1
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, &wm.Error{Op: op, Err: err}
+		}
+		// Parse header and find the index of the target value column
+		if isHeader {
+			valueColIndex = index(record, valueCol)
+			if valueColIndex == -1 {
+				return nil, &wm.Error{Code: wm.EINVALID, Op: op, Message: fmt.Sprintf("Invalid agg functions. Spatial: %s, Temporal: %s", params.SpatialAggFunc, params.TemporalAggFunc)}
+			}
+			isHeader = false
+		} else {
+			regionID := record[0]
+			value, err := strconv.ParseFloat(record[valueColIndex], 64)
+			if err != nil {
+				continue
+			}
+			points = append(points, wm.ModelOutputAdminData{
+				ID:    regionID,
+				Value: value,
+			})
+		}
+	}
+	result[adminLevel] = points
+
+	return &result, nil
+}
+
 // GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp string) (*wm.ModelOutputRegionalAdmins, error) {
 	op := "Storage.GetRegionAggregation"
@@ -232,10 +283,6 @@ func (s *Storage) GetRegionAggregation(params wm.DatacubeParams, timestamp strin
 		r := csv.NewReader(bytes.NewReader(buf))
 		isHeader := true
 		valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
-		if params.SpatialAggFunc == "count" {
-			// when counting data points spatially, temporal aggregation function doesn't matter
-			valueCol = "s_count"
-		}
 		valueColIndex := -1
 		for {
 			record, err := r.Read()
@@ -787,10 +834,6 @@ func getTimeseriesFromCsv(s *Storage, key string, params wm.DatacubeParams) ([]*
 	r := csv.NewReader(bytes.NewReader(buf))
 	isHeader := true
 	valueCol := fmt.Sprintf("s_%s_t_%s", params.SpatialAggFunc, params.TemporalAggFunc)
-	if params.SpatialAggFunc == "count" {
-		// when counting data points spatially, temporal aggregation function doesn't matter
-		valueCol = "s_count"
-	}
 	valueColIndex := -1
 	for {
 		record, err := r.Read()

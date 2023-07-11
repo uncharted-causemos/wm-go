@@ -31,6 +31,17 @@ const (
 	TemporalResolutionOptionMonth TemporalResolutionOption = "month"
 )
 
+// AdminLevel defines the admin levels
+type AdminLevel string
+
+// Available admin levels
+const (
+	AdminLevelCountry AdminLevel = "country"
+	AdminLevel1       AdminLevel = "admin1"
+	AdminLevel2       AdminLevel = "admin2"
+	AdminLevel3       AdminLevel = "admin3"
+)
+
 // DatacubeParams represent common parameters for requesting model run data
 type DatacubeParams struct {
 	DataID          string                   `json:"data_id"`
@@ -67,6 +78,19 @@ type QualifierInfoParams struct {
 type PipelineResultsParams struct {
 	DataID string `json:"data_id"`
 	RunID  string `json:"run_id"`
+}
+
+// RegionalDataPointWithTimestamp represent a regional data point with time axis
+type RegionalDataPointWithTimestamp struct {
+	RegionID  string  `json:"region_id"`
+	Timestamp int64   `json:"timestamp"`
+	Value     float64 `json:"value"`
+}
+
+// RegionalExtrema stores regional data points with minimum and maximum value across time and regions
+type RegionalExtrema struct {
+	Min map[string][]RegionalDataPointWithTimestamp `json:"min"`
+	Max map[string][]RegionalDataPointWithTimestamp `json:"max"`
 }
 
 // TimeseriesValue represent a timeseries data point
@@ -210,6 +234,9 @@ type ModelOutputBulkRegionalAdmins struct {
 	*ModelOutputRegionalAdmins `json:"data"`
 }
 
+// ModelOutputRegional represent regional data for one or more admin levels. Each admin level field is optional.
+type ModelOutputRegional map[AdminLevel][]ModelOutputAdminData
+
 // ModelOutputRegionalAdmins represent regional data for all admin levels
 type ModelOutputRegionalAdmins struct {
 	Country []ModelOutputAdminData `json:"country"`
@@ -245,9 +272,10 @@ const (
 
 // TransformConfig defines transform configuration
 type TransformConfig struct {
-	Transform   Transform `json:"transform"`
-	RegionID    string    `json:"region_id"`
-	ScaleFactor float64   `json:"scale_factor"`
+	Transform      Transform       `json:"transform"`
+	RegionID       string          `json:"region_id"`
+	ScaleFactor    float64         `json:"scale_factor"`
+	DatacubeParams *DatacubeParams `json:"datacube_params"`
 }
 
 // DataOutput defines the methods that output database implementation needs to satisfy
@@ -275,6 +303,9 @@ type DataOutput interface {
 
 	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
 	GetRegionAggregation(params DatacubeParams, timestamp string) (*ModelOutputRegionalAdmins, error)
+
+	// GetRegionAggregation returns regional data for ALL admin regions at ONE timestamp
+	GetRegionAggregationByAdminLevel(params DatacubeParams, timestamp string, adminLevel AdminLevel) (*ModelOutputRegional, error)
 
 	// GetRawData returns datacube raw data
 	GetRawData(params DatacubeParams) ([]*ModelOutputRawDataPoint, error)
@@ -314,6 +345,9 @@ type DataOutput interface {
 
 	// TransformQualifierRegional returns transformed qualifier regional data for ALL admin regions at ONE timestamp
 	TransformQualifierRegional(data *ModelOutputRegionalQualifiers, timestamp string, config TransformConfig) (*ModelOutputRegionalQualifiers, error)
+
+	// TransformRegionAggregationByAdminLevel returns transformed regional data for given admin level at given timestamp
+	TransformRegionAggregationByAdminLevel(data *ModelOutputRegional, config TransformConfig) (*ModelOutputRegional, error)
 }
 
 // VectorTile defines methods that tile storage/database needs to satisfy
