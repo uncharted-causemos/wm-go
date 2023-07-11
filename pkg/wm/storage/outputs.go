@@ -62,6 +62,19 @@ func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.RegionalExtrem
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
 	}
+
+	// remove unneeded data based on agg parameters from user
+	var filter = fmt.Sprintf(`s_%s_t_%s`, params.SpatialAggFunc, params.TemporalAggFunc)
+	for key, _ := range output.Min {
+		if key != filter {
+			delete(output.Min, key)
+		}
+	}
+	for key, _ := range output.Max {
+		if key != filter {
+			delete(output.Max, key)
+		}
+	}
 	return &output, nil
 }
 
