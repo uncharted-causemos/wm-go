@@ -330,7 +330,7 @@ func (a *api) getDataOutputExtrema(w http.ResponseWriter, r *http.Request) error
 	op := "api.getDataOutputExtrema"
 	params := getDatacubeParams(r)
 
-	var extrema *wm.Extrema
+	var extrema *wm.RegionalExtrema
 	var err error
 
 	extrema, err = a.dataOutput.GetOutputExtrema(params)

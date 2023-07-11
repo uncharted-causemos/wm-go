@@ -46,7 +46,7 @@ func index(vs []string, t string) int {
 }
 
 // GetOutputExtrema - gets min and max statistics
-func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.Extrema, error) {
+func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.RegionalExtrema, error) {
 	op := "Storage.GetOutputExtrema"
 
 	key := fmt.Sprintf("%s/%s/%s/%s/regional/country/stats/default/extrema.json",
@@ -57,7 +57,7 @@ func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.Extrema, error
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
 	}
-	var output wm.Extrema
+	var output wm.RegionalExtrema
 	err = json.Unmarshal(buf, &output)
 	if err != nil {
 		return nil, &wm.Error{Op: op, Err: err}
