@@ -50,6 +50,7 @@ type DatacubeParams struct {
 	Resolution      TemporalResolutionOption `json:"resolution"`
 	TemporalAggFunc AggregationOption        `json:"temporal_agg"`
 	SpatialAggFunc  AggregationOption        `json:"spatial_agg"`
+	AdminLevel      AdminLevel               `json:"admin_level"`
 }
 
 // FullTimeseriesParams represent all parameters for fetching a timeseries
@@ -92,6 +93,9 @@ type RegionalExtrema struct {
 	Min map[string][]RegionalDataPointWithTimestamp `json:"min"`
 	Max map[string][]RegionalDataPointWithTimestamp `json:"max"`
 }
+
+// RegionalExtremaSelected stored filtered extrema data (by agg type)
+type RegionalExtremaSelected map[string][]RegionalDataPointWithTimestamp
 
 // TimeseriesValue represent a timeseries data point
 type TimeseriesValue struct {
@@ -269,6 +273,9 @@ type DataOutput interface {
 
 	// GetOutputTimeseries returns datacube output timeseries
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
+
+	// GetOutputExtrema returns extrema json
+	GetOutputExtrema(params DatacubeParams) (*RegionalExtremaSelected, error)
 
 	// GetOutputSparkline returns datacube output sparkline
 	GetOutputSparkline(params DatacubeParams, rawRes TemporalResolution, rawLatestTimestamp int64) ([]float64, error)
