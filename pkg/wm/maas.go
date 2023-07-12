@@ -94,6 +94,8 @@ type RegionalExtrema struct {
 	Max map[string][]RegionalDataPointWithTimestamp `json:"max"`
 }
 
+type RegionalExtremaSelected map[string][]RegionalDataPointWithTimestamp
+
 // TimeseriesValue represent a timeseries data point
 type TimeseriesValue struct {
 	Timestamp int64   `json:"timestamp"`
@@ -272,7 +274,7 @@ type DataOutput interface {
 	GetOutputTimeseries(params DatacubeParams) ([]*TimeseriesValue, error)
 
 	// GetOutputExtrema returns extrema json
-	GetOutputExtrema(params DatacubeParams) (*RegionalExtrema, error)
+	GetOutputExtrema(params DatacubeParams) (*RegionalExtremaSelected, error)
 
 	// GetOutputSparkline returns datacube output sparkline
 	GetOutputSparkline(params DatacubeParams, rawRes TemporalResolution, rawLatestTimestamp int64) ([]float64, error)

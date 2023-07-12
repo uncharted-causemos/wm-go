@@ -46,7 +46,7 @@ func index(vs []string, t string) int {
 }
 
 // GetOutputExtrema - gets min and max statistics
-func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.RegionalExtrema, error) {
+func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.RegionalExtremaSelected, error) {
 	op := "Storage.GetOutputExtrema"
 	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/stats/default/extrema.json",
 		params.DataID, params.RunID, params.Resolution, params.Feature, params.AdminLevel)
@@ -64,17 +64,21 @@ func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.RegionalExtrem
 
 	// remove unneeded data based on agg parameters from user
 	var filter = fmt.Sprintf(`s_%s_t_%s`, params.SpatialAggFunc, params.TemporalAggFunc)
+	filteredOutput := make(wm.RegionalExtremaSelected)
+
 	for key := range output.Min {
-		if key != filter {
-			delete(output.Min, key)
+		if key == filter {
+			filteredOutput["min"] = output.Min[key]
 		}
 	}
+
 	for key := range output.Max {
-		if key != filter {
-			delete(output.Max, key)
+		if key == filter {
+			filteredOutput["max"] = output.Max[key]
 		}
 	}
-	return &output, nil
+
+	return &filteredOutput, nil
 }
 
 // GetRegionalOutputStats returns regional output statistics
