@@ -48,9 +48,8 @@ func index(vs []string, t string) int {
 // GetOutputExtrema - gets min and max statistics
 func (s *Storage) GetOutputExtrema(params wm.DatacubeParams) (*wm.RegionalExtrema, error) {
 	op := "Storage.GetOutputExtrema"
-
-	key := fmt.Sprintf("%s/%s/%s/%s/regional/country/stats/default/extrema.json",
-		params.DataID, params.RunID, params.Resolution, params.Feature)
+	key := fmt.Sprintf("%s/%s/%s/%s/regional/%s/stats/default/extrema.json",
+		params.DataID, params.RunID, params.Resolution, params.Feature, params.AdminLevel)
 	bucket := getBucket(s, params.RunID)
 	buf, err := getFileFromS3(s, bucket, aws.String(key))
 

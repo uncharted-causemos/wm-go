@@ -50,6 +50,7 @@ type DatacubeParams struct {
 	Resolution      TemporalResolutionOption `json:"resolution"`
 	TemporalAggFunc AggregationOption        `json:"temporal_agg"`
 	SpatialAggFunc  AggregationOption        `json:"spatial_agg"`
+	AdminLevel      AdminLevel               `json:"admin_level"`
 }
 
 // FullTimeseriesParams represent all parameters for fetching a timeseries
