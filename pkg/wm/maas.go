@@ -94,6 +94,7 @@ type RegionalExtrema struct {
 	Max map[string][]RegionalDataPointWithTimestamp `json:"max"`
 }
 
+// RegionalExtremaSelected stored filtered extrema data (by agg type)
 type RegionalExtremaSelected map[string][]RegionalDataPointWithTimestamp
 
 // TimeseriesValue represent a timeseries data point
